@@ -1,1 +1,19 @@
-node_modules
+﻿# Laravel
+/vendor
+/node_modules
+/.idea
+/.vscode
+.env
+.env.*
+/storage/*.key
+/storage/app/*.pdf
+/storage/app/public/*
+/storage/framework/*
+/storage/logs/*
+/public/storage
+/bootstrap/cache/*
+composer.lock
+npm-debug.log
+yarn-error.log
+.DS_Store
+Thumbs.db
