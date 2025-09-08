@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,5 +23,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // Register Blade components
         Blade::component('app-layout', \App\View\Components\AppLayout::class);
+
+        if (config('app.env') === 'production') {
+            URL::forceScheme('https');
+        }
     }
 }
