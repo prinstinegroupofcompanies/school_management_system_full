@@ -47,11 +47,12 @@ EXPOSE 8080
 # - migrate with --force; ignore errors if DB not reachable to avoid boot failure
 CMD sh -lc 'php artisan storage:link >/dev/null 2>&1 || true; \
             php artisan key:generate --force >/dev/null 2>&1 || true; \
+            php artisan optimize:clear >/dev/null 2>&1 || true; \
+            php artisan migrate --force >/dev/null 2>&1 || true; \
+            if [ "$SEED_ON_BOOT" = "true" ]; then php artisan db:seed --force >/dev/null 2>&1 || true; fi; \
             php artisan config:cache >/dev/null 2>&1 || true; \
             php artisan route:cache >/dev/null 2>&1 || true; \
             php artisan view:cache >/dev/null 2>&1 || true; \
-            php artisan migrate --force >/dev/null 2>&1 || true; \
-            if [ "$SEED_ON_BOOT" = "true" ]; then php artisan db:seed --force >/dev/null 2>&1 || true; fi; \
             php -S 0.0.0.0:${PORT} public/index.php'
 
 
