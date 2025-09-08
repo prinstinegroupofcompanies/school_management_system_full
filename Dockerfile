@@ -46,6 +46,7 @@ EXPOSE 8080
 # - storage:link may fail if already linked, so ignore error
 # - migrate with --force; ignore errors if DB not reachable to avoid boot failure
 CMD sh -lc 'php artisan storage:link >/dev/null 2>&1 || true; \
+            php artisan key:generate --force >/dev/null 2>&1 || true; \
             php artisan config:cache >/dev/null 2>&1 || true; \
             php artisan route:cache >/dev/null 2>&1 || true; \
             php artisan view:cache >/dev/null 2>&1 || true; \
