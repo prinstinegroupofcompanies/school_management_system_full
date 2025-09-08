@@ -24,15 +24,19 @@ RUN apt-get update \
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+ENV COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_NO_INTERACTION=1
 
 WORKDIR /var/www/html
 
 # Leverage Docker layer caching for Composer deps
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+RUN composer install --no-dev --prefer-dist --no-scripts --optimize-autoloader
 
-# Copy application code
+# Copy application code (now artisan exists)
 COPY . .
+# Finish Composer scripts after full code is present
+RUN composer dump-autoload -o && composer install --no-dev --prefer-dist --optimize-autoloader || true
 
 # Expose the port Render will map
 ENV PORT=8080
