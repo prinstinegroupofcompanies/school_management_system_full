@@ -30,7 +30,7 @@ return new class extends Migration
             $table->string('caste')->nullable();
             $table->string('mother_tongue')->nullable();
             $table->string('nationality')->default('Liberian');
-            $table->foreignId('student_category_id')->nullable()->constrained('student_categories')->onDelete('set null');
+            $table->unsignedBigInteger('student_category_id')->nullable();
             $table->foreignId('student_group_id')->nullable()->constrained('student_groups')->onDelete('set null');
             $table->foreignId('student_house_id')->nullable()->constrained('student_houses')->onDelete('set null');
             $table->decimal('height', 5, 2)->nullable(); // in cm
