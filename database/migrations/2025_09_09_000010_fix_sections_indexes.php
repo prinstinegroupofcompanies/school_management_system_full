@@ -23,20 +23,8 @@ return new class extends Migration
             }
         });
 
-        // Create the composite index if it does not already exist
-        // Works for PostgreSQL; for other DBs it will be ignored if it already exists
-        try {
-            DB::statement('CREATE INDEX IF NOT EXISTS sections_section_teacher_id_status_index ON sections (section_teacher_id, status)');
-        } catch (\Throwable $e) {
-            // Fallback for databases without IF NOT EXISTS support
-            try {
-                Schema::table('sections', function (Blueprint $table) {
-                    $table->index(['section_teacher_id', 'status'], 'sections_section_teacher_id_status_index');
-                });
-            } catch (\Throwable $e2) {
-                // swallow to avoid breaking deploy if already exists
-            }
-        }
+        // Intentionally skip creating composite index to avoid cross-DB timing issues
+        // You can add it later manually once columns are confirmed present
     }
 
     public function down(): void
@@ -44,13 +32,7 @@ return new class extends Migration
         if (!Schema::hasTable('sections')) {
             return;
         }
-        try {
-            Schema::table('sections', function (Blueprint $table) {
-                $table->dropIndex('sections_section_teacher_id_status_index');
-            });
-        } catch (\Throwable $e) {
-            // ignore
-        }
+        // No index was created in up(), nothing to drop here
         Schema::table('sections', function (Blueprint $table) {
             if (Schema::hasColumn('sections', 'section_teacher_id')) {
                 $table->dropConstrainedForeignId('section_teacher_id');
