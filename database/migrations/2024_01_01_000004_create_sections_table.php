@@ -25,7 +25,6 @@ return new class extends Migration
             $table->timestamps();
             
             $table->index(['name', 'class_id']);
-            $table->index(['section_teacher_id', 'status']);
             $table->index(['class_id', 'is_active']);
         });
     }
