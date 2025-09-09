@@ -13,7 +13,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Bridge INSTALL_TOKEN env to config for use at runtime
+        config(['app.install_token' => env('INSTALL_TOKEN')]);
     }
 
     /**

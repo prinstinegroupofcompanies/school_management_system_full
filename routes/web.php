@@ -579,7 +579,7 @@ Route::get('/debug-auth', function () {
 // One-time install endpoint to run migrations/seed without shell
 Route::get('/ops/install', function (Illuminate\Http\Request $request) {
     $token = (string) $request->query('token');
-    $expected = (string) env('INSTALL_TOKEN');
+    $expected = (string) config('app.install_token');
     abort_unless($token && $expected && hash_equals($expected, $token), 403);
     $out = [];
     try {
