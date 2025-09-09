@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
@@ -574,6 +575,25 @@ Route::get('/debug-auth', function () {
         ] : null
     ]);
 });
+
+// One-time install endpoint to run migrations/seed without shell
+Route::get('/ops/install', function (Illuminate\Http\Request $request) {
+    $token = (string) $request->query('token');
+    $expected = (string) env('INSTALL_TOKEN');
+    abort_unless($token && $expected && hash_equals($expected, $token), 403);
+    $out = [];
+    try {
+        Artisan::call('migrate', ['--force' => true]);
+        $out['migrate'] = trim(Artisan::output());
+        if ($request->boolean('seed')) {
+            Artisan::call('db:seed', ['--force' => true]);
+            $out['seed'] = trim(Artisan::output());
+        }
+        return response()->json(['ok' => true, 'output' => $out]);
+    } catch (\Throwable $e) {
+        return response()->json(['ok' => false, 'error' => $e->getMessage()], 500);
+    }
+})->name('ops.install');
 
 Route::get('/test-login', function () {
     $credentials = ['email' => 'teacher@school.com', 'password' => 'password'];
