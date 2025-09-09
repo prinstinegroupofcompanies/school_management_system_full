@@ -52,8 +52,11 @@ EXPOSE 8080
 # - migrate with --force; ignore errors if DB not reachable to avoid boot failure
 CMD sh -lc 'mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache; \
             chmod -R 775 storage bootstrap/cache || true; \
+            # Ensure APP_KEY exists; generate one if not provided by env
+            if [ -z "$APP_KEY" ]; then \
+              export APP_KEY=base64:$(php -r "echo base64_encode(random_bytes(32));"); \
+            fi; \
             php artisan storage:link >/dev/null 2>&1 || true; \
-            php artisan key:generate --force >/dev/null 2>&1 || true; \
             php artisan optimize:clear >/dev/null 2>&1 || true; \
             php artisan migrate --force >/dev/null 2>&1 || true; \
             if [ "$SEED_ON_BOOT" = "true" ]; then php artisan db:seed --force >/dev/null 2>&1 || true; fi; \
