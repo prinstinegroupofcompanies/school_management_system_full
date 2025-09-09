@@ -29,9 +29,14 @@ ENV COMPOSER_ALLOW_SUPERUSER=1 \
 
 WORKDIR /var/www/html
 
-# Leverage Docker layer caching for Composer deps
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --prefer-dist --no-scripts --optimize-autoloader
+# Leverage Docker layer caching for Composer deps (composer.lock optional)
+COPY composer.json ./
+COPY composer.lock* ./
+RUN if [ -f composer.lock ]; then \
+      composer install --no-dev --prefer-dist --no-scripts --optimize-autoloader; \
+    else \
+      composer update --no-dev --prefer-dist --no-scripts --optimize-autoloader; \
+    fi
 
 # Copy application code (now artisan exists)
 COPY . .
