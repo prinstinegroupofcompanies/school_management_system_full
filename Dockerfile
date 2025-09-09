@@ -50,7 +50,9 @@ EXPOSE 8080
 # Entrypoint: prepare app then run server
 # - storage:link may fail if already linked, so ignore error
 # - migrate with --force; ignore errors if DB not reachable to avoid boot failure
-CMD sh -lc 'php artisan storage:link >/dev/null 2>&1 || true; \
+CMD sh -lc 'mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache; \
+            chmod -R 775 storage bootstrap/cache || true; \
+            php artisan storage:link >/dev/null 2>&1 || true; \
             php artisan key:generate --force >/dev/null 2>&1 || true; \
             php artisan optimize:clear >/dev/null 2>&1 || true; \
             php artisan migrate --force >/dev/null 2>&1 || true; \
