@@ -15,8 +15,8 @@ return new class extends Migration
 
         Schema::table('sections', function (Blueprint $table) {
             if (!Schema::hasColumn('sections', 'section_teacher_id')) {
-                // Add as nullable to avoid constraint issues; you can backfill later
-                $table->foreignId('section_teacher_id')->nullable()->constrained('teachers')->nullOnDelete();
+                // Add as plain column (no FK) to avoid dependency ordering issues
+                $table->unsignedBigInteger('section_teacher_id')->nullable();
             }
             if (!Schema::hasColumn('sections', 'status')) {
                 $table->string('status')->default('active');
