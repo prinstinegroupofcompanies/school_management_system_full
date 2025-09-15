@@ -22,17 +22,25 @@ composer dump-autoload --optimize
 echo "Checking database connection..."
 php artisan migrate:status
 
-# Run database migrations with verbose output
-echo "Running database migrations..."
-php artisan migrate --force --verbose
+# Run force migration to ensure all tables are created
+echo "Running force migration..."
+php force_migrate.php
 
-# Check if migrations were successful
-if [ $? -eq 0 ]; then
-    echo "Migrations completed successfully"
-else
-    echo "Migration failed, trying to reset and migrate again..."
-    php artisan migrate:fresh --force --seed
-fi
+# Verify key tables exist
+echo "Verifying key tables..."
+php -r "
+require_once 'vendor/autoload.php';
+\$app = require_once 'bootstrap/app.php';
+\$app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
+\$tables = ['users', 'students', 'teachers', 'class_rooms', 'subjects'];
+foreach (\$tables as \$table) {
+    if (Schema::hasTable(\$table)) {
+        echo \"✅ \$table exists\n\";
+    } else {
+        echo \"❌ \$table missing\n\";
+    }
+}
+"
 
 # Run database seeders for production
 echo "Running database seeders..."

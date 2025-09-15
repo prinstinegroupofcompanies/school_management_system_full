@@ -21,33 +21,45 @@ class AdminController extends Controller
             'semester' => (int) (date('n') <= 6 ? 1 : 2),
         ];
         $stats = [
-            'total_students' => Student::count(),
-            'total_teachers' => Teacher::count(),
-            'total_classes' => ClassRoom::count(),
-            'total_subjects' => Subject::count(),
-            'total_exams' => ExamSchedule::count(),
-            'total_fee_payments' => FeePayment::sum('amount'),
+            'total_students' => $this->safeCount(Student::class),
+            'total_teachers' => $this->safeCount(Teacher::class),
+            'total_classes' => $this->safeCount(ClassRoom::class),
+            'total_subjects' => $this->safeCount(Subject::class),
+            'total_exams' => $this->safeCount(ExamSchedule::class),
+            'total_fee_payments' => $this->safeSum(FeePayment::class, 'amount'),
             'attendance_rate' => $this->getAttendanceRate(),
         ];
 
         $feeStats = [
-            'collected_today' => FeePayment::whereDate('created_at', today())->sum('amount'),
+            'collected_today' => $this->safeQuery(function() {
+                return FeePayment::whereDate('created_at', today())->sum('amount');
+            }),
             'pending' => $this->getPendingPayments(),
         ];
 
         $attendanceStats = [
-            'present' => StudentAttendance::whereDate('date', today())->where('status', 'present')->count(),
-            'absent' => StudentAttendance::whereDate('date', today())->where('status', 'absent')->count(),
-            'late' => StudentAttendance::whereDate('date', today())->where('status', 'late')->count(),
-            'total' => StudentAttendance::whereDate('date', today())->count(),
+            'present' => $this->safeQuery(function() {
+                return StudentAttendance::whereDate('date', today())->where('status', 'present')->count();
+            }),
+            'absent' => $this->safeQuery(function() {
+                return StudentAttendance::whereDate('date', today())->where('status', 'absent')->count();
+            }),
+            'late' => $this->safeQuery(function() {
+                return StudentAttendance::whereDate('date', today())->where('status', 'late')->count();
+            }),
+            'total' => $this->safeQuery(function() {
+                return StudentAttendance::whereDate('date', today())->count();
+            }),
         ];
 
         $recentActivities = $this->getRecentActivities();
-        $upcoming_exams = ExamSchedule::with('examType', 'subject')
-            ->where('exam_date', '>=', now())
-            ->orderBy('exam_date')
-            ->limit(5)
-            ->get();
+        $upcoming_exams = $this->safeQuery(function() {
+            return ExamSchedule::with('examType', 'subject')
+                ->where('exam_date', '>=', now())
+                ->orderBy('exam_date')
+                ->limit(5)
+                ->get();
+        }) ?: collect();
 
         return view('dashboard.admin', compact('stats', 'feeStats', 'attendanceStats', 'recentActivities', 'upcoming_exams') + ['session' => $session]);
     }
@@ -91,5 +103,41 @@ class AdminController extends Controller
                 'created_at' => now()->subMinutes(30),
             ],
         ]);
+    }
+
+    /**
+     * Safely count records from a model, returning 0 if table doesn't exist
+     */
+    private function safeCount($model)
+    {
+        try {
+            return $model::count();
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Safely sum a column from a model, returning 0 if table doesn't exist
+     */
+    private function safeSum($model, $column)
+    {
+        try {
+            return $model::sum($column) ?? 0;
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Safely execute a database query, returning 0 if it fails
+     */
+    private function safeQuery($callback)
+    {
+        try {
+            return $callback();
+        } catch (\Exception $e) {
+            return 0;
+        }
     }
 }
