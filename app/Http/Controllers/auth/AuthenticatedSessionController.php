@@ -35,31 +35,20 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return $this->authenticated($request, Auth::user());
-    }
-
-    /**
-     * Handle an authenticated user.
-     */
-    protected function authenticated(Request $request, $user)
-    {
-        // Update last login time
-        $user->update(['last_login_at' => now()]);
-
+        $user = Auth::user();
+        
         // Redirect based on user type
         switch ($user->user_type) {
             case 'admin':
-                return redirect()->intended('/admin/dashboard');
+                return redirect()->intended(route('admin.dashboard'));
             case 'teacher':
-                return redirect()->intended('/teacher/dashboard');
+                return redirect()->intended(route('teacher.dashboard'));
             case 'student':
-                return redirect()->intended('/student/dashboard');
+                return redirect()->intended(route('student.dashboard'));
             case 'finance':
-                return redirect()->intended('/finance/dashboard');
-            case 'parent':
-                return redirect()->intended('/parent/dashboard');
+                return redirect()->intended(route('dashboard'));
             default:
-                return redirect()->intended('/dashboard');
+                return redirect()->intended(route('dashboard'));
         }
     }
 
@@ -68,17 +57,12 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request)
     {
-        // Update last logout time
-        if (Auth::check()) {
-            Auth::user()->update(['last_logout_at' => now()]);
-        }
-
-        Auth::logout();
+        Auth::guard('web')->logout();
 
         $request->session()->invalidate();
 
         $request->session()->regenerateToken();
 
-        return redirect('/login')->with('success', 'You have been logged out successfully.');
+        return redirect('/');
     }
 }
