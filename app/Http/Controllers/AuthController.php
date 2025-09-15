@@ -22,7 +22,22 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->intended('dashboard');
+            
+            $user = Auth::user();
+            
+            // Redirect based on user type
+            switch ($user->user_type) {
+                case 'admin':
+                    return redirect()->intended(route('admin.dashboard'));
+                case 'teacher':
+                    return redirect()->intended(route('teacher.dashboard'));
+                case 'student':
+                    return redirect()->intended(route('student.dashboard'));
+                case 'finance':
+                    return redirect()->intended(route('dashboard'));
+                default:
+                    return redirect()->intended(route('dashboard'));
+            }
         }
 
         return back()->withErrors([

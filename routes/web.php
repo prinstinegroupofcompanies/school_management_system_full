@@ -672,11 +672,11 @@ Route::middleware('guest')->group(function () {
         return view('auth.login');
     })->name('login.show');
     
-    Route::post('/login', [\App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'store'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login');
 });
 
 Route::middleware('auth')->group(function () {
-    Route::post('/logout', [\App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'destroy'])->name('logout');
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 
 // Debug route to check users (remove in production)
