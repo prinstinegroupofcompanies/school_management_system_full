@@ -169,9 +169,9 @@
                     @foreach($hostels as $hostel)
                     <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
                         <div class="flex items-start justify-between mb-4">
-                            <h4 class="text-lg font-medium text-gray-900">{{ $hostel['name'] }}</h4>
+                            <h4 class="text-lg font-medium text-gray-900">{{ $hostel->name }}</h4>
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                {{ ucfirst($hostel['status']) }}
+                                {{ ucfirst($hostel->status) }}
                             </span>
                         </div>
                         
@@ -180,39 +180,65 @@
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                                 </svg>
-                                Type: {{ $hostel['type'] }}
+                                Type: Hostel
                             </div>
                             <div class="flex items-center text-sm text-gray-600">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
                                 </svg>
-                                Capacity: {{ $hostel['current_occupancy'] }}/{{ $hostel['capacity'] }} students
+                                @php
+                                    $totalCapacity = $hostel->rooms->sum('capacity') ?? 0;
+                                    $currentOccupancy = $hostel->rooms->sum('current_occupancy') ?? 0;
+                                @endphp
+                                Capacity: {{ $currentOccupancy }}/{{ $totalCapacity }} students
                             </div>
                             <div class="flex items-center text-sm text-gray-600">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
                                 </svg>
-                                Monthly Fee: ${{ number_format($hostel['monthly_fee'], 2) }}
+                                @php
+                                    $avgRent = $hostel->rooms->avg('monthly_rent') ?? 0;
+                                @endphp
+                                Monthly Fee: ${{ number_format($avgRent, 2) }}
                             </div>
                         </div>
                         
                         <div class="mb-4">
                             <h5 class="text-sm font-medium text-gray-700 mb-2">Facilities:</h5>
                             <div class="flex flex-wrap gap-2">
-                                @foreach($hostel['facilities'] as $facility)
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    {{ $facility }}
-                                </span>
-                                @endforeach
+                                @php
+                                    $amenities = [];
+                                    if ($hostel->rooms && $hostel->rooms->count() > 0) {
+                                        $firstRoom = $hostel->rooms->first();
+                                        if ($firstRoom && $firstRoom->amenities) {
+                                            $amenities = is_array($firstRoom->amenities) ? $firstRoom->amenities : [];
+                                        }
+                                    }
+                                @endphp
+                                
+                                @if(!empty($amenities))
+                                    @foreach($amenities as $facility)
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        {{ $facility }}
+                                    </span>
+                                    @endforeach
+                                @else
+                                    <span class="text-sm text-gray-500">Basic facilities included</span>
+                                @endif
                             </div>
                         </div>
                         
                         <div class="flex items-center justify-between">
                             <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="bg-blue-600 h-2 rounded-full" style="width: {{ ($hostel['current_occupancy'] / $hostel['capacity']) * 100 }}%"></div>
+                                @php
+                                    $totalCapacity = $hostel->rooms->sum('capacity') ?? 1;
+                                    $currentOccupancy = $hostel->rooms->sum('current_occupancy') ?? 0;
+                                    $occupancyPercentage = $totalCapacity > 0 ? ($currentOccupancy / $totalCapacity) * 100 : 0;
+                                @endphp
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: {{ $occupancyPercentage }}%"></div>
                             </div>
                             <span class="ml-3 text-sm text-gray-500">
-                                {{ round(($hostel['current_occupancy'] / $hostel['capacity']) * 100) }}% occupied
+                                {{ round($occupancyPercentage) }}% occupied
                             </span>
                         </div>
                     </div>

@@ -218,7 +218,7 @@ class FeeController extends Controller
         
         $reports = FinanceReport::latest('pushed_at')->paginate(15);
 
-        return view('admin.fees.reports.index', compact(
+        return view('finance.fees.reports.index', compact(
             'totalFees', 'totalCollected', 'totalPending', 'monthlyCollection', 'classWiseCollection', 'reports'
         ));
     }

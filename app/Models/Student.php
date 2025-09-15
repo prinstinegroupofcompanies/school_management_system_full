@@ -71,6 +71,14 @@ class Student extends Model
     }
 
     /**
+     * Get the class room that the student belongs to (alias for class).
+     */
+    public function classRoom(): BelongsTo
+    {
+        return $this->belongsTo(ClassRoom::class, 'class_id');
+    }
+
+    /**
      * Get the section that the student belongs to.
      */
     public function section(): BelongsTo

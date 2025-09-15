@@ -10,6 +10,8 @@ use App\Models\ExamSchedule;
 use App\Models\FeePayment;
 use App\Models\FeeStructure;
 use App\Models\StudentAttendance;
+use App\Models\Scholarship;
+use App\Models\ScholarshipApplication;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -173,6 +175,9 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
         
+        // Get scholarship statistics
+        $scholarshipStats = $this->getScholarshipStats();
+        
         // Use mock data like the FinanceController
         $stats = [
             'total_revenue' => FeePayment::sum('amount_paid'),
@@ -181,8 +186,8 @@ class DashboardController extends Controller
             'total_pending' => max(FeeStructure::sum('amount') - FeePayment::sum('amount_paid'), 0),
             'collected_today' => FeePayment::whereDate('payment_date', today())->sum('amount_paid'),
             'pending_payments' => max(FeeStructure::sum('amount') - FeePayment::sum('amount_paid'), 0),
-            'total_scholarships' => 0,
-            'active_scholarships' => 0,
+            'total_scholarships' => $scholarshipStats['total_scholarships'],
+            'active_scholarships' => $scholarshipStats['active_scholarships'],
             'monthly_revenue' => FeePayment::whereYear('payment_date', date('Y'))
                 ->whereMonth('payment_date', date('m'))
                 ->sum('amount_paid'),
@@ -193,8 +198,8 @@ class DashboardController extends Controller
         $recent_payments = FeePayment::with(['student.user'])
             ->latest('payment_date')->take(5)->get();
 
-        // Mock pending scholarships data
-        $pending_scholarships = collect();
+        // Get pending scholarships data
+        $pending_scholarships = $this->getPendingScholarships();
 
         // Monthly collection data (SQLite-safe)
         $monthlyCollection = $this->getMonthlyCollection();
@@ -218,6 +223,7 @@ class DashboardController extends Controller
             'monthlyCollection' => $monthlyCollection,
             'classWiseCollection' => $classWiseCollection,
             'recentActivities' => $recentActivities,
+            'scholarshipStats' => $scholarshipStats,
         ];
 
         return view('dashboard.finance', $data);
@@ -308,5 +314,39 @@ class DashboardController extends Controller
                 'created_at' => Carbon::now()->subHours(6),
             ],
         ]);
+    }
+
+    private function getScholarshipStats()
+    {
+        $totalScholarships = Scholarship::count();
+        $activeScholarships = Scholarship::where('is_active', true)->count();
+        $totalAwarded = ScholarshipApplication::where('status', 'approved')->count();
+        $totalAmountAwarded = ScholarshipApplication::where('status', 'approved')
+            ->join('scholarships', 'scholarship_applications.scholarship_id', '=', 'scholarships.id')
+            ->sum('scholarships.amount');
+
+        return [
+            'total_scholarships' => $totalScholarships,
+            'active_scholarships' => $activeScholarships,
+            'total_awarded' => $totalAwarded,
+            'total_amount_awarded' => $totalAmountAwarded,
+        ];
+    }
+
+    private function getPendingScholarships()
+    {
+        return ScholarshipApplication::where('status', 'pending')
+            ->with(['scholarship', 'student.user'])
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get()
+            ->map(function ($application) {
+                return [
+                    'student_name' => $application->student->user->name ?? 'Unknown Student',
+                    'scholarship_name' => $application->scholarship->name ?? 'Unknown Scholarship',
+                    'amount' => $application->scholarship->amount ?? 0,
+                    'application_date' => $application->created_at,
+                ];
+            });
     }
 }

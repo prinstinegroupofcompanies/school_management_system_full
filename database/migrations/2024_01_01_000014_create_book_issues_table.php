@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('book_issues', function (Blueprint $table) {
             $table->id();
             $table->string('issue_no')->unique();
-            $table->unsignedBigInteger->constrained();
-            $table->unsignedBigInteger;
-            $table->unsignedBigInteger('class_id')->nullable();
+            $table->foreignId('book_id')->constrained('books')->onDelete('cascade');
+            $table->foreignId('member_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('class_id')->nullable()->constrained('class_rooms')->onDelete('set null');
             $table->date('issue_date');
             $table->date('due_date');
             $table->date('return_date')->nullable();
@@ -29,7 +29,7 @@ return new class extends Migration
             $table->text('fine_reason')->nullable();
             $table->boolean('fine_paid')->default(false);
             $table->date('fine_paid_date')->nullable();
-            $table->unsignedBigInteger->nullable();
+            $table->foreignId('issued_by')->nullable()->constrained('users')->onDelete('set null');
             $table->text('remarks')->nullable();
             $table->timestamps();
             

@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Student;
+use App\Models\Hostel;
+use App\Models\HostelRoom;
+use App\Models\HostelPayment;
 
 class HostelController extends Controller
 {
@@ -17,46 +20,30 @@ class HostelController extends Controller
             abort(403, 'Student record not found');
         }
 
-        // Mock hostel data for students
-        $hostels = [
-            [
-                'id' => 1,
-                'name' => 'Liberty Hall',
-                'type' => 'Boys Hostel',
-                'capacity' => 200,
-                'current_occupancy' => 180,
-                'facilities' => ['WiFi', 'Laundry', 'Common Room', 'Study Hall'],
-                'monthly_fee' => 150.00,
-                'status' => 'available',
-            ],
-            [
-                'id' => 2,
-                'name' => 'Freedom Hall',
-                'type' => 'Girls Hostel',
-                'capacity' => 150,
-                'current_occupancy' => 120,
-                'facilities' => ['WiFi', 'Laundry', 'Common Room', 'Study Hall', 'Gym'],
-                'monthly_fee' => 175.00,
-                'status' => 'available',
-            ],
-        ];
+        // Get real hostel data
+        $hostels = Hostel::where('status', 'active')
+            ->with(['rooms' => function($query) {
+                $query->where('is_active', true);
+            }])
+            ->get();
 
-        $myRoom = [
-            'id' => 101,
-            'hostel' => 'Liberty Hall',
-            'room_number' => '101',
-            'room_type' => 'Double Occupancy',
-            'roommate' => 'John Doe',
-            'monthly_fee' => 150.00,
-            'next_payment_due' => '2024-10-01',
-            'status' => 'occupied',
-        ];
+        // Get student's current room if they have one
+        $myRoom = null;
+        if ($student->hostel_room_id) {
+            $myRoom = HostelRoom::with('hostel')
+                ->find($student->hostel_room_id);
+        }
 
+        // Calculate real hostel statistics
+        $totalRooms = HostelRoom::where('is_active', true)->count();
+        $totalCapacity = HostelRoom::where('is_active', true)->sum('capacity');
+        $currentOccupancy = HostelRoom::where('is_active', true)->sum('current_occupancy');
+        
         $hostelStats = [
-            'total_hostels' => 4,
-            'total_rooms' => 200,
-            'total_capacity' => 400,
-            'current_occupancy' => 320,
+            'total_hostels' => $hostels->count(),
+            'total_rooms' => $totalRooms,
+            'total_capacity' => $totalCapacity,
+            'current_occupancy' => $currentOccupancy,
         ];
 
         return view('student.hostel.index', compact('hostels', 'myRoom', 'hostelStats'));
@@ -71,33 +58,17 @@ class HostelController extends Controller
             abort(403, 'Student record not found');
         }
 
-        // Mock available rooms
-        $rooms = [
-            [
-                'id' => 101,
-                'hostel' => 'Liberty Hall',
-                'room_number' => '101',
-                'room_type' => 'Double Occupancy',
-                'capacity' => 2,
-                'current_occupancy' => 1,
-                'monthly_fee' => 150.00,
-                'facilities' => ['Bed', 'Study Table', 'Wardrobe', 'WiFi'],
-                'status' => 'available',
-            ],
-            [
-                'id' => 102,
-                'hostel' => 'Liberty Hall',
-                'room_number' => '102',
-                'room_type' => 'Single Occupancy',
-                'capacity' => 1,
-                'current_occupancy' => 0,
-                'monthly_fee' => 200.00,
-                'facilities' => ['Bed', 'Study Table', 'Wardrobe', 'WiFi', 'Private Bathroom'],
-                'status' => 'available',
-            ],
-        ];
+        // Get real available rooms
+        $rooms = HostelRoom::with('hostel')
+            ->where('is_active', true)
+            ->where('status', 'available')
+            ->whereRaw('current_occupancy < capacity')
+            ->get();
 
-        return view('student.hostel.rooms', compact('rooms'));
+        // Get all hostels for filter dropdown
+        $hostels = Hostel::where('status', 'active')->get();
+
+        return view('student.hostel.rooms', compact('rooms', 'hostels'));
     }
 
     public function request(Request $request)
@@ -129,28 +100,16 @@ class HostelController extends Controller
             abort(403, 'Student record not found');
         }
 
-        // Mock payment history
-        $payments = [
-            [
-                'id' => 1,
-                'month' => 'September 2024',
-                'amount' => 150.00,
-                'due_date' => '2024-09-01',
-                'paid_date' => '2024-08-28',
-                'status' => 'paid',
-                'method' => 'Bank Transfer',
-            ],
-            [
-                'id' => 2,
-                'month' => 'October 2024',
-                'amount' => 150.00,
-                'due_date' => '2024-10-01',
-                'paid_date' => null,
-                'status' => 'pending',
-                'method' => null,
-            ],
-        ];
+        // Get real payment history
+        $payments = HostelPayment::where('student_id', $student->id)
+            ->orderBy('due_date', 'desc')
+            ->get();
 
-        return view('student.hostel.payments', compact('payments'));
+        // Calculate payment statistics
+        $totalPaid = $payments->where('status', 'paid')->sum('amount');
+        $outstanding = $payments->where('status', 'pending')->sum('amount');
+        $nextDueDate = $payments->where('status', 'pending')->min('due_date');
+
+        return view('student.hostel.payments', compact('payments', 'totalPaid', 'outstanding', 'nextDueDate'));
     }
 }

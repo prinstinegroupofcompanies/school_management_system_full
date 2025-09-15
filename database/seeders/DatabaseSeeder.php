@@ -14,6 +14,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             // RolePermissionSeeder::class, // Commented out due to Spatie Permission incompatibility
             UserSeeder::class,
+            ScholarshipSeeder::class,
+            ProductionSeeder::class, // Add production data for Render deployment
         ]);
     }
 }

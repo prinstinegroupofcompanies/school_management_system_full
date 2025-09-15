@@ -65,7 +65,7 @@ class TeacherController extends Controller
         $recent_activities = collect();
         
         // Recent homework assignments
-        $recentHomeworkActivities = Homework::where('teacher_id', $teacher->id)
+        $recentHomeworkActivities = collect(Homework::where('teacher_id', $teacher->id)
             ->latest('created_at')
             ->take(3)
             ->get()
@@ -74,10 +74,10 @@ class TeacherController extends Controller
                     'description' => 'Homework assigned: ' . $homework->title . ' to ' . ($homework->classRoom->name ?? 'Unknown Class'),
                     'created_at' => $homework->created_at,
                 ];
-            });
+            }));
 
         // Recent exam schedules
-        $recentExamActivities = ExamSchedule::whereHas('subject', function($query) use ($teacher) {
+        $recentExamActivities = collect(ExamSchedule::whereHas('subject', function($query) use ($teacher) {
                 $query->where('teacher_id', $teacher->id);
             })
             ->latest('created_at')
@@ -88,10 +88,10 @@ class TeacherController extends Controller
                     'description' => 'Exam scheduled: ' . $exam->title . ' for ' . ($exam->class->name ?? 'Unknown Class'),
                     'created_at' => $exam->created_at,
                 ];
-            });
+            }));
 
         // Recent attendance marking
-        $recentAttendanceActivities = TeacherAttendance::where('teacher_id', $teacher->id)
+        $recentAttendanceActivities = collect(TeacherAttendance::where('teacher_id', $teacher->id)
             ->latest('date')
             ->take(2)
             ->get()
@@ -100,7 +100,7 @@ class TeacherController extends Controller
                     'description' => 'Attendance marked: ' . ucfirst($attendance->status) . ' on ' . \Carbon\Carbon::parse($attendance->date)->format('M d, Y'),
                     'created_at' => $attendance->date,
                 ];
-            });
+            }));
 
         // Merge and sort all activities
         $recent_activities = $recentHomeworkActivities
@@ -118,17 +118,17 @@ class TeacherController extends Controller
         ];
 
         // Get all students from classes taught by this teacher
-        $students = Student::whereHas('classRoom.subjects', function($query) use ($teacher) {
+        $students = collect(Student::whereHas('classRoom.subjects', function($query) use ($teacher) {
             $query->where('teacher_id', $teacher->id);
         })->with('user')->get()->map(function($student) {
             return (object) [
                 'id' => $student->id,
                 'name' => $student->user->name,
             ];
-        });
+        }));
 
         // Format classes with student counts
-        $classes = $classes->map(function($class) use ($teacher) {
+        $classes = collect($classes->map(function($class) use ($teacher) {
             $studentCount = Student::where('class_id', $class->id)->count();
             return (object) [
                 'id' => $class->id,
@@ -145,19 +145,19 @@ class TeacherController extends Controller
                         ];
                     }),
             ];
-        });
+        }));
 
         // Format subjects
-        $subjects = $subjects->map(function($subject) {
+        $subjects = collect($subjects->map(function($subject) {
             return (object) [
                 'id' => $subject->id,
                 'name' => $subject->name,
                 'code' => $subject->code,
             ];
-        });
+        }));
 
         // Format upcoming exams
-        $upcomingExams = $upcomingExams->map(function($exam) {
+        $upcomingExams = collect($upcomingExams->map(function($exam) {
             return (object) [
                 'id' => $exam->id,
                 'examType' => (object) ['name' => $exam->examType->name ?? 'N/A'],
@@ -167,7 +167,7 @@ class TeacherController extends Controller
                 'start_time' => $exam->start_time,
                 'title' => $exam->title,
             ];
-        });
+        }));
 
         return view('dashboard.teacher', compact(
             'stats', 

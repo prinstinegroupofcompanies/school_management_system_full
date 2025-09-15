@@ -14,14 +14,15 @@ class Notification extends Model
         'user_id', 'title', 'message', 'type', 'category', 'subcategory',
         'priority', 'status', 'read_at', 'action_url', 'action_text',
         'related_model', 'related_id', 'metadata', 'scheduled_at',
-        'sent_at', 'delivery_method', 'delivery_status', 'error_message',
+        'sent_at', 'failed_at', 'delivery_method', 'delivery_status', 'error_message',
         'retry_count', 'max_retries', 'expires_at', 'is_active'
     ];
 
     protected $casts = [
         'read_at' => 'datetime', 'scheduled_at' => 'datetime', 'sent_at' => 'datetime',
-        'expires_at' => 'datetime', 'metadata' => 'array', 'priority' => 'integer',
-        'retry_count' => 'integer', 'max_retries' => 'integer', 'is_active' => 'boolean'
+        'failed_at' => 'datetime', 'expires_at' => 'datetime', 'metadata' => 'array', 
+        'priority' => 'integer', 'retry_count' => 'integer', 'max_retries' => 'integer', 
+        'is_active' => 'boolean'
     ];
 
     public function user(): BelongsTo

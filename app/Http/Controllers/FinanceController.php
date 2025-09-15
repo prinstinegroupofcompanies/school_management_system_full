@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\StudentFee;
 use App\Models\PaymentRecord;
 use App\Models\Student;
+use App\Models\Scholarship;
+use App\Models\ScholarshipApplication;
+use App\Models\FeePayment;
 use Illuminate\Support\Facades\DB;
 
 class FinanceController extends Controller
@@ -33,21 +36,9 @@ class FinanceController extends Controller
             ->limit(10)
             ->get();
 
-        // Mock pending scholarships data
-        $pending_scholarships = collect([
-            [
-                'student_name' => 'Sarah Wilson',
-                'scholarship_name' => 'Academic Excellence',
-                'amount' => 2000,
-                'application_date' => now()->subDays(7),
-            ],
-            [
-                'student_name' => 'David Brown',
-                'scholarship_name' => 'Sports Achievement',
-                'amount' => 1500,
-                'application_date' => now()->subDays(10),
-            ],
-        ]);
+        // Get real scholarship data
+        $scholarshipStats = $this->getScholarshipStats();
+        $pending_scholarships = $this->getPendingScholarships();
 
         $monthlyCollection = PaymentRecord::where('payment_records.status', 'approved')
             ->selectRaw("CAST(strftime('%m', approved_at) AS INTEGER) as month, SUM(amount) as total")
@@ -78,6 +69,8 @@ class FinanceController extends Controller
             'monthlyCollection' => $monthlyCollection,
             'classWiseCollection' => $classWiseCollection,
             'recentActivities' => $recentActivities,
+            'scholarshipStats' => $scholarshipStats,
+            'pending_scholarships' => $pending_scholarships,
         ]);
     }
 
@@ -142,6 +135,40 @@ class FinanceController extends Controller
         }
         
         return round(($total_collected / $total_expected) * 100, 2);
+    }
+
+    private function getScholarshipStats()
+    {
+        $totalScholarships = Scholarship::count();
+        $activeScholarships = Scholarship::where('is_active', true)->count();
+        $totalAwarded = ScholarshipApplication::where('status', 'approved')->count();
+        $totalAmountAwarded = ScholarshipApplication::where('status', 'approved')
+            ->join('scholarships', 'scholarship_applications.scholarship_id', '=', 'scholarships.id')
+            ->sum('scholarships.amount');
+
+        return [
+            'total_scholarships' => $totalScholarships,
+            'active_scholarships' => $activeScholarships,
+            'total_awarded' => $totalAwarded,
+            'total_amount_awarded' => $totalAmountAwarded,
+        ];
+    }
+
+    private function getPendingScholarships()
+    {
+        return ScholarshipApplication::with(['scholarship', 'student.user'])
+            ->where('status', 'pending')
+            ->latest()
+            ->limit(5)
+            ->get()
+            ->map(function ($application) {
+                return [
+                    'student_name' => $application->student->user->name ?? 'Unknown',
+                    'scholarship_name' => $application->scholarship->name,
+                    'amount' => $application->scholarship->amount,
+                    'application_date' => $application->application_date,
+                ];
+            });
     }
 
     private function getScholarshipDistribution()

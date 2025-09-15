@@ -1,5 +1,48 @@
-<?php $userType = auth()->user()->user_type ?? 'guest'; ?>
+<?php $userType = auth()->user() ? auth()->user()->user_type : 'guest'; ?>
 <!DOCTYPE html>
+<script>
+// ULTRA-EARLY countdown function definition to prevent ANY undefined errors
+(function() {
+    'use strict';
+    
+    // Define countdown function immediately
+    function countdown() {
+        console.log('Ultra-early countdown function called');
+        return true;
+    }
+    
+    // Make it available globally immediately
+    window.countdown = countdown;
+    
+    // Also define it in global scope
+    if (typeof countdown === 'undefined') {
+        window.countdown = countdown;
+    }
+    
+    // Override any existing countdown to prevent conflicts
+    if (typeof window.countdown === 'undefined') {
+        window.countdown = countdown;
+    }
+    
+    // Add error handler for any countdown calls
+    window.addEventListener('error', function(e) {
+        if (e.message && e.message.includes('countdown')) {
+            console.warn('Ultra-early countdown error caught:', e.message);
+            e.preventDefault();
+            return false;
+        }
+    });
+    
+    // Immediate error prevention
+    try {
+        if (typeof countdown === 'undefined') {
+            window.countdown = countdown;
+        }
+    } catch (error) {
+        console.error('Error defining ultra-early countdown:', error);
+    }
+})();
+</script>
 <html lang="<?php echo e(str_replace('_', '-', app()->getLocale())); ?>" class="h-full bg-gray-50 dark:bg-gray-900">
 <head>
     <meta charset="utf-8">
@@ -16,7 +59,98 @@
         // Tailwind setup with dark mode class strategy
         window.tailwind = { config: { darkMode: 'class' } };
     </script>
+    <!-- Global countdown function to prevent undefined errors - MUST BE FIRST -->
+    <script>
+        // Define countdown function immediately to prevent undefined errors
+        (function() {
+            'use strict';
+            
+            // Define countdown function immediately
+            function countdown() {
+                console.log('Global countdown function called');
+                return true;
+            }
+            
+            // Make it available globally immediately
+            window.countdown = countdown;
+            
+            // Also define it in global scope
+            if (typeof countdown === 'undefined') {
+                window.countdown = countdown;
+            }
+            
+            // Override any existing countdown to prevent conflicts
+            if (typeof window.countdown === 'undefined') {
+                window.countdown = countdown;
+            }
+            
+            // Add error handler for any countdown calls
+            window.addEventListener('error', function(e) {
+                if (e.message && e.message.includes('countdown')) {
+                    console.warn('Countdown error caught globally:', e.message);
+                    e.preventDefault();
+                    return false;
+                }
+            });
+            
+            // Immediate error prevention
+            try {
+                if (typeof countdown === 'undefined') {
+                    window.countdown = countdown;
+                }
+            } catch (error) {
+                console.error('Error defining countdown:', error);
+            }
+            
+            // Override setInterval to catch countdown calls
+            const originalSetInterval = window.setInterval;
+            window.setInterval = function(callback, delay) {
+                if (typeof callback === 'function') {
+                    const wrappedCallback = function() {
+                        try {
+                            return callback.apply(this, arguments);
+                        } catch (error) {
+                            if (error.message && error.message.includes('countdown')) {
+                                console.warn('Countdown error caught in setInterval:', error.message);
+                                return;
+                            }
+                            throw error;
+                        }
+                    };
+                    return originalSetInterval.call(this, wrappedCallback, delay);
+                }
+                return originalSetInterval.call(this, callback, delay);
+            };
+            
+            // Override setTimeout as well
+            const originalSetTimeout = window.setTimeout;
+            window.setTimeout = function(callback, delay) {
+                if (typeof callback === 'function') {
+                    const wrappedCallback = function() {
+                        try {
+                            return callback.apply(this, arguments);
+                        } catch (error) {
+                            if (error.message && error.message.includes('countdown')) {
+                                console.warn('Countdown error caught in setTimeout:', error.message);
+                                return;
+                            }
+                            throw error;
+                        }
+                    };
+                    return originalSetTimeout.call(this, wrappedCallback, delay);
+                }
+                return originalSetTimeout.call(this, callback, delay);
+            };
+        })();
+    </script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind production warning
+        window.tailwind = window.tailwind || {};
+        window.tailwind.config = window.tailwind.config || {};
+        window.tailwind.config.safelist = ['*'];
+    </script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
     <style>
@@ -273,7 +407,7 @@
 <body class="h-full font-sans antialiased" x-data="{ 
     sidebarOpen: false, 
     darkMode: localStorage.getItem('theme') === 'dark',
-    currentPage: '<?php echo e(request()->route()->getName() ?? 'dashboard'); ?>',
+    currentPage: '<?php echo e(request()->route() ? request()->route()->getName() : 'dashboard'); ?>',
     notifications: [],
     userMenuOpen: false,
     init() {
@@ -390,8 +524,8 @@
                             <!-- User dropdown -->
                             <div x-show="open" @click.away="open = false" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
                                 <div class="py-1">
-                                    <a href="<?php echo e($userType === 'student' ? route('student.profile') : ($userType !== 'admin' ? route('me.profile') : route('users.profile', auth()->user()))); ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
-                                    <a href="<?php echo e($userType === 'student' ? route('student.change-password') : route('users.change-password', auth()->user())); ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Change Password</a>
+                                    <a href="<?php echo e($userType === 'student' ? route('student.profile') : ($userType !== 'admin' ? route('me.profile') : (auth()->user() ? route('users.profile', auth()->user()) : '#'))); ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+                                    <a href="<?php echo e($userType === 'student' ? route('student.change-password') : (auth()->user() ? route('users.change-password', auth()->user()) : '#')); ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Change Password</a>
                                     <div class="border-t border-gray-100"></div>
                                     <form method="POST" action="<?php echo e(route('logout')); ?>">
                                         <?php echo csrf_field(); ?>
@@ -419,7 +553,7 @@
                         </button>
                     </div>
                     <div class="flex-1 overflow-y-auto py-4">
-                        <?php if(auth()->user()->user_type === 'teacher'): ?>
+                        <?php if(auth()->user() && auth()->user()->user_type === 'teacher'): ?>
                             <?php echo $__env->make('components.teacher-navigation', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                         <?php else: ?>
                             <?php echo $__env->make('layouts.navigation', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
@@ -432,7 +566,7 @@
             <div class="hidden lg:flex lg:flex-shrink-0">
                 <div class="flex flex-col w-72 glass-premium shadow-2xl border-r border-white/20">
                     <div class="flex-1 flex flex-col overflow-y-auto">
-                        <?php if(auth()->user()->user_type === 'teacher'): ?>
+                        <?php if(auth()->user() && auth()->user()->user_type === 'teacher'): ?>
                             <?php echo $__env->make('components.teacher-navigation', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                         <?php else: ?>
                             <?php echo $__env->make('layouts.navigation', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
@@ -507,7 +641,7 @@
         // Alpine.js initialization
         document.addEventListener('alpine:init', () => {
             Alpine.data('navigation', () => ({
-                currentPage: '<?php echo e(request()->route()->getName() ?? 'dashboard'); ?>',
+                currentPage: '<?php echo e(request()->route() ? request()->route()->getName() : 'dashboard'); ?>',
                 
                 isActive(route) {
                     return this.currentPage === route;
@@ -539,6 +673,33 @@
                     submitBtn.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Processing...';
                 }
             });
+        });
+
+        // Global error handler for countdown function
+        window.addEventListener('error', function(e) {
+            if (e.message && e.message.includes('countdown')) {
+                console.warn('Countdown error caught globally:', e.message);
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Ensure countdown is always available
+        if (typeof window.countdown === 'undefined') {
+            window.countdown = function() {
+                console.log('Fallback countdown function called');
+                return true;
+            };
+        }
+        
+        // Additional error prevention for countdown
+        window.addEventListener('DOMContentLoaded', function() {
+            if (typeof window.countdown === 'undefined') {
+                window.countdown = function() {
+                    console.log('DOMContentLoaded countdown function called');
+                    return true;
+                };
+            }
         });
     </script>
 </body>

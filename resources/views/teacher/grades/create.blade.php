@@ -2,8 +2,19 @@
 
 @section('content')
 <div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Enter Student Grades</h1>
+        <div class="flex space-x-4">
+            <a href="{{ route('teacher.grades.index') }}" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+                Back to Grades
+            </a>
+            <a href="{{ route('teacher.grades.exam-questions') }}" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+                Exam Questions
+            </a>
+        </div>
+    </div>
+    
     <div class="max-w-4xl mx-auto bg-white rounded-lg shadow p-6">
-        <h1 class="text-2xl font-bold text-gray-900 mb-6">Enter Student Grades</h1>
         <form method="POST" action="{{ route('teacher.grades.store') }}" class="space-y-6">
             @csrf
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -20,7 +31,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Subject</label>
-                    <select name="subject_id" id="subject_id" class="mt-1 block w-full border-gray-300 rounded-md" required>
+                    <select name="subject_id" id="subject_id" class="mt-1 block w-full border-gray-300 rounded-md" required onchange="onSubjectChange(this)">
                         <option value="">Select subject</option>
                         @foreach($subjects as $subject)
                             <option value="{{ $subject->id }}" {{ (isset($selectedSubjectId) && (int)$selectedSubjectId === $subject->id) ? 'selected' : '' }}>
@@ -109,9 +120,33 @@
 </div>
 <script>
     function onClassChange(sel){
+        const classId = sel.value;
+        const subjectSelect = document.getElementById('subject_id');
+        const studentSelect = document.getElementById('student_id');
+        
+        // Clear subject and student dropdowns
+        subjectSelect.innerHTML = '<option value="">Select subject</option>';
+        studentSelect.innerHTML = '';
+        
+        if (classId) {
+            // Load subjects for selected class
+            fetch(`{{ route('teacher.grades.subjects') }}?class_id=${classId}`)
+                .then(response => response.json())
+                .then(data => {
+                    data.subjects.forEach(subject => {
+                        const option = document.createElement('option');
+                        option.value = subject.id;
+                        option.textContent = subject.name;
+                        subjectSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error loading subjects:', error));
+        }
+        
+        // Update URL parameters
         const params = new URLSearchParams(window.location.search);
-        if (sel && sel.value){
-            params.set('class_id', sel.value);
+        if (classId) {
+            params.set('class_id', classId);
         } else {
             params.delete('class_id');
         }
@@ -136,11 +171,25 @@
         }
     }
 
+    function onSubjectChange(sel) {
+        const classId = document.querySelector('select[name="class_id"]').value;
+        const subjectId = sel.value;
+        const studentSelect = document.getElementById('student_id');
+        
+        // Clear student dropdown
+        studentSelect.innerHTML = '';
+        
+        if (classId && subjectId) {
+            loadEligibleStudents();
+        }
+    }
+
     function loadEligibleStudents() {
         const classId = document.querySelector('select[name="class_id"]').value;
         const subjectId = document.getElementById('subject_id').value;
         if (!classId || !subjectId) return;
-        fetch(`{{ route('teacher.grades.eligible') }}?class_id=${classId}&subject_id=${subjectId}`)
+        
+        fetch(`{{ route('teacher.grades.students') }}?class_id=${classId}&subject_id=${subjectId}`)
             .then(r => r.json())
             .then(resp => {
                 const select = document.getElementById('student_id');
@@ -151,6 +200,10 @@
                     opt.textContent = `${s.name} (${s.class})`;
                     select.appendChild(opt);
                 });
+                
+                // Enable student search and select
+                document.getElementById('student_search').disabled = false;
+                select.disabled = false;
             })
             .catch(() => {});
     }

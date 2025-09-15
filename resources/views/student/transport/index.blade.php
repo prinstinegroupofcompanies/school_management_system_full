@@ -176,9 +176,9 @@
                     @foreach($routes as $route)
                     <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                         <div class="flex items-start justify-between mb-3">
-                            <h4 class="text-lg font-medium text-gray-900">{{ $route['name'] }}</h4>
+                            <h4 class="text-lg font-medium text-gray-900">{{ $route->route_name }}</h4>
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                {{ ucfirst($route['status']) }}
+                                {{ ucfirst($route->status) }}
                             </span>
                         </div>
                         
@@ -187,34 +187,46 @@
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                Pickup: {{ $route['pickup_time'] }}
+                                Pickup: {{ $route->morning_pickup_time }}
                             </div>
                             <div class="flex items-center text-sm text-gray-600">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                Dropoff: {{ $route['dropoff_time'] }}
+                                Dropoff: {{ $route->morning_dropoff_time }}
                             </div>
                             <div class="flex items-center text-sm text-gray-600">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                 </svg>
-                                Driver: {{ $route['driver'] }}
+                                Driver: Not Available
                             </div>
                             <div class="flex items-center text-sm text-gray-600">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path>
                                 </svg>
-                                Vehicle: {{ $route['vehicle'] }}
+                                Vehicle: {{ $route->route_code }}
                             </div>
+                            @if($route->fare_amount)
+                            <div class="flex items-center text-sm text-gray-600">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                </svg>
+                                Fare: ${{ number_format($route->fare_amount, 2) }}
+                            </div>
+                            @endif
                         </div>
                         
                         <div class="flex items-center justify-between">
                             <div class="text-sm text-gray-500">
-                                {{ $route['current_passengers'] }}/{{ $route['capacity'] }} passengers
+                                {{ $route->current_capacity }}/{{ $route->max_capacity }} passengers
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="bg-blue-600 h-2 rounded-full" style="width: {{ ($route['current_passengers'] / $route['capacity']) * 100 }}%"></div>
+                                @php
+                                    $capacity = $route->max_capacity ?? 1;
+                                    $percentage = $capacity > 0 ? ($route->current_capacity / $capacity) * 100 : 0;
+                                @endphp
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: {{ $percentage }}%"></div>
                             </div>
                         </div>
                     </div>

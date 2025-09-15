@@ -17,18 +17,26 @@ class Scholarship extends Model
         'application_deadline', 'start_date', 'end_date', 'max_recipients',
         'current_recipients', 'is_active', 'is_merit_based', 'is_need_based',
         'is_sports_based', 'is_arts_based', 'is_academic_based',
-        'created_by', 'notes'
+        'is_community_based', 'created_by', 'notes'
     ];
 
     protected $casts = [
-        'amount' => 'decimal:2', 'percentage' => 'decimal:2',
-        'max_amount' => 'decimal:2', 'min_amount' => 'decimal:2',
-        'application_deadline' => 'date', 'start_date' => 'date',
-        'end_date' => 'date', 'max_recipients' => 'integer',
-        'current_recipients' => 'integer', 'is_active' => 'boolean',
-        'is_merit_based' => 'boolean', 'is_need_based' => 'boolean',
-        'is_sports_based' => 'boolean', 'is_arts_based' => 'boolean',
-        'is_academic_based' => 'boolean'
+        'amount' => 'decimal:2', 
+        'percentage' => 'decimal:2',
+        'max_amount' => 'decimal:2', 
+        'min_amount' => 'decimal:2',
+        'application_deadline' => 'date', 
+        'start_date' => 'date',
+        'end_date' => 'date', 
+        'max_recipients' => 'integer',
+        'current_recipients' => 'integer', 
+        'is_active' => 'boolean',
+        'is_merit_based' => 'boolean', 
+        'is_need_based' => 'boolean',
+        'is_sports_based' => 'boolean', 
+        'is_arts_based' => 'boolean',
+        'is_academic_based' => 'boolean',
+        'is_community_based' => 'boolean'
     ];
 
     public function applications(): HasMany
@@ -245,81 +253,57 @@ class Scholarship extends Model
         return 'Unknown'; // You can add relationship if needed
     }
 
-    public function getIsActiveAttribute(): bool
-    {
-        return $this->is_active;
-    }
-
-    public function getIsMeritBasedAttribute(): bool
-    {
-        return $this->is_merit_based;
-    }
-
-    public function getIsNeedBasedAttribute(): bool
-    {
-        return $this->is_need_based;
-    }
-
-    public function getIsSportsBasedAttribute(): bool
-    {
-        return $this->is_sports_based;
-    }
-
-    public function getIsArtsBasedAttribute(): bool
-    {
-        return $this->is_arts_based;
-    }
-
-    public function getIsAcademicBasedAttribute(): bool
-    {
-        return $this->is_academic_based;
-    }
 
     public function getIsAvailableAttribute(): bool
     {
-        return $this->current_recipients < $this->max_recipients;
+        return $this->getAttribute('current_recipients') < $this->getAttribute('max_recipients');
     }
 
     public function getIsFullAttribute(): bool
     {
-        return $this->current_recipients >= $this->max_recipients;
+        return $this->getAttribute('current_recipients') >= $this->getAttribute('max_recipients');
     }
 
     public function getIsExpiredAttribute(): bool
     {
-        return $this->end_date && $this->end_date < now();
+        $endDate = $this->getAttribute('end_date');
+        return $endDate && $endDate < now();
     }
 
     public function getIsExpiringSoonAttribute(): bool
     {
-        if (!$this->end_date || $this->is_expired) return false;
+        $endDate = $this->getAttribute('end_date');
+        if (!$endDate || $this->is_expired) return false;
         
         $expiryDate = now()->addDays(30);
-        return $this->end_date <= $expiryDate;
+        return $endDate <= $expiryDate;
     }
 
     public function getIsDeadlinePassedAttribute(): bool
     {
-        return $this->application_deadline && $this->application_deadline < now();
+        $deadline = $this->getAttribute('application_deadline');
+        return $deadline && $deadline < now();
     }
 
     public function getIsDeadlineApproachingAttribute(): bool
     {
-        if (!$this->application_deadline || $this->is_deadline_passed) return false;
+        $deadline = $this->getAttribute('application_deadline');
+        if (!$deadline || $this->is_deadline_passed) return false;
         
         $approachingDate = now()->addDays(7);
-        return $this->application_deadline <= $approachingDate;
+        return $deadline <= $approachingDate;
     }
 
     public function getAvailableSlotsAttribute(): int
     {
-        return max(0, $this->max_recipients - $this->current_recipients);
+        return max(0, $this->getAttribute('max_recipients') - $this->getAttribute('current_recipients'));
     }
 
     public function getOccupancyPercentageAttribute(): float
     {
-        if ($this->max_recipients == 0) return 0;
-        return round(($this->current_recipients / $this->max_recipients) * 100, 2);
+        $maxRecipients = $this->getAttribute('max_recipients');
+        if ($maxRecipients == 0) return 0;
+        return round(($this->getAttribute('current_recipients') / $maxRecipients) * 100, 2);
     }
 
     public function getOccupancyColorAttribute(): string
@@ -334,23 +318,26 @@ class Scholarship extends Model
 
     public function getDaysUntilDeadlineAttribute(): int
     {
-        if (!$this->application_deadline || $this->is_deadline_passed) return 0;
-        return now()->diffInDays($this->application_deadline, false);
+        $deadline = $this->getAttribute('application_deadline');
+        if (!$deadline || $this->is_deadline_passed) return 0;
+        return now()->diffInDays($deadline, false);
     }
 
     public function getDaysUntilStartAttribute(): int
     {
-        if (!$this->start_date) return 0;
+        $startDate = $this->getAttribute('start_date');
+        if (!$startDate) return 0;
         
-        if ($this->start_date < now()) return 0;
+        if ($startDate < now()) return 0;
         
-        return now()->diffInDays($this->start_date, false);
+        return now()->diffInDays($startDate, false);
     }
 
     public function getDaysUntilEndAttribute(): int
     {
-        if (!$this->end_date || $this->is_expired) return 0;
-        return now()->diffInDays($this->end_date, false);
+        $endDate = $this->getAttribute('end_date');
+        if (!$endDate || $this->is_expired) return 0;
+        return now()->diffInDays($endDate, false);
     }
 
     public function getDaysSinceCreationAttribute(): int
@@ -365,15 +352,18 @@ class Scholarship extends Model
 
     public function getScholarshipSummaryAttribute(): string
     {
-        $summary = $this->name . ' (' . $this->code . ')';
+        $summary = $this->getAttribute('name') . ' (' . $this->getAttribute('code') . ')';
         
-        if ($this->type) {
+        $type = $this->getAttribute('type');
+        if ($type) {
             $summary .= ' - ' . $this->type_display;
         }
         
-        if ($this->amount) {
+        $amount = $this->getAttribute('amount');
+        $percentage = $this->getAttribute('percentage');
+        if ($amount) {
             $summary .= ' - ' . $this->amount_display;
-        } elseif ($this->percentage) {
+        } elseif ($percentage) {
             $summary .= ' - ' . $this->percentage_display;
         }
         
@@ -390,24 +380,29 @@ class Scholarship extends Model
     {
         $summary = [];
         
-        if ($this->amount) {
+        $amount = $this->getAttribute('amount');
+        if ($amount) {
             $summary[] = 'Amount: ' . $this->amount_display;
         }
         
-        if ($this->percentage) {
+        $percentage = $this->getAttribute('percentage');
+        if ($percentage) {
             $summary[] = 'Percentage: ' . $this->percentage_display;
         }
         
-        if ($this->min_amount) {
+        $minAmount = $this->getAttribute('min_amount');
+        if ($minAmount) {
             $summary[] = 'Min: ' . $this->min_amount_display;
         }
         
-        if ($this->max_amount) {
+        $maxAmount = $this->getAttribute('max_amount');
+        if ($maxAmount) {
             $summary[] = 'Max: ' . $this->max_amount_display;
         }
         
-        if ($this->currency) {
-            $summary[] = 'Currency: ' . $this->currency;
+        $currency = $this->getAttribute('currency');
+        if ($currency) {
+            $summary[] = 'Currency: ' . $currency;
         }
         
         return empty($summary) ? 'No financial details' : implode(' | ', $summary);
@@ -417,15 +412,18 @@ class Scholarship extends Model
     {
         $summary = [];
         
-        if ($this->application_deadline) {
+        $deadline = $this->getAttribute('application_deadline');
+        if ($deadline) {
             $summary[] = 'Deadline: ' . $this->application_deadline_display;
         }
         
-        if ($this->start_date) {
+        $startDate = $this->getAttribute('start_date');
+        if ($startDate) {
             $summary[] = 'Start: ' . $this->start_date_display;
         }
         
-        if ($this->end_date) {
+        $endDate = $this->getAttribute('end_date');
+        if ($endDate) {
             $summary[] = 'End: ' . $this->end_date_display;
         }
         
@@ -447,12 +445,12 @@ class Scholarship extends Model
 
     public function canBeEdited(): bool
     {
-        return $this->is_active && $this->current_recipients === 0;
+        return $this->is_active && $this->getAttribute('current_recipients') === 0;
     }
 
     public function canBeDeleted(): bool
     {
-        return $this->current_recipients === 0;
+        return $this->getAttribute('current_recipients') === 0;
     }
 
     public function canBeActivated(): bool
@@ -462,7 +460,7 @@ class Scholarship extends Model
 
     public function canBeDeactivated(): bool
     {
-        return $this->is_active && $this->current_recipients === 0;
+        return $this->is_active && $this->getAttribute('current_recipients') === 0;
     }
 
     public function canAcceptApplications(): bool
@@ -477,7 +475,7 @@ class Scholarship extends Model
 
     public function canRemoveRecipient(): bool
     {
-        return $this->current_recipients > 0;
+        return $this->getAttribute('current_recipients') > 0;
     }
 
     public function activate(): void

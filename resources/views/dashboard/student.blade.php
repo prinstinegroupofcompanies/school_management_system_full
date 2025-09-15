@@ -216,6 +216,57 @@
             </div>
         </div>
 
+        <!-- Academic Performance -->
+        <div class="bg-white shadow rounded-lg mb-8">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Academic Performance</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <a href="{{ route('student.exams.marks') }}" class="flex items-center justify-between p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                        <div class="flex items-center">
+                            <svg class="w-6 h-6 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900">View Grades</h4>
+                                <p class="text-xs text-gray-500">Check your academic performance</p>
+                            </div>
+                        </div>
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
+                    <a href="{{ route('student.attendance.index') }}" class="flex items-center justify-between p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+                        <div class="flex items-center">
+                            <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900">My Attendance</h4>
+                                <p class="text-xs text-gray-500">Track your attendance record</p>
+                            </div>
+                        </div>
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
+                    <a href="{{ route('student.finance.index') }}" class="flex items-center justify-between p-4 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors">
+                        <div class="flex items-center">
+                            <svg class="w-6 h-6 text-yellow-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                            </svg>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900">Fee Status</h4>
+                                <p class="text-xs text-gray-500">Check payment status</p>
+                            </div>
+                        </div>
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <!-- Quick Actions -->
         <div class="bg-white shadow rounded-lg mb-8">
             <div class="px-4 py-5 sm:p-6">
@@ -255,6 +306,98 @@
             </div>
         </div>
 
+        <!-- Library, Transport & Hostel Services -->
+        <div class="bg-white shadow rounded-lg mb-8">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Campus Services</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Library Section -->
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-center mb-3">
+                            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 5.477 5.754 5 7.5 5s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 19 16.5 19c-1.746 0-3.332-.477-4.5-1.253"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-medium text-gray-900">Library</h4>
+                                <p class="text-sm text-gray-500">Access books and resources</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 mb-4">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">Books Available:</span>
+                                <span class="font-medium">{{ $libraryStats['available_books'] ?? 0 }}</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">My Borrowed:</span>
+                                <span class="font-medium">{{ $libraryStats['my_borrowed'] ?? 0 }}</span>
+                            </div>
+                        </div>
+                        <a href="{{ route('student.library.index') }}" class="w-full bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 text-center block transition-colors">
+                            Visit Library
+                        </a>
+                    </div>
+
+                    <!-- Transport Section -->
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-center mb-3">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-medium text-gray-900">Transport</h4>
+                                <p class="text-sm text-gray-500">Bus routes and schedules</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 mb-4">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">Active Routes:</span>
+                                <span class="font-medium">{{ $transportStats['active_routes'] ?? 0 }}</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">My Route:</span>
+                                <span class="font-medium">{{ $myRoute ? 'Assigned' : 'Not Assigned' }}</span>
+                            </div>
+                        </div>
+                        <a href="{{ route('student.transport.index') }}" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-center block transition-colors">
+                            View Transport
+                        </a>
+                    </div>
+
+                    <!-- Hostel Section -->
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-center mb-3">
+                            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-medium text-gray-900">Hostel</h4>
+                                <p class="text-sm text-gray-500">Accommodation services</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 mb-4">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">Available Rooms:</span>
+                                <span class="font-medium">{{ $hostelStats['total_rooms'] ?? 0 }}</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">My Room:</span>
+                                <span class="font-medium">{{ $myRoom ? 'Assigned' : 'Not Assigned' }}</span>
+                            </div>
+                        </div>
+                        <a href="{{ route('student.hostel.index') }}" class="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-center block transition-colors">
+                            View Hostel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Recent Activities -->
         <div class="bg-white shadow rounded-lg">
             <div class="px-4 py-5 sm:p-6">
@@ -280,7 +423,7 @@
                                             <p class="text-sm text-gray-500">{{ $activity['description'] }}</p>
                                         </div>
                                         <div class="text-right text-sm whitespace-nowrap text-gray-500">
-                                            <time>{{ $activity['created_at']->diffForHumans() }}</time>
+                                            <time>{{ $activity['created_at'] ? $activity['created_at']->diffForHumans() : 'Recently' }}</time>
                                         </div>
                                     </div>
                                 </div>

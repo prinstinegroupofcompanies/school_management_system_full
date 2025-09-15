@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Student;
+use App\Models\Transport;
+use App\Models\TransportRoute;
 
 class TransportController extends Controller
 {
@@ -17,60 +19,30 @@ class TransportController extends Controller
             abort(403, 'Student record not found');
         }
 
-        // Mock transport data for students
-        $routes = [
-            [
-                'id' => 1,
-                'name' => 'Route A - Downtown',
-                'pickup_time' => '07:30 AM',
-                'dropoff_time' => '03:30 PM',
-                'driver' => 'John Smith',
-                'vehicle' => 'Bus #001',
-                'capacity' => 50,
-                'current_passengers' => 35,
-                'status' => 'active',
-            ],
-            [
-                'id' => 2,
-                'name' => 'Route B - Suburbs',
-                'pickup_time' => '07:45 AM',
-                'dropoff_time' => '03:45 PM',
-                'driver' => 'Jane Doe',
-                'vehicle' => 'Bus #002',
-                'capacity' => 45,
-                'current_passengers' => 42,
-                'status' => 'active',
-            ],
-            [
-                'id' => 3,
-                'name' => 'Route C - East Side',
-                'pickup_time' => '08:00 AM',
-                'dropoff_time' => '04:00 PM',
-                'driver' => 'Mike Johnson',
-                'vehicle' => 'Bus #003',
-                'capacity' => 40,
-                'current_passengers' => 28,
-                'status' => 'active',
-            ],
-        ];
+        // Get real transport data
+        $routes = TransportRoute::where('status', 'active')
+            ->where('is_active', true)
+            ->latest()
+            ->take(10)
+            ->get();
 
-        $myRoute = [
-            'id' => 1,
-            'name' => 'Route A - Downtown',
-            'pickup_location' => '123 Main Street',
-            'pickup_time' => '07:30 AM',
-            'dropoff_time' => '03:30 PM',
-            'driver' => 'John Smith',
-            'driver_phone' => '+1234567890',
-            'vehicle' => 'Bus #001',
-            'status' => 'active',
-        ];
+        // Get student's assigned route if they have one
+        $myRoute = null;
+        if ($student->transport_route_id) {
+            $myRoute = TransportRoute::find($student->transport_route_id);
+        }
+
+        // Calculate real transport statistics
+        $totalRoutes = TransportRoute::count();
+        $activeRoutes = TransportRoute::where('status', 'active')->where('is_active', true)->count();
+        $totalVehicles = Transport::where('status', 'active')->count();
+        $totalStudents = Student::whereNotNull('transport_route_id')->count();
 
         $transportStats = [
-            'total_routes' => 8,
-            'active_routes' => 6,
-            'total_vehicles' => 12,
-            'total_students' => 450,
+            'total_routes' => $totalRoutes,
+            'active_routes' => $activeRoutes,
+            'total_vehicles' => $totalVehicles,
+            'total_students' => $totalStudents,
         ];
 
         return view('student.transport.index', compact('routes', 'myRoute', 'transportStats'));
@@ -85,33 +57,10 @@ class TransportController extends Controller
             abort(403, 'Student record not found');
         }
 
-        // Mock all available routes
-        $routes = [
-            [
-                'id' => 1,
-                'name' => 'Route A - Downtown',
-                'pickup_time' => '07:30 AM',
-                'dropoff_time' => '03:30 PM',
-                'driver' => 'John Smith',
-                'vehicle' => 'Bus #001',
-                'capacity' => 50,
-                'current_passengers' => 35,
-                'status' => 'active',
-                'pickup_locations' => ['123 Main Street', '456 Oak Avenue', '789 Pine Road'],
-            ],
-            [
-                'id' => 2,
-                'name' => 'Route B - Suburbs',
-                'pickup_time' => '07:45 AM',
-                'dropoff_time' => '03:45 PM',
-                'driver' => 'Jane Doe',
-                'vehicle' => 'Bus #002',
-                'capacity' => 45,
-                'current_passengers' => 42,
-                'status' => 'active',
-                'pickup_locations' => ['321 Elm Street', '654 Maple Drive', '987 Cedar Lane'],
-            ],
-        ];
+        // Get real available routes
+        $routes = TransportRoute::where('status', 'active')
+            ->where('is_active', true)
+            ->paginate(20);
 
         return view('student.transport.routes', compact('routes'));
     }

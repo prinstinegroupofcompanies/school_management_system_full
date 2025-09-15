@@ -88,7 +88,7 @@ class StudentController extends Controller
             ->map(function($a) {
                 return [
                     'description' => 'Attendance: ' . ucfirst($a->status) . ' on ' . \Carbon\Carbon::parse($a->date)->format('M d, Y'),
-                    'created_at' => $a->date,
+                    'created_at' => $a->date ? \Carbon\Carbon::parse($a->date) : now(),
                 ];
             });
 
@@ -100,11 +100,47 @@ class StudentController extends Controller
             ->map(function($p) {
                 return [
                     'description' => 'Fee payment of $' . number_format($p->amount_paid, 2),
-                    'created_at' => $p->payment_date,
+                    'created_at' => $p->payment_date ? \Carbon\Carbon::parse($p->payment_date) : now(),
                 ];
             });
 
         $recentActivities = $recentAttendances->merge($recentPayments)->sortByDesc('created_at')->take(5);
+
+        // Get library statistics
+        $libraryStats = [
+            'total_books' => \App\Models\Book::count(),
+            'available_books' => \App\Models\Book::where('status', 'available')->count(),
+            'borrowed_books' => \App\Models\BookIssue::where('status', 'borrowed')->count(),
+            'my_borrowed' => \App\Models\BookIssue::where('student_id', $student->id)->where('status', 'borrowed')->count(),
+        ];
+
+        // Get transport statistics
+        $transportStats = [
+            'total_routes' => \App\Models\TransportRoute::count(),
+            'active_routes' => \App\Models\TransportRoute::where('status', 'active')->count(),
+            'total_vehicles' => \App\Models\Transport::where('status', 'active')->count(),
+            'total_students' => \App\Models\Student::whereNotNull('transport_route_id')->count(),
+        ];
+
+        // Get student's transport route
+        $myRoute = null;
+        if ($student->transport_route_id) {
+            $myRoute = \App\Models\TransportRoute::with('transport')->find($student->transport_route_id);
+        }
+
+        // Get hostel statistics
+        $hostelStats = [
+            'total_hostels' => \App\Models\Hostel::where('status', 'active')->count(),
+            'total_rooms' => \App\Models\HostelRoom::where('is_active', true)->count(),
+            'total_capacity' => \App\Models\HostelRoom::where('is_active', true)->sum('capacity'),
+            'current_occupancy' => \App\Models\HostelRoom::where('is_active', true)->sum('current_occupancy'),
+        ];
+
+        // Get student's hostel room
+        $myRoom = null;
+        if ($student->hostel_room_id) {
+            $myRoom = \App\Models\HostelRoom::with('hostel')->find($student->hostel_room_id);
+        }
 
         // Calculate real statistics
         $stats = [
@@ -123,7 +159,12 @@ class StudentController extends Controller
             'feeStatus',
             'upcomingExams',
             'recentActivities',
-            'session'
+            'session',
+            'libraryStats',
+            'transportStats',
+            'myRoute',
+            'hostelStats',
+            'myRoom'
         ));
     }
 

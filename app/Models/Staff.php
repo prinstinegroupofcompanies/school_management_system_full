@@ -20,32 +20,40 @@ class Staff extends Model
         'specialization',
         'experience_years',
         'joining_date',
+        'contract_start_date',
         'contract_end_date',
-        'salary',
+        'employment_type',
+        'employment_status',
+        'basic_salary',
+        'salary_currency',
         'bank_name',
-        'bank_account_no',
-        'emergency_contact',
-        'emergency_contact_relation',
-        'is_active',
+        'bank_account_number',
+        'bank_branch',
+        'tax_identification_number',
+        'social_security_number',
+        'emergency_contact_name',
+        'emergency_contact_phone',
+        'emergency_contact_relationship',
+        'emergency_contact_address',
+        'documents',
+        'certifications',
+        'skills',
+        'bio',
+        'achievements',
+        'notes',
         'profile_photo',
         'signature',
-        'bio',
-        'social_media_links',
-        'awards_achievements',
-        'certifications',
-        'languages_known',
-        'interests_hobbies',
     ];
 
     protected $casts = [
         'joining_date' => 'date',
+        'contract_start_date' => 'date',
         'contract_end_date' => 'date',
-        'salary' => 'decimal:2',
+        'basic_salary' => 'decimal:2',
         'experience_years' => 'integer',
-        'is_active' => 'boolean',
-        'social_media_links' => 'array',
-        'languages_known' => 'array',
-        'interests_hobbies' => 'array',
+        'documents' => 'array',
+        'certifications' => 'array',
+        'skills' => 'array',
     ];
 
     public function user(): BelongsTo
@@ -63,19 +71,30 @@ class Staff extends Model
         return $this->belongsTo(Designation::class);
     }
 
-    public function attendances(): HasMany
-    {
-        return $this->hasMany(StaffAttendance::class);
-    }
+    // Note: StaffAttendance and LeaveRequest models not implemented yet
+    // public function attendances(): HasMany
+    // {
+    //     return $this->hasMany(StaffAttendance::class);
+    // }
 
-    public function leaves(): HasMany
-    {
-        return $this->hasMany(LeaveRequest::class);
-    }
+    // public function leaves(): HasMany
+    // {
+    //     return $this->hasMany(LeaveRequest::class);
+    // }
 
     public function payrolls(): HasMany
     {
         return $this->hasMany(Payroll::class);
+    }
+
+    public function performances(): HasMany
+    {
+        return $this->hasMany(StaffPerformance::class);
+    }
+
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(StaffSchedule::class);
     }
 
     public function getFullNameAttribute(): string
@@ -90,17 +109,17 @@ class Staff extends Model
 
     public function getPhoneAttribute(): string
     {
-        return $this->user->phone;
+        return $this->user->phone ?? '';
     }
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where('employment_status', 'active');
     }
 
     public function scopeInactive($query)
     {
-        return $query->where('is_active', false);
+        return $query->where('employment_status', '!=', 'active');
     }
 
     public function scopeByDepartment($query, $departmentId)

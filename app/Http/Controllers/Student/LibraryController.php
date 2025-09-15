@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Student;
+use App\Models\Book;
+use App\Models\BookIssue;
 
 class LibraryController extends Controller
 {
@@ -17,53 +19,30 @@ class LibraryController extends Controller
             abort(403, 'Student record not found');
         }
 
-        // Mock library data for students
-        $books = [
-            [
-                'id' => 1,
-                'title' => 'Mathematics for Grade 10',
-                'author' => 'Dr. John Smith',
-                'isbn' => '978-1234567890',
-                'category' => 'Mathematics',
-                'available' => true,
-                'due_date' => null,
-            ],
-            [
-                'id' => 2,
-                'title' => 'English Literature',
-                'author' => 'Jane Doe',
-                'isbn' => '978-0987654321',
-                'category' => 'English',
-                'available' => false,
-                'due_date' => '2024-09-15',
-            ],
-            [
-                'id' => 3,
-                'title' => 'Science Fundamentals',
-                'author' => 'Dr. Robert Johnson',
-                'isbn' => '978-1122334455',
-                'category' => 'Science',
-                'available' => true,
-                'due_date' => null,
-            ],
-        ];
+        // Get real library data
+        $books = Book::where('status', 'available')
+            ->with('category')
+            ->latest()
+            ->take(10)
+            ->get();
 
-        $borrowedBooks = [
-            [
-                'id' => 2,
-                'title' => 'English Literature',
-                'author' => 'Jane Doe',
-                'borrow_date' => '2024-08-15',
-                'due_date' => '2024-09-15',
-                'status' => 'borrowed',
-            ],
-        ];
+        // Get student's borrowed books
+        $borrowedBooks = BookIssue::where('student_id', $student->id)
+            ->where('status', 'borrowed')
+            ->with('book')
+            ->latest()
+            ->get();
 
+        // Calculate real library statistics
+        $totalBooks = Book::count();
+        $availableBooks = Book::where('status', 'available')->count();
+        $borrowedBooksCount = BookIssue::where('status', 'borrowed')->count();
+        
         $libraryStats = [
-            'total_books' => 1500,
-            'available_books' => 1200,
-            'borrowed_books' => 300,
-            'my_borrowed' => count($borrowedBooks),
+            'total_books' => $totalBooks,
+            'available_books' => $availableBooks,
+            'borrowed_books' => $borrowedBooksCount,
+            'my_borrowed' => $borrowedBooks->count(),
         ];
 
         return view('student.library.index', compact('books', 'borrowedBooks', 'libraryStats'));
@@ -80,25 +59,15 @@ class LibraryController extends Controller
 
         $query = $request->get('query', '');
         
-        // Mock search results
-        $books = [
-            [
-                'id' => 1,
-                'title' => 'Mathematics for Grade 10',
-                'author' => 'Dr. John Smith',
-                'isbn' => '978-1234567890',
-                'category' => 'Mathematics',
-                'available' => true,
-            ],
-            [
-                'id' => 3,
-                'title' => 'Science Fundamentals',
-                'author' => 'Dr. Robert Johnson',
-                'isbn' => '978-1122334455',
-                'category' => 'Science',
-                'available' => true,
-            ],
-        ];
+        // Real search results
+        $books = Book::where('status', 'available')
+            ->where(function($q) use ($query) {
+                $q->where('title', 'like', "%{$query}%")
+                  ->orWhere('author', 'like', "%{$query}%")
+                  ->orWhere('isbn', 'like', "%{$query}%");
+            })
+            ->with('category')
+            ->paginate(20);
 
         return view('student.library.search', compact('books', 'query'));
     }

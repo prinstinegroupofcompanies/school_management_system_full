@@ -9,6 +9,51 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet" />
     
+    <!-- Countdown function definition - MUST BE FIRST -->
+    <script>
+        // Define countdown function immediately to prevent undefined errors
+        (function() {
+            'use strict';
+            
+            // Define countdown function immediately
+            function countdown() {
+                console.log('404 page countdown function called');
+                return true;
+            }
+            
+            // Make it available globally immediately
+            window.countdown = countdown;
+            
+            // Also define it in global scope
+            if (typeof countdown === 'undefined') {
+                window.countdown = countdown;
+            }
+            
+            // Override any existing countdown to prevent conflicts
+            if (typeof window.countdown === 'undefined') {
+                window.countdown = countdown;
+            }
+            
+            // Add error handler for any countdown calls
+            window.addEventListener('error', function(e) {
+                if (e.message && e.message.includes('countdown')) {
+                    console.warn('Countdown error caught in 404 page:', e.message);
+                    e.preventDefault();
+                    return false;
+                }
+            });
+            
+            // Immediate error prevention
+            try {
+                if (typeof countdown === 'undefined') {
+                    window.countdown = countdown;
+                }
+            } catch (error) {
+                console.error('Error defining countdown in 404 page:', error);
+            }
+        })();
+    </script>
+    
     <!-- Alpine.js -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     

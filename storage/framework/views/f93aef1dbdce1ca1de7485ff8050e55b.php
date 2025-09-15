@@ -83,6 +83,126 @@
     <?php endif; ?>
 
     <?php if($userType === 'admin'): ?>
+    <!-- Staff Management -->
+    <div x-data="{ open: <?php echo e(request()->routeIs('admin.staff.*') ? 'true' : 'false'); ?> }">
+        <button @click="open = !open"
+                class="group w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('admin.staff.*') ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'); ?>">
+            <div class="flex items-center">
+                <svg class="mr-3 h-5 w-5 <?php echo e(request()->routeIs('admin.staff.*') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'); ?>" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Staff Management
+            </div>
+            <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+        </button>
+        <div x-show="open" x-transition class="ml-4 space-y-1">
+            <a href="<?php echo e(route('admin.staff.index')); ?>" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('admin.staff.index') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'); ?>">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                All Staff
+            </a>
+            <a href="<?php echo e(route('admin.staff.performance')); ?>" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('admin.staff.performance') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'); ?>">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Performance
+            </a>
+            <a href="<?php echo e(route('admin.staff.schedules')); ?>" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('admin.staff.schedules') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'); ?>">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 19h14a2 2 0 002-2v-6H3v6a2 2 0 002 2z" />
+                </svg>
+                Schedules
+            </a>
+            <a href="<?php echo e(route('admin.staff.payroll')); ?>" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('admin.staff.payroll') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'); ?>">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                </svg>
+                Payroll
+            </a>
+        </div>
+    </div>
+
+    <!-- Notifications & Alerts -->
+    <div x-data="{ open: <?php echo e(request()->routeIs('admin.notifications.*') ? 'true' : 'false'); ?> }">
+        <button @click="open = !open"
+                class="group w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('admin.notifications.*') ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'); ?>">
+            <div class="flex items-center">
+                <svg class="mr-3 h-5 w-5 <?php echo e(request()->routeIs('admin.notifications.*') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'); ?>" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4.828 7l2.586 2.586a2 2 0 002.828 0L12 7M4.828 7H3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-1.828M4.828 7l2.586-2.586a2 2 0 012.828 0L12 7m8 0v10a2 2 0 01-2 2H7m5-5h5m-5 0l-2.5-2.5M12 12l2.5 2.5" />
+                </svg>
+                Notifications
+            </div>
+            <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+        </button>
+        <div x-show="open" x-transition class="ml-4 space-y-1">
+            <a href="<?php echo e(route('admin.notifications.index')); ?>" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('admin.notifications.index') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'); ?>">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                All Notifications
+            </a>
+            <a href="<?php echo e(route('admin.notifications.create')); ?>" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('admin.notifications.create') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'); ?>">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Send Notification
+            </a>
+            <a href="<?php echo e(route('admin.notifications.templates')); ?>" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('admin.notifications.templates') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'); ?>">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Templates
+            </a>
+        </div>
+    </div>
+
+    <!-- Reports & Analytics -->
+    <div x-data="{ open: <?php echo e(request()->routeIs('admin.reports.*') ? 'true' : 'false'); ?> }">
+        <button @click="open = !open"
+                class="group w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('admin.reports.*') ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'); ?>">
+            <div class="flex items-center">
+                <svg class="mr-3 h-5 w-5 <?php echo e(request()->routeIs('admin.reports.*') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'); ?>" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Reports
+            </div>
+            <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+        </button>
+        <div x-show="open" x-transition class="ml-4 space-y-1">
+            <a href="<?php echo e(route('admin.reports.index')); ?>" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('admin.reports.index') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'); ?>">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Dashboard
+            </a>
+            <a href="<?php echo e(route('admin.reports.academic')); ?>" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('admin.reports.academic') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'); ?>">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 5.477 5.754 5 7.5 5s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332-.477-4.5-1.253" />
+                </svg>
+                Academic
+            </a>
+            <a href="<?php echo e(route('finance.reports.financial')); ?>" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('finance.reports.financial') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'); ?>">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                </svg>
+                Financial
+            </a>
+            <a href="<?php echo e(route('admin.reports.attendance')); ?>" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('admin.reports.attendance') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'); ?>">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Attendance
+            </a>
+        </div>
+    </div>
+
     <!-- Finance Management -->
     <div x-data="{ open: <?php echo e(request()->routeIs('admin.finance_officers.*') || request()->routeIs('admin.fees.reports') ? 'true' : 'false'); ?> }">
         <button @click="open = !open"
@@ -166,24 +286,68 @@
                 <svg class="mr-3 h-5 w-5 <?php echo e(request()->routeIs('teacher.grades.*') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'); ?>" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-9 4h12M4 6h16" />
                 </svg>
-                Grades
+                Grade Management
             </div>
             <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
         </button>
         <div x-show="open" x-transition class="ml-4 space-y-1">
-            <a href="<?php echo e(route('teacher.grades.create')); ?>" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('teacher.grades.create') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'); ?>">
-                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Add Grades
-            </a>
             <a href="<?php echo e(route('teacher.grades.index')); ?>" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('teacher.grades.index') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'); ?>">
                 <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                My Grades
+                View Grades
+            </a>
+            <a href="<?php echo e(route('teacher.grades.create')); ?>" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('teacher.grades.create') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'); ?>">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Grade
+            </a>
+            <a href="<?php echo e(route('teacher.grades.bulk-create')); ?>" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('teacher.grades.bulk-create') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'); ?>">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+                Bulk Entry
+            </a>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    
+    <?php if($userType === 'parent'): ?>
+    <div x-data="{ open: <?php echo e(request()->routeIs('parent.grades.*') ? 'true' : 'false'); ?> }">
+        <button @click="open = !open" 
+                class="group w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('parent.grades.*') ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'); ?>">
+            <div class="flex items-center">
+                <svg class="mr-3 h-5 w-5 <?php echo e(request()->routeIs('parent.grades.*') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'); ?>" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-9 4h12M4 6h16" />
+                </svg>
+                Children's Grades
+            </div>
+            <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+        </button>
+        <div x-show="open" x-transition class="ml-4 space-y-1">
+            <a href="<?php echo e(route('parent.grades.index')); ?>" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('parent.grades.index') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'); ?>">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                All Grades
+            </a>
+            <a href="<?php echo e(route('parent.grades.progress')); ?>" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('parent.grades.progress') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'); ?>">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Academic Progress
+            </a>
+            <a href="<?php echo e(route('parent.grades.download')); ?>" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('parent.grades.download') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'); ?>">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download Reports
             </a>
         </div>
     </div>

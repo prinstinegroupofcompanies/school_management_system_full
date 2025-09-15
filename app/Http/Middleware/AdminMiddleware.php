@@ -17,11 +17,19 @@ class AdminMiddleware
     {
         // Check if user is authenticated
         if (!auth()->check()) {
-            return redirect()->route('login');
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Unauthenticated.'], 401);
+            }
+            
+            return redirect()->route('login')->with('error', 'Please log in to access this page.');
         }
 
         // Check if user is admin
         if (auth()->user()->user_type !== 'admin') {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Access denied. Admin privileges required.'], 403);
+            }
+            
             abort(403, 'Access denied. Admin privileges required.');
         }
 

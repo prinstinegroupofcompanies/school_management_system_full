@@ -60,6 +60,11 @@ class HostelRoom extends Model
         return $this->belongsTo(RoomType::class, 'room_type_id');
     }
 
+    public function hostel(): BelongsTo
+    {
+        return $this->belongsTo(Hostel::class);
+    }
+
     public function students(): HasMany
     {
         return $this->hasMany(Student::class, 'hostel_room_id');

@@ -17,6 +17,7 @@ class Subject extends Model
         'code',
         'description',
         'teacher_id',
+        'class_id',
         'level',
         'type',
         'hours_per_week',
