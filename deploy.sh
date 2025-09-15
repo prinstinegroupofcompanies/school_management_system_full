@@ -18,9 +18,21 @@ php artisan cache:clear
 echo "Regenerating autoload files..."
 composer dump-autoload --optimize
 
-# Run database migrations
+# Check database connection
+echo "Checking database connection..."
+php artisan migrate:status
+
+# Run database migrations with verbose output
 echo "Running database migrations..."
-php artisan migrate --force
+php artisan migrate --force --verbose
+
+# Check if migrations were successful
+if [ $? -eq 0 ]; then
+    echo "Migrations completed successfully"
+else
+    echo "Migration failed, trying to reset and migrate again..."
+    php artisan migrate:fresh --force --seed
+fi
 
 # Run database seeders for production
 echo "Running database seeders..."
