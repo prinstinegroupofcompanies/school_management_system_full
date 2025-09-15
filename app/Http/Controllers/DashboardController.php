@@ -42,21 +42,35 @@ class DashboardController extends Controller
         $session = $this->currentSession();
         $data = [
             'stats' => [
-                'total_students' => Student::count(),
-                'total_teachers' => Teacher::count(),
-                'total_classes' => ClassRoom::count(),
-                'total_subjects' => Subject::count(),
+                'total_students' => $this->safeCount(Student::class),
+                'total_teachers' => $this->safeCount(Teacher::class),
+                'total_classes' => $this->safeCount(ClassRoom::class),
+                'total_subjects' => $this->safeCount(Subject::class),
             ],
             'attendanceStats' => [
-                'present' => StudentAttendance::where('status', 'present')->whereDate('date', today())->count(),
-                'absent' => StudentAttendance::where('status', 'absent')->whereDate('date', today())->count(),
-                'late' => StudentAttendance::where('status', 'late')->whereDate('date', today())->count(),
-                'total' => StudentAttendance::whereDate('date', today())->count(),
+                'present' => $this->safeQuery(function() {
+                    return StudentAttendance::where('status', 'present')->whereDate('date', today())->count();
+                }),
+                'absent' => $this->safeQuery(function() {
+                    return StudentAttendance::where('status', 'absent')->whereDate('date', today())->count();
+                }),
+                'late' => $this->safeQuery(function() {
+                    return StudentAttendance::where('status', 'late')->whereDate('date', today())->count();
+                }),
+                'total' => $this->safeQuery(function() {
+                    return StudentAttendance::whereDate('date', today())->count();
+                }),
             ],
-            'upcomingExams' => ExamSchedule::where('exam_date', '>=', today())->with(['examType', 'subject'])->take(5)->get(),
+            'upcomingExams' => $this->safeQuery(function() {
+                return ExamSchedule::where('exam_date', '>=', today())->with(['examType', 'subject'])->take(5)->get();
+            }) ?: collect(),
             'feeStats' => [
-                'collected_today' => FeePayment::whereDate('payment_date', today())->sum('amount_paid'),
-                'pending' => FeeStructure::sum('amount') - FeePayment::sum('amount_paid'),
+                'collected_today' => $this->safeQuery(function() {
+                    return FeePayment::whereDate('payment_date', today())->sum('amount_paid');
+                }),
+                'pending' => $this->safeQuery(function() {
+                    return FeeStructure::sum('amount') - FeePayment::sum('amount_paid');
+                }),
                 'overdue' => 0, // Calculate based on due dates
             ],
             'recentActivities' => $this->getRecentActivities(),
@@ -348,5 +362,29 @@ class DashboardController extends Controller
                     'application_date' => $application->created_at,
                 ];
             });
+    }
+
+    /**
+     * Safely execute a database query, returning 0 or empty collection if it fails
+     */
+    private function safeQuery($callback)
+    {
+        try {
+            return $callback();
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Safely count records from a model, returning 0 if table doesn't exist
+     */
+    private function safeCount($model)
+    {
+        try {
+            return $model::count();
+        } catch (\Exception $e) {
+            return 0;
+        }
     }
 }

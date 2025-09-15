@@ -66,24 +66,32 @@ class AdminController extends Controller
 
     private function getAttendanceRate()
     {
-        $total_attendance = StudentAttendance::count();
-        $present_attendance = StudentAttendance::where('status', 'present')->count();
-        
-        if ($total_attendance == 0) {
+        try {
+            $total_attendance = StudentAttendance::count();
+            $present_attendance = StudentAttendance::where('status', 'present')->count();
+            
+            if ($total_attendance == 0) {
+                return 0;
+            }
+            
+            return round(($present_attendance / $total_attendance) * 100, 2);
+        } catch (\Exception $e) {
             return 0;
         }
-        
-        return round(($present_attendance / $total_attendance) * 100, 2);
     }
 
     private function getPendingPayments()
     {
-        // Calculate pending payments based on fee structures and existing payments
-        $total_students = Student::count();
-        $total_paid = FeePayment::where('status', 'paid')->sum('amount');
-        
-        // This is a simplified calculation - in reality, you'd check against fee structures
-        return $total_students * 1000 - $total_paid; // Assuming 1000 LRD per student
+        try {
+            // Calculate pending payments based on fee structures and existing payments
+            $total_students = Student::count();
+            $total_paid = FeePayment::where('status', 'paid')->sum('amount');
+            
+            // This is a simplified calculation - in reality, you'd check against fee structures
+            return $total_students * 1000 - $total_paid; // Assuming 1000 LRD per student
+        } catch (\Exception $e) {
+            return 0;
+        }
     }
 
     private function getRecentActivities()
