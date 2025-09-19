@@ -8,12 +8,28 @@ $app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
 echo "=== Dashboard Data Debug ===\n\n";
 
 try {
-    echo "1. Checking database tables...\n";
+    echo "1. Checking database connection and tables...\n";
     
-    $tables = DB::select("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
-    echo "Total tables: " . count($tables) . "\n";
-    foreach ($tables as $table) {
-        echo "   - " . $table->tablename . "\n";
+    $driver = config('database.default');
+    echo "Database driver: $driver\n";
+    
+    try {
+        if ($driver === 'pgsql') {
+            $tables = DB::select("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
+            echo "Total tables: " . count($tables) . "\n";
+            foreach ($tables as $table) {
+                echo "   - " . $table->tablename . "\n";
+            }
+        } else {
+            // SQLite
+            $tables = DB::select("SELECT name FROM sqlite_master WHERE type='table'");
+            echo "Total tables: " . count($tables) . "\n";
+            foreach ($tables as $table) {
+                echo "   - " . $table->name . "\n";
+            }
+        }
+    } catch (Exception $e) {
+        echo "❌ Table listing error: " . $e->getMessage() . "\n";
     }
     echo "\n";
     

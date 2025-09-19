@@ -11,6 +11,8 @@ use App\Models\Teacher;
 use App\Models\FeeStructure;
 use App\Models\FeePayment;
 use App\Models\StudentAttendance;
+use App\Models\Department;
+use App\Models\Designation;
 use Illuminate\Support\Facades\Hash;
 
 class ProductionSeeder extends Seeder
@@ -56,19 +58,35 @@ class ProductionSeeder extends Seeder
             ]
         );
 
+        // Create departments first
+        $mathDept = \App\Models\Department::firstOrCreate([
+            'code' => 'MATH'
+        ], [
+            'name' => 'Mathematics Department',
+            'description' => 'Mathematics and Science Department',
+        ]);
+
+        $designation = \App\Models\Designation::firstOrCreate([
+            'name' => 'Teacher'
+        ], [
+            'description' => 'Teaching Staff',
+        ]);
+
         // Create Teacher record for the first teacher user
         if (!Teacher::where('user_id', $teacherUser1->id)->exists()) {
-            Teacher::create([
-                'user_id' => $teacherUser1->id,
-                'employee_id' => 'TCH001',
-                'department' => 'Mathematics',
-                'qualification' => 'BSc Mathematics',
-                'experience_years' => 3,
-                'joining_date' => now()->subYears(3),
-                'basic_salary' => 50000,
-                'employment_status' => 'active',
-                'currency' => 'LRD',
-            ]);
+            $existingTeacher = Teacher::where('employee_id', 'TCH001')->first();
+            if (!$existingTeacher) {
+                Teacher::create([
+                    'user_id' => $teacherUser1->id,
+                    'employee_id' => 'TCH001',
+                    'department_id' => $mathDept->id,
+                    'designation_id' => $designation->id,
+                    'qualification' => 'BSc Mathematics',
+                    'joining_date' => now()->subYears(3),
+                    'salary' => 50000,
+                    'employment_status' => 'active',
+                ]);
+            }
         }
 
         // Create sample class
@@ -104,12 +122,16 @@ class ProductionSeeder extends Seeder
                 'user_id' => $studentUser->id,
                 'class_id' => $class->id,
                 'student_id' => 'STU001',
+                'academic_year' => date('Y'),
                 'date_of_birth' => '2005-01-01',
                 'address' => 'Sample Address',
                 'phone' => '1234567890',
                 'admission_no' => 'ADM001',
                 'admission_date' => now()->subMonths(6),
                 'status' => 'active',
+                'first_name' => 'John',
+                'last_name' => 'Doe',
+                'gender' => 'male',
             ]);
         }
 
@@ -125,18 +147,27 @@ class ProductionSeeder extends Seeder
             ]
         );
 
+        $scienceDept = \App\Models\Department::firstOrCreate([
+            'code' => 'SCI'
+        ], [
+            'name' => 'Science Department',
+            'description' => 'Science and Chemistry Department',
+        ]);
+
         if (!Teacher::where('user_id', $teacherUser2->id)->exists()) {
-            Teacher::create([
-                'user_id' => $teacherUser2->id,
-                'employee_id' => 'TCH002',
-                'department' => 'Science',
-                'qualification' => 'MSc Chemistry',
-                'experience_years' => 5,
-                'joining_date' => now()->subYears(5),
-                'basic_salary' => 60000,
-                'employment_status' => 'active',
-                'currency' => 'LRD',
-            ]);
+            $existingTeacher2 = Teacher::where('employee_id', 'TCH002')->first();
+            if (!$existingTeacher2) {
+                Teacher::create([
+                    'user_id' => $teacherUser2->id,
+                    'employee_id' => 'TCH002',
+                    'department_id' => $scienceDept->id,
+                    'designation_id' => $designation->id,
+                    'qualification' => 'MSc Chemistry',
+                    'joining_date' => now()->subYears(5),
+                    'salary' => 60000,
+                    'employment_status' => 'active',
+                ]);
+            }
         }
 
         // Create sample fee structures
