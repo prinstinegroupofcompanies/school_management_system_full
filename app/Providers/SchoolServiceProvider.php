@@ -37,13 +37,23 @@ class SchoolServiceProvider extends ServiceProvider
                 $user = auth()->user();
                 $view->with('currentUser', $user);
                 
-                // Share user-specific data
-                if ($user->user_type === 'student') {
-                    $view->with('currentStudent', $user->student);
-                } elseif ($user->user_type === 'teacher') {
-                    $view->with('currentTeacher', $user->teacher);
-                } elseif ($user->user_type === 'staff') {
-                    $view->with('currentStaff', $user->staff);
+                // Share user-specific data with safe database access
+                try {
+                    if ($user->user_type === 'student') {
+                        $student = $user->student;
+                        $view->with('currentStudent', $student);
+                    } elseif ($user->user_type === 'teacher') {
+                        $teacher = $user->teacher;
+                        $view->with('currentTeacher', $teacher);
+                    } elseif ($user->user_type === 'staff') {
+                        $staff = $user->staff;
+                        $view->with('currentStaff', $staff);
+                    }
+                } catch (\Exception $e) {
+                    // Tables don't exist yet - set safe defaults
+                    $view->with('currentStudent', null);
+                    $view->with('currentTeacher', null);
+                    $view->with('currentStaff', null);
                 }
             }
         });

@@ -20,11 +20,15 @@ try {
     
     // Drop all tables and recreate
     echo "2. Dropping all tables...\n";
-    DB::statement('DROP SCHEMA public CASCADE');
-    DB::statement('CREATE SCHEMA public');
-    DB::statement('GRANT ALL ON SCHEMA public TO postgres');
-    DB::statement('GRANT ALL ON SCHEMA public TO public');
-    echo "✅ All tables dropped\n\n";
+    try {
+        DB::statement('DROP SCHEMA public CASCADE');
+        DB::statement('CREATE SCHEMA public');
+        DB::statement('GRANT ALL ON SCHEMA public TO postgres');
+        DB::statement('GRANT ALL ON SCHEMA public TO public');
+        echo "✅ All tables dropped\n\n";
+    } catch (Exception $e) {
+        echo "⚠️  Schema drop error (continuing): " . $e->getMessage() . "\n\n";
+    }
     
     // Run migrations
     echo "3. Running fresh migrations...\n";
@@ -42,29 +46,33 @@ try {
         }
         echo "\n";
         
-        // Run seeders
+        // Run seeders with better error handling
         echo "5. Running seeders...\n";
-        $exitCode = Artisan::call('db:seed', ['--force' => true]);
-        
-        if ($exitCode === 0) {
-            echo "✅ Seeders completed successfully\n\n";
-        } else {
-            echo "❌ Seeders failed, trying individual seeders...\n";
+        try {
+            $exitCode = Artisan::call('db:seed', ['--force' => true]);
             
-            // Try individual seeders
-            $seeders = ['UserSeeder', 'ProductionSeeder'];
-            foreach ($seeders as $seeder) {
-                try {
-                    $exitCode = Artisan::call('db:seed', ['--class' => $seeder, '--force' => true]);
-                    if ($exitCode === 0) {
-                        echo "✅ $seeder completed successfully\n";
-                    } else {
-                        echo "❌ $seeder failed\n";
+            if ($exitCode === 0) {
+                echo "✅ Seeders completed successfully\n\n";
+            } else {
+                echo "❌ Seeders failed, trying individual seeders...\n";
+                
+                // Try individual seeders
+                $seeders = ['ProductionSeeder'];
+                foreach ($seeders as $seeder) {
+                    try {
+                        $exitCode = Artisan::call('db:seed', ['--class' => $seeder, '--force' => true]);
+                        if ($exitCode === 0) {
+                            echo "✅ $seeder completed successfully\n";
+                        } else {
+                            echo "❌ $seeder failed\n";
+                        }
+                    } catch (Exception $e) {
+                        echo "❌ $seeder error: " . $e->getMessage() . "\n";
                     }
-                } catch (Exception $e) {
-                    echo "❌ $seeder error: " . $e->getMessage() . "\n";
                 }
             }
+        } catch (Exception $e) {
+            echo "❌ Seeding error: " . $e->getMessage() . "\n";
         }
         
     } else {
