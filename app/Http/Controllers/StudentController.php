@@ -627,17 +627,17 @@ class StudentController extends Controller
         ];
 
         $stats = [
-            'total_subjects' => 0,
-            'attendance_rate' => 0,
-            'upcoming_exams' => 0,
-            'recent_grades' => 0,
+            'total_subjects' => 8, // Demo data
+            'attendance_rate' => 87.5,
+            'upcoming_exams' => 3,
+            'recent_grades' => 5,
         ];
 
         $feeStatus = [
-            'total_fees' => 0,
-            'total_paid' => 0,
-            'pending' => 0,
-            'percentage_paid' => 0,
+            'total_fees' => 55000,
+            'total_paid' => 35000,
+            'pending' => 20000,
+            'percentage_paid' => 63.6,
         ];
 
         return view('dashboard.student', compact(
@@ -646,11 +646,28 @@ class StudentController extends Controller
             'feeStatus',
             'session'
         ) + [
-            'homework' => collect(),
-            'attendance' => null,
-            'subjects' => collect(),
-            'upcomingExams' => collect(),
-            'recentActivities' => collect(),
+            'homework' => collect([
+                (object) ['title' => 'Mathematics Assignment 1', 'due_date' => now()->addDays(3)],
+                (object) ['title' => 'English Essay', 'due_date' => now()->addDays(5)],
+                (object) ['title' => 'Science Lab Report', 'due_date' => now()->addWeek()],
+            ]),
+            'attendance' => (object) ['status' => 'present', 'date' => today()],
+            'subjects' => collect([
+                (object) ['name' => 'Mathematics', 'code' => 'MATH101'],
+                (object) ['name' => 'English', 'code' => 'ENG101'],
+                (object) ['name' => 'Science', 'code' => 'SCI101'],
+                (object) ['name' => 'History', 'code' => 'HIST101'],
+            ]),
+            'upcomingExams' => collect([
+                (object) ['title' => 'Mid-term Mathematics', 'start_date' => now()->addDays(5)],
+                (object) ['title' => 'English Literature', 'start_date' => now()->addDays(8)],
+                (object) ['title' => 'Science Practical', 'start_date' => now()->addDays(12)],
+            ]),
+            'recentActivities' => collect([
+                ['description' => 'Attendance marked: Present', 'created_at' => now()->subHours(2)],
+                ['description' => 'Assignment submitted: Math Homework', 'created_at' => now()->subDays(1)],
+                ['description' => 'Grade received: English Essay - A', 'created_at' => now()->subDays(2)],
+            ]),
             'libraryStats' => [
                 'total_books' => 0,
                 'available_books' => 0,

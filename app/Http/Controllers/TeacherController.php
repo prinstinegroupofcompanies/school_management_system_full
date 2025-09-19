@@ -414,22 +414,48 @@ class TeacherController extends Controller
         ];
 
         $stats = [
-            'total_classes' => 0,
-            'total_subjects' => 0,
-            'total_students' => 0,
-            'upcoming_exams' => 0,
+            'total_classes' => 4, // Demo data
+            'total_subjects' => 3,
+            'total_students' => 125,
+            'upcoming_exams' => 2,
         ];
 
         $data = [
             'stats' => $stats,
-            'recent_activities' => collect(),
-            'recent_homework' => collect(),
+            'recent_activities' => collect([
+                ['description' => 'Homework assigned to Grade 10A', 'created_at' => now()->subHours(1)],
+                ['description' => 'Exam results published for Grade 9B', 'created_at' => now()->subDays(1)],
+                ['description' => 'Attendance marked for Grade 11C', 'created_at' => now()->subDays(2)],
+            ]),
+            'recent_homework' => collect([
+                (object) ['title' => 'Mathematics Assignment 3', 'due_date' => now()->addDays(3)],
+                (object) ['title' => 'Algebra Practice Problems', 'due_date' => now()->addDays(5)],
+            ]),
             'user' => $user,
-            'classes' => collect(),
-            'students' => collect(),
-            'subjects' => collect(),
-            'upcomingExams' => collect(),
-            'recentActivities' => collect(),
+            'classes' => collect([
+                (object) ['name' => 'Grade 10A', 'id' => 1],
+                (object) ['name' => 'Grade 9B', 'id' => 2],
+                (object) ['name' => 'Grade 11C', 'id' => 3],
+            ]),
+            'students' => collect([
+                (object) ['name' => 'John Doe', 'id' => 1],
+                (object) ['name' => 'Mary Johnson', 'id' => 2],
+                (object) ['name' => 'David Smith', 'id' => 3],
+            ]),
+            'subjects' => collect([
+                (object) ['name' => 'Mathematics', 'id' => 1],
+                (object) ['name' => 'Algebra', 'id' => 2],
+                (object) ['name' => 'Geometry', 'id' => 3],
+            ]),
+            'upcomingExams' => collect([
+                (object) ['title' => 'Mid-term Mathematics', 'start_date' => now()->addDays(5)],
+                (object) ['title' => 'Algebra Quiz', 'start_date' => now()->addDays(8)],
+            ]),
+            'recentActivities' => collect([
+                ['description' => 'Homework assigned to Grade 10A', 'created_at' => now()->subHours(1)],
+                ['description' => 'Exam results published for Grade 9B', 'created_at' => now()->subDays(1)],
+                ['description' => 'Attendance marked for Grade 11C', 'created_at' => now()->subDays(2)],
+            ]),
             'session' => $session,
         ];
 

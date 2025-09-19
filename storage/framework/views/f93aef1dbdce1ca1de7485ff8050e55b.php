@@ -1,4 +1,19 @@
-<?php $userType = auth()->user()->user_type ?? 'guest'; ?>
+<?php 
+$userType = auth()->user()->user_type ?? 'guest'; 
+
+// Helper function to safely generate routes
+function safeRoute($name, $parameters = [], $fallback = '#') {
+    try {
+        if (Route::has($name)) {
+            return route($name, $parameters);
+        }
+    } catch (\Exception $e) {
+        // Log the error but don't break the page
+        \Log::warning("Navigation route error: {$name}", ['error' => $e->getMessage()]);
+    }
+    return $fallback;
+}
+?>
 
 <nav class="flex-1 px-6 py-6 space-y-3">
     <!-- Premium Dashboard -->
@@ -44,6 +59,7 @@
 
     
     <?php if($userType === 'student'): ?>
+    <?php if(Route::has('student.gradesheet.show')): ?>
     <a href="<?php echo e(route('student.gradesheet.show')); ?>" 
        class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('student.gradesheet.*') ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'); ?>">
         <svg class="mr-3 h-5 w-5 <?php echo e(request()->routeIs('student.gradesheet.*') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'); ?>" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -51,6 +67,7 @@
         </svg>
         My Gradesheet
     </a>
+    <?php endif; ?>
     <div x-data="{ open: <?php echo e(request()->routeIs('student.finance.*') ? 'true' : 'false'); ?> }">
         <button @click="open = !open" 
                 class="nav-item-premium group w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-premium <?php echo e(request()->routeIs('student.finance.*') ? 'bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 shadow-lg' : 'text-gray-700 hover:bg-white/50 hover:text-gray-900'); ?>">
@@ -337,18 +354,22 @@
                 </svg>
                 All Grades
             </a>
+            <?php if(Route::has('parent.grades.progress')): ?>
             <a href="<?php echo e(route('parent.grades.progress')); ?>" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('parent.grades.progress') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'); ?>">
                 <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
                 Academic Progress
             </a>
+            <?php endif; ?>
+            <?php if(Route::has('parent.grades.download')): ?>
             <a href="<?php echo e(route('parent.grades.download')); ?>" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all <?php echo e(request()->routeIs('parent.grades.download') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'); ?>">
                 <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 Download Reports
             </a>
+            <?php endif; ?>
         </div>
     </div>
     <?php endif; ?>
