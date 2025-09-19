@@ -7,7 +7,7 @@
             <div class="p-6 bg-white border-b border-gray-200">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold text-gray-900">Edit Student</h2>
-                    <a href="{{ route('students.show', $student) }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                    <a href="{{ route('admin.students.show', $student) }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
                         Back to Student
                     </a>
                 </div>
@@ -22,7 +22,7 @@
                     </div>
                 @endif
 
-                <form action="{{ route('students.update', $student) }}" method="POST">
+                <form action="{{ route('admin.students.update', $student) }}" method="POST">
                     @csrf
                     @method('PUT')
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
