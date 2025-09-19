@@ -26,6 +26,26 @@ class Student extends Model
         'phone',
         'address',
         'status',
+        // Auto-generated fields
+        'admission_number',
+        'student_number',
+        'international_student_id',
+        // Enhanced academic tracking
+        'assigned_subjects',
+        'assigned_teachers',
+        'curriculum_type',
+        'learning_objectives',
+        // Fee management
+        'total_fees',
+        'paid_fees',
+        'balance_fees',
+        // Academic performance
+        'current_gpa',
+        'current_grade',
+        'attendance_percentage',
+        // Activity tracking
+        'activity_log',
+        'last_activity_at',
         // legacy/extended fields kept for compatibility
         'admission_no', 'roll_no', 'first_name', 'last_name', 'middle_name',
         'blood_group', 'religion', 'caste', 'mother_tongue', 'nationality',
@@ -48,6 +68,16 @@ class Student extends Model
         'is_hostel' => 'boolean',
         'sibling_ids' => 'array',
         'wallet_balance' => 'decimal:2',
+        // New casts
+        'assigned_subjects' => 'array',
+        'assigned_teachers' => 'array',
+        'learning_objectives' => 'array',
+        'total_fees' => 'decimal:2',
+        'paid_fees' => 'decimal:2',
+        'balance_fees' => 'decimal:2',
+        'current_gpa' => 'decimal:2',
+        'activity_log' => 'array',
+        'last_activity_at' => 'datetime',
         'last_payment_date' => 'date',
         'restricted_access' => 'boolean',
         'restriction_date' => 'date',
@@ -322,5 +352,208 @@ class Student extends Model
     public function subjects(): BelongsToMany
     {
         return $this->belongsToMany(Subject::class, 'student_subject')->withTimestamps();
+    }
+
+    // New relationships for enhanced functionality
+    public function internationalGrades(): HasMany
+    {
+        return $this->hasMany(InternationalGrade::class);
+    }
+
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(StudentActivityLog::class);
+    }
+
+    public function classFeeStructure(): BelongsTo
+    {
+        return $this->belongsTo(ClassFeeStructure::class, 'class_id', 'class_id')
+                    ->where('is_active', true)
+                    ->where('academic_year', $this->academic_year ?? date('Y'));
+    }
+
+    // Auto-generation methods
+    public static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($student) {
+            // Generate unique admission number
+            $student->admission_number = self::generateAdmissionNumber();
+            
+            // Generate unique student number
+            $student->student_number = self::generateStudentNumber();
+            
+            // Generate international student ID
+            $student->international_student_id = self::generateInternationalStudentId();
+            
+            // Set default academic year if not provided
+            if (!$student->academic_year) {
+                $student->academic_year = date('Y');
+            }
+            
+            // Set default curriculum type
+            if (!$student->curriculum_type) {
+                $student->curriculum_type = 'international';
+            }
+        });
+
+        static::created(function ($student) {
+            // Auto-assign subjects and teachers based on class
+            $student->autoAssignSubjectsAndTeachers();
+            
+            // Auto-assign fee structure
+            $student->autoAssignFeeStructure();
+            
+            // Log enrollment activity
+            if (auth()->check()) {
+                StudentActivityLog::logEnrollment($student, $student->classRoom, auth()->user());
+            }
+        });
+    }
+
+    // Auto-generation helper methods
+    public static function generateAdmissionNumber(): string
+    {
+        $year = date('Y');
+        $lastStudent = self::where('admission_number', 'like', "ADM{$year}%")
+                          ->orderBy('admission_number', 'desc')
+                          ->first();
+        
+        if ($lastStudent) {
+            $lastNumber = (int) substr($lastStudent->admission_number, -4);
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
+        }
+        
+        return "ADM{$year}" . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+    }
+
+    public static function generateStudentNumber(): string
+    {
+        $lastStudent = self::orderBy('student_number', 'desc')->first();
+        
+        if ($lastStudent && $lastStudent->student_number) {
+            $lastNumber = (int) substr($lastStudent->student_number, 3);
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
+        }
+        
+        return 'STU' . str_pad($newNumber, 6, '0', STR_PAD_LEFT);
+    }
+
+    public static function generateInternationalStudentId(): string
+    {
+        $country = 'LR'; // Liberia country code
+        $year = date('y');
+        $lastStudent = self::where('international_student_id', 'like', "{$country}{$year}%")
+                          ->orderBy('international_student_id', 'desc')
+                          ->first();
+        
+        if ($lastStudent) {
+            $lastNumber = (int) substr($lastStudent->international_student_id, -5);
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
+        }
+        
+        return "{$country}{$year}" . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+    }
+
+    // Auto-assignment methods
+    public function autoAssignSubjectsAndTeachers()
+    {
+        if (!$this->classRoom) return;
+
+        // Get all subjects assigned to this class
+        $classSubjects = $this->classRoom->subjects()->with('teacher')->get();
+        
+        $assignedSubjects = [];
+        $assignedTeachers = [];
+        
+        foreach ($classSubjects as $subject) {
+            $assignedSubjects[] = [
+                'id' => $subject->id,
+                'name' => $subject->name,
+                'code' => $subject->code,
+                'credits' => $subject->credits ?? 1,
+            ];
+            
+            if ($subject->teacher) {
+                $assignedTeachers[] = [
+                    'subject_id' => $subject->id,
+                    'teacher_id' => $subject->teacher->id,
+                    'teacher_name' => $subject->teacher->user->name,
+                    'employee_id' => $subject->teacher->employee_id,
+                ];
+            }
+        }
+        
+        $this->update([
+            'assigned_subjects' => $assignedSubjects,
+            'assigned_teachers' => $assignedTeachers,
+        ]);
+    }
+
+    public function autoAssignFeeStructure()
+    {
+        if (!$this->classRoom) return;
+
+        $feeStructure = ClassFeeStructure::where('class_id', $this->class_id)
+                                       ->where('academic_year', $this->academic_year)
+                                       ->where('is_active', true)
+                                       ->first();
+        
+        if ($feeStructure) {
+            $this->update([
+                'total_fees' => $feeStructure->total_fees,
+                'paid_fees' => 0,
+                'balance_fees' => $feeStructure->total_fees,
+            ]);
+        }
+    }
+
+    // Fee management methods
+    public function recordPayment($amount, $paymentType = 'tuition', $approvedBy = null)
+    {
+        $newPaidAmount = $this->paid_fees + $amount;
+        $newBalance = $this->total_fees - $newPaidAmount;
+        
+        $this->update([
+            'paid_fees' => $newPaidAmount,
+            'balance_fees' => max(0, $newBalance),
+            'last_payment_date' => now(),
+            'payment_status' => $newBalance <= 0 ? 'paid' : 'partial',
+        ]);
+
+        // Log the payment
+        if (auth()->check()) {
+            StudentActivityLog::logFeePayment($this, $amount, $paymentType, auth()->user());
+        }
+
+        return $this;
+    }
+
+    public function hasPendingFees(): bool
+    {
+        return $this->balance_fees > 0;
+    }
+
+    // Display helpers
+    public function getDisplayName(): string
+    {
+        return $this->user->name ?? ($this->first_name . ' ' . $this->last_name);
+    }
+
+    public function getFormattedAdmissionNumber(): string
+    {
+        return $this->admission_number ?? 'Not Assigned';
+    }
+
+    public function getFormattedStudentNumber(): string
+    {
+        return $this->student_number ?? 'Not Assigned';
     }
 } 
