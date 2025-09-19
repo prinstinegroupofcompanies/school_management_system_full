@@ -10,13 +10,40 @@ use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $students = Student::with(['user', 'classRoom'])->paginate(10);
-            return view('admin.students.index', compact('students'));
+            $query = Student::with(['user', 'classRoom']);
+
+            // Search functionality
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->whereHas('user', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+                })->orWhere('admission_number', 'like', "%{$search}%");
+            }
+
+            // Filter by class
+            if ($request->filled('class_id')) {
+                $query->where('class_id', $request->class_id);
+            }
+
+            // Filter by status
+            if ($request->filled('status')) {
+                $query->whereHas('user', function ($q) use ($request) {
+                    $q->where('status', $request->status);
+                });
+            }
+
+            $students = $query->paginate(15);
+            $classes = ClassRoom::all();
+
+            return view('admin.students.index', compact('students', 'classes'));
         } catch (\Exception $e) {
-            return view('admin.students.index', ['students' => collect()]);
+            $classes = collect();
+            $students = collect();
+            return view('admin.students.index', compact('students', 'classes'));
         }
     }
 
