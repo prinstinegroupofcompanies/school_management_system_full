@@ -3,33 +3,50 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
-use App\Models\Grade;
+use App\Models\InternationalGrade;
 use App\Models\Student;
 use App\Models\Subject;
-use App\Models\ExamPaper;
-use Illuminate\Validation\Rule;
+use App\Models\ClassRoom;
+use App\Models\Teacher;
+use App\Models\StudentActivityLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class GradeController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('teacher');
+    }
+
+    /**
+     * Display teacher's grades with filtering
+     */
     public function index(Request $request)
     {
         $teacher = $request->user()->teacher;
         
-        // Get classes and subjects for filters
-        $classes = $teacher->classes()->get();
-        $subjects = $teacher->subjects()->get();
+        if (!$teacher) {
+            return redirect()->route('teacher.dashboard')
+                           ->withErrors(['error' => 'Teacher profile not found.']);
+        }
+        
+        // Get teacher's assigned subjects and classes
+        $subjects = Subject::where('teacher_id', $teacher->id)->get();
+        $classes = ClassRoom::whereHas('subjects', function($query) use ($teacher) {
+            $query->where('teacher_id', $teacher->id);
+        })->get();
         
         // Get academic years from grades
-        $academicYears = Grade::where('teacher_id', $teacher->id)
+        $academicYears = InternationalGrade::where('teacher_id', $teacher->id)
             ->distinct()
             ->pluck('academic_year')
             ->sort()
             ->values();
         
         // Build grades query with filters
-        $gradesQuery = Grade::where('teacher_id', $teacher->id)
-            ->with(['student.user', 'subject', 'class']);
+        $gradesQuery = InternationalGrade::where('teacher_id', $teacher->id)
+            ->with(['student.user', 'subject', 'classRoom']);
             
         // Apply filters
         if ($request->filled('class_id')) {
@@ -44,263 +61,588 @@ class GradeController extends Controller
             $gradesQuery->where('academic_year', $request->academic_year);
         }
         
-        $grades = $gradesQuery->latest()->paginate(15);
+        if ($request->filled('semester')) {
+            $gradesQuery->where('semester', $request->semester);
+        }
         
-        return view('teacher.grades.index', compact('grades', 'classes', 'subjects', 'academicYears'));
+        if ($request->filled('status')) {
+            $gradesQuery->where('status', $request->status);
+        } else {
+            // Default to show draft and submitted grades
+            $gradesQuery->whereIn('status', ['draft', 'submitted']);
+        }
+        
+        $grades = $gradesQuery->orderBy('created_at', 'desc')->paginate(15);
+        
+        // Get summary statistics
+        $stats = [
+            'total_grades' => InternationalGrade::where('teacher_id', $teacher->id)->count(),
+            'draft_grades' => InternationalGrade::where('teacher_id', $teacher->id)->where('status', 'draft')->count(),
+            'submitted_grades' => InternationalGrade::where('teacher_id', $teacher->id)->where('status', 'submitted')->count(),
+            'approved_grades' => InternationalGrade::where('teacher_id', $teacher->id)->where('status', 'approved')->count(),
+            'published_grades' => InternationalGrade::where('teacher_id', $teacher->id)->where('status', 'published')->count(),
+        ];
+        
+        return view('teacher.grades.index', compact('grades', 'classes', 'subjects', 'academicYears', 'stats'));
     }
 
+    /**
+     * Show form for creating new grade
+     */
     public function create(Request $request)
     {
         $teacher = $request->user()->teacher;
+        
+        if (!$teacher) {
+            return redirect()->route('teacher.dashboard')
+                           ->withErrors(['error' => 'Teacher profile not found.']);
+        }
+        
+        // Get teacher's assigned subjects and classes
+        $subjects = Subject::where('teacher_id', $teacher->id)->get();
+        $classes = ClassRoom::whereHas('subjects', function($query) use ($teacher) {
+            $query->where('teacher_id', $teacher->id);
+        })->get();
+        
         $selectedClassId = $request->get('class_id');
         $selectedSubjectId = $request->get('subject_id');
-        $selectedPeriodId = $request->get('academic_period_id');
-
-        $classes = $teacher->classes()->get();
-        $subjectsQuery = $teacher->subjects();
-        if ($selectedClassId) {
-            $subjectsQuery->where('class_id', $selectedClassId);
-        }
-        $subjects = $subjectsQuery->get();
         
-        // Get academic periods
-        $academicPeriods = \App\Models\AcademicPeriod::currentYear()->orderBy('name')->get();
-
+        // Get students if class and subject are selected
         $students = collect();
         if ($selectedClassId && $selectedSubjectId) {
-            // Students enrolled in selected class AND enrolled in the selected subject
             $students = Student::where('class_id', $selectedClassId)
-                ->whereHas('subjects', function($q) use ($selectedSubjectId) {
-                    $q->where('subjects.id', $selectedSubjectId);
-                })
-                ->with('user','class')
-                ->get();
-        } elseif ($selectedClassId) {
-            // Fallback: all students in class
-            $students = Student::where('class_id', $selectedClassId)
-                ->with('user','class')
-                ->get();
+                              ->with(['user', 'classRoom'])
+                              ->get();
         }
-
-        return view('teacher.grades.create', [
-            'classes' => $classes,
-            'subjects' => $subjects,
-            'academicPeriods' => $academicPeriods,
-            'students' => $students,
-            'selectedClassId' => $selectedClassId,
-            'selectedSubjectId' => $selectedSubjectId,
-            'selectedPeriodId' => $selectedPeriodId,
-        ]);
+        
+        // Assessment types for dropdown
+        $assessmentTypes = [
+            'assignment' => 'Assignment',
+            'quiz' => 'Quiz',
+            'midterm' => 'Midterm Exam',
+            'final' => 'Final Exam',
+            'project' => 'Project',
+            'participation' => 'Class Participation',
+            'presentation' => 'Presentation',
+            'lab_work' => 'Laboratory Work',
+            'homework' => 'Homework',
+            'test' => 'Test'
+        ];
+        
+        // Semester options
+        $semesters = [
+            'fall' => 'Fall Semester',
+            'spring' => 'Spring Semester', 
+            'summer' => 'Summer Semester'
+        ];
+        
+        $currentYear = date('Y');
+        $currentSemester = $this->getCurrentSemester();
+        
+        return view('teacher.grades.create', compact(
+            'classes', 'subjects', 'students', 'assessmentTypes', 'semesters',
+            'selectedClassId', 'selectedSubjectId', 'currentYear', 'currentSemester'
+        ));
     }
-
+    
+    /**
+     * Store a newly created grade
+     */
     public function store(Request $request)
     {
         $teacher = $request->user()->teacher;
-        $request->validate([
-            'student_id' => [
-                'required',
-                Rule::exists('students','id')->where(fn($q) => $q->where('class_id', $request->class_id)),
-                // Ensure student is enrolled in the selected subject (real-time data)
-                Rule::exists('student_subject','student_id')->where(fn($q) => $q->where('subject_id', $request->subject_id)),
-            ],
-            'class_id' => ['required', Rule::exists('class_rooms','id')],
-            'subject_id' => ['required', Rule::exists('subjects','id')->where(fn($q) => $q->where('class_id', $request->class_id)->where('teacher_id', $teacher->id))],
-            'academic_year' => 'required|integer|min:2000|max:2100',
-            'academic_period_id' => 'required|exists:academic_periods,id',
-            'period_1' => 'nullable|numeric|min:0|max:100',
-            'period_2' => 'nullable|numeric|min:0|max:100',
-            'period_3' => 'nullable|numeric|min:0|max:100',
-            'period_4' => 'nullable|numeric|min:0|max:100',
-            'period_5' => 'nullable|numeric|min:0|max:100',
-            'period_6' => 'nullable|numeric|min:0|max:100',
-            'exam' => 'nullable|numeric|min:0|max:100',
+        
+        if (!$teacher) {
+            return redirect()->route('teacher.dashboard')
+                           ->withErrors(['error' => 'Teacher profile not found.']);
+        }
+
+        $validated = $request->validate([
+            'student_id' => 'required|exists:students,id',
+            'subject_id' => 'required|exists:subjects,id',
+            'class_id' => 'required|exists:class_rooms,id',
+            'assessment_type' => 'required|string|max:255',
+            'assessment_title' => 'required|string|max:255',
+            'assessment_description' => 'nullable|string',
+            'assessment_date' => 'required|date',
+            'academic_year' => 'required|string|max:10',
+            'semester' => 'required|in:fall,spring,summer',
+            'raw_score' => 'required|numeric|min:0',
+            'max_score' => 'required|numeric|min:0.01',
+            'teacher_comments' => 'nullable|string',
+            'feedback' => 'nullable|string',
+            'weight' => 'nullable|numeric|min:0|max:10',
+            'counts_toward_final' => 'boolean',
+            'is_extra_credit' => 'boolean',
+            'save_as_draft' => 'boolean',
         ]);
 
-        $grade = Grade::updateOrCreate(
-            [
-                'student_id' => $request->student_id,
-                'class_id' => $request->class_id,
-                'subject_id' => $request->subject_id,
-                'academic_year' => $request->academic_year,
-                'academic_period_id' => $request->academic_period_id,
-            ],
-            array_merge(
-                $request->only(['period_1','period_2','period_3','period_4','period_5','period_6','exam']),
-                ['teacher_id' => $teacher->id, 'status' => 'pending']
-            )
-        );
-        
-        // Calculate period average
-        $grade->calculatePeriodAverage();
-        $grade->save();
+        // Verify teacher has permission to grade this subject
+        $subject = Subject::where('id', $validated['subject_id'])
+                         ->where('teacher_id', $teacher->id)
+                         ->first();
 
-        return redirect()->route('teacher.grades.index')->with('success','Grades saved as pending and sent for approval.');
+        if (!$subject) {
+            return back()->withErrors(['subject_id' => 'You are not authorized to grade this subject.'])
+                        ->withInput();
+        }
+
+        DB::beginTransaction();
+        try {
+            // Set defaults
+            $validated['teacher_id'] = $teacher->id;
+            $validated['weight'] = $validated['weight'] ?? 1.0;
+            $validated['counts_toward_final'] = $request->boolean('counts_toward_final', true);
+            $validated['is_extra_credit'] = $request->boolean('is_extra_credit', false);
+
+            // Create grade
+            $grade = InternationalGrade::create($validated);
+
+            // Set status based on save type
+            if ($request->boolean('save_as_draft')) {
+                $grade->status = 'draft';
+            } else {
+                $grade->submit();
+            }
+            $grade->save();
+
+            DB::commit();
+
+            $message = $request->boolean('save_as_draft') 
+                     ? 'Grade saved as draft successfully.' 
+                     : 'Grade submitted for admin approval successfully.';
+
+            return redirect()->route('teacher.grades.index')
+                           ->with('success', $message);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->withErrors(['error' => 'Failed to create grade: ' . $e->getMessage()])
+                        ->withInput();
+        }
     }
 
-    public function getSubjects(Request $request)
+    /**
+     * Show specific grade
+     */
+    public function show(InternationalGrade $grade)
     {
-        $user = $request->user();
-        if (!$user) {
-            return response()->json(['subjects' => []]);
+        $teacher = auth()->user()->teacher;
+        
+        // Verify teacher owns this grade
+        if ($grade->teacher_id !== $teacher->id) {
+            return redirect()->route('teacher.grades.index')
+                           ->withErrors(['error' => 'You are not authorized to view this grade.']);
         }
+
+        $grade->load(['student.user', 'subject', 'classRoom', 'approvedBy']);
         
-        $teacher = $user->teacher;
-        if (!$teacher) {
-            return response()->json(['subjects' => []]);
-        }
-        
-        $classId = $request->get('class_id');
-        
-        if (!$classId) {
-            return response()->json(['subjects' => []]);
-        }
-        
-        $subjects = $teacher->subjects()
-            ->where('class_id', $classId)
-            ->get(['id', 'name']);
-            
-        return response()->json(['subjects' => $subjects]);
+        return view('teacher.grades.show', compact('grade'));
     }
 
-    public function getEligibleStudents(Request $request)
+    /**
+     * Show form for editing grade (only drafts and rejected)
+     */
+    public function edit(InternationalGrade $grade)
     {
-        $classId = $request->get('class_id');
-        $subjectId = $request->get('subject_id');
+        $teacher = auth()->user()->teacher;
         
-        if (!$classId || !$subjectId) {
-            return response()->json(['data' => []]);
+        // Verify teacher owns this grade
+        if ($grade->teacher_id !== $teacher->id) {
+            return redirect()->route('teacher.grades.index')
+                           ->withErrors(['error' => 'You are not authorized to edit this grade.']);
         }
+
+        // Only allow editing of draft or rejected grades
+        if (!in_array($grade->status, ['draft', 'rejected'])) {
+            return redirect()->route('teacher.grades.show', $grade)
+                           ->withErrors(['error' => 'Cannot edit grades that have been submitted or approved.']);
+        }
+
+        $subjects = Subject::where('teacher_id', $teacher->id)->get();
+        $classes = ClassRoom::whereHas('subjects', function($query) use ($teacher) {
+            $query->where('teacher_id', $teacher->id);
+        })->get();
         
-        $students = Student::where('class_id', $classId)
-            ->whereHas('subjects', function($q) use ($subjectId) {
-                $q->where('subjects.id', $subjectId);
-            })
-            ->with(['user', 'class'])
-            ->get()
-            ->map(function($student) {
-                return [
-                    'id' => $student->id,
-                    'name' => $student->user->name,
-                    'class' => $student->class->name ?? 'Unknown'
-                ];
-            });
-            
-        return response()->json(['data' => $students]);
+        $students = Student::where('class_id', $grade->class_id)->with(['user', 'classRoom'])->get();
+        
+        $assessmentTypes = [
+            'assignment' => 'Assignment',
+            'quiz' => 'Quiz',
+            'midterm' => 'Midterm Exam',
+            'final' => 'Final Exam',
+            'project' => 'Project',
+            'participation' => 'Class Participation',
+            'presentation' => 'Presentation',
+            'lab_work' => 'Laboratory Work',
+            'homework' => 'Homework',
+            'test' => 'Test'
+        ];
+        
+        $semesters = [
+            'fall' => 'Fall Semester',
+            'spring' => 'Spring Semester', 
+            'summer' => 'Summer Semester'
+        ];
+
+        return view('teacher.grades.edit', compact('grade', 'classes', 'subjects', 'students', 'assessmentTypes', 'semesters'));
     }
 
-    public function examQuestions(Request $request)
+    /**
+     * Update the specified grade
+     */
+    public function update(Request $request, InternationalGrade $grade)
     {
-        $teacher = $request->user()->teacher;
-        $selectedClassId = $request->get('class_id');
-        $selectedSubjectId = $request->get('subject_id');
-
-        $classes = $teacher->classes()->get();
-        $subjectsQuery = $teacher->subjects();
-        if ($selectedClassId) {
-            $subjectsQuery->where('class_id', $selectedClassId);
+        $teacher = auth()->user()->teacher;
+        
+        // Verify teacher owns this grade
+        if ($grade->teacher_id !== $teacher->id) {
+            return redirect()->route('teacher.grades.index')
+                           ->withErrors(['error' => 'You are not authorized to update this grade.']);
         }
-        $subjects = $subjectsQuery->get();
 
-        $examPapers = ExamPaper::where('teacher_id', $teacher->id)
-            ->with(['classRoom', 'subject'])
-            ->when($selectedClassId, function($query) use ($selectedClassId) {
-                return $query->where('class_id', $selectedClassId);
-            })
-            ->when($selectedSubjectId, function($query) use ($selectedSubjectId) {
-                return $query->where('subject_id', $selectedSubjectId);
-            })
-            ->latest()
-            ->paginate(15);
+        // Only allow updating of draft or rejected grades
+        if (!in_array($grade->status, ['draft', 'rejected'])) {
+            return redirect()->route('teacher.grades.show', $grade)
+                           ->withErrors(['error' => 'Cannot update grades that have been submitted or approved.']);
+        }
 
-        return view('teacher.grades.exam-questions', compact(
-            'classes', 
-            'subjects', 
-            'examPapers',
-            'selectedClassId',
-            'selectedSubjectId'
-        ));
+        $validated = $request->validate([
+            'assessment_type' => 'required|string|max:255',
+            'assessment_title' => 'required|string|max:255',
+            'assessment_description' => 'nullable|string',
+            'assessment_date' => 'required|date',
+            'raw_score' => 'required|numeric|min:0',
+            'max_score' => 'required|numeric|min:0.01',
+            'teacher_comments' => 'nullable|string',
+            'feedback' => 'nullable|string',
+            'weight' => 'nullable|numeric|min:0|max:10',
+            'counts_toward_final' => 'boolean',
+            'is_extra_credit' => 'boolean',
+            'save_as_draft' => 'boolean',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Set defaults
+            $validated['weight'] = $validated['weight'] ?? 1.0;
+            $validated['counts_toward_final'] = $request->boolean('counts_toward_final', true);
+            $validated['is_extra_credit'] = $request->boolean('is_extra_credit', false);
+
+            $grade->update($validated);
+
+            // Update status based on save type
+            if ($request->boolean('save_as_draft')) {
+                $grade->status = 'draft';
+            } else {
+                $grade->submit();
+            }
+            $grade->save();
+
+            DB::commit();
+
+            $message = $request->boolean('save_as_draft') 
+                     ? 'Grade updated and saved as draft.' 
+                     : 'Grade updated and submitted for admin approval.';
+
+            return redirect()->route('teacher.grades.show', $grade)
+                           ->with('success', $message);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->withErrors(['error' => 'Failed to update grade: ' . $e->getMessage()])
+                        ->withInput();
+        }
     }
 
-    public function createExamQuestions(Request $request)
+    /**
+     * Get current semester based on date
+     */
+    private function getCurrentSemester(): string
     {
-        $teacher = $request->user()->teacher;
-        $selectedClassId = $request->get('class_id');
-        $selectedSubjectId = $request->get('subject_id');
-
-        $classes = $teacher->classes()->get();
-        $subjectsQuery = $teacher->subjects();
-        if ($selectedClassId) {
-            $subjectsQuery->where('class_id', $selectedClassId);
-        }
-        $subjects = $subjectsQuery->get();
-
-        return view('teacher.grades.create-exam-questions', compact(
-            'classes', 
-            'subjects',
-            'selectedClassId',
-            'selectedSubjectId'
-        ));
+        $month = date('n');
+        if ($month >= 8 && $month <= 12) return 'fall';
+        if ($month >= 1 && $month <= 5) return 'spring';
+        return 'summer';
     }
 
-    public function storeExamQuestions(Request $request)
+    /**
+     * Get students for a specific class and subject (AJAX)
+     */
+    public function getStudents(Request $request)
     {
         $teacher = $request->user()->teacher;
         
         $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
             'class_id' => 'required|exists:class_rooms,id',
             'subject_id' => 'required|exists:subjects,id',
-            'total_marks' => 'required|integer|min:1',
-            'duration_minutes' => 'required|integer|min:1',
-            'exam_date' => 'nullable|date|after:now',
-            'questions' => 'required|array|min:1',
-            'questions.*.question' => 'required|string',
-            'questions.*.type' => 'required|in:multiple_choice,short_answer,essay',
-            'questions.*.marks' => 'required|integer|min:1',
-            'questions.*.options' => 'required_if:questions.*.type,multiple_choice|array',
-            'questions.*.correct_answer' => 'required|string',
         ]);
 
-        $examPaper = ExamPaper::create([
-            'teacher_id' => $teacher->id,
-            'class_id' => $request->class_id,
-            'subject_id' => $request->subject_id,
-            'title' => $request->title,
-            'description' => $request->description,
-            'total_marks' => $request->total_marks,
-            'duration_minutes' => $request->duration_minutes,
-            'questions' => $request->questions,
-            'exam_date' => $request->exam_date,
-            'status' => 'draft'
-        ]);
+        // Verify teacher has permission for this subject
+        $subject = Subject::where('id', $request->subject_id)
+                         ->where('teacher_id', $teacher->id)
+                         ->first();
 
-        return redirect()->route('teacher.grades.exam-questions')
-            ->with('success', 'Exam questions created successfully!');
+        if (!$subject) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $students = Student::where('class_id', $request->class_id)
+                          ->with(['user', 'classRoom'])
+                          ->get()
+                          ->map(function ($student) {
+                              return [
+                                  'id' => $student->id,
+                                  'name' => $student->getDisplayName(),
+                                  'admission_number' => $student->admission_number,
+                                  'student_number' => $student->student_number,
+                              ];
+                          });
+
+        return response()->json($students);
     }
 
-    public function publishExam(ExamPaper $examPaper)
+    /**
+     * Bulk grade entry for multiple students
+     */
+    public function bulkCreate(Request $request)
     {
-        $examPaper->update(['status' => 'published']);
+        $teacher = $request->user()->teacher;
         
-        return redirect()->back()
-            ->with('success', 'Exam published successfully!');
+        if (!$teacher) {
+            return redirect()->route('teacher.dashboard')
+                           ->withErrors(['error' => 'Teacher profile not found.']);
+        }
+
+        $subjects = Subject::where('teacher_id', $teacher->id)->get();
+        $classes = ClassRoom::whereHas('subjects', function($query) use ($teacher) {
+            $query->where('teacher_id', $teacher->id);
+        })->get();
+
+        $selectedClassId = $request->get('class_id');
+        $selectedSubjectId = $request->get('subject_id');
+        
+        $students = collect();
+        if ($selectedClassId && $selectedSubjectId) {
+            $students = Student::where('class_id', $selectedClassId)
+                              ->with(['user', 'classRoom'])
+                              ->get();
+        }
+
+        $assessmentTypes = [
+            'assignment' => 'Assignment',
+            'quiz' => 'Quiz',
+            'midterm' => 'Midterm Exam',
+            'final' => 'Final Exam',
+            'project' => 'Project',
+            'participation' => 'Class Participation',
+        ];
+
+        $semesters = [
+            'fall' => 'Fall Semester',
+            'spring' => 'Spring Semester', 
+            'summer' => 'Summer Semester'
+        ];
+
+        return view('teacher.grades.bulk-create', compact(
+            'classes', 'subjects', 'students', 'assessmentTypes', 'semesters',
+            'selectedClassId', 'selectedSubjectId'
+        ));
     }
 
-    public function sendExamToClass(ExamPaper $examPaper)
+    /**
+     * Store bulk grades
+     */
+    public function bulkStore(Request $request)
     {
-        // Get all students in the class
-        $students = Student::where('class_id', $examPaper->class_id)
-            ->with('user')
-            ->get();
+        $teacher = $request->user()->teacher;
+        
+        if (!$teacher) {
+            return redirect()->route('teacher.dashboard')
+                           ->withErrors(['error' => 'Teacher profile not found.']);
+        }
 
-        // Here you would typically send notifications to students
-        // For now, we'll just update the status
-        $examPaper->update(['status' => 'published']);
+        $validated = $request->validate([
+            'class_id' => 'required|exists:class_rooms,id',
+            'subject_id' => 'required|exists:subjects,id',
+            'assessment_type' => 'required|string|max:255',
+            'assessment_title' => 'required|string|max:255',
+            'assessment_description' => 'nullable|string',
+            'assessment_date' => 'required|date',
+            'academic_year' => 'required|string|max:10',
+            'semester' => 'required|in:fall,spring,summer',
+            'max_score' => 'required|numeric|min:0.01',
+            'weight' => 'nullable|numeric|min:0|max:10',
+            'counts_toward_final' => 'boolean',
+            'is_extra_credit' => 'boolean',
+            'save_as_draft' => 'boolean',
+            'students' => 'required|array',
+            'students.*.student_id' => 'required|exists:students,id',
+            'students.*.raw_score' => 'required|numeric|min:0',
+            'students.*.comments' => 'nullable|string',
+        ]);
 
-        return redirect()->back()
-            ->with('success', "Exam sent to {$students->count()} students in {$examPaper->classRoom->name}!");
+        // Verify teacher has permission for this subject
+        $subject = Subject::where('id', $validated['subject_id'])
+                         ->where('teacher_id', $teacher->id)
+                         ->first();
+
+        if (!$subject) {
+            return back()->withErrors(['subject_id' => 'You are not authorized to grade this subject.'])
+                        ->withInput();
+        }
+
+        DB::beginTransaction();
+        try {
+            $successCount = 0;
+            $errors = [];
+
+            foreach ($validated['students'] as $studentData) {
+                try {
+                    $gradeData = [
+                        'student_id' => $studentData['student_id'],
+                        'subject_id' => $validated['subject_id'],
+                        'teacher_id' => $teacher->id,
+                        'class_id' => $validated['class_id'],
+                        'assessment_type' => $validated['assessment_type'],
+                        'assessment_title' => $validated['assessment_title'],
+                        'assessment_description' => $validated['assessment_description'],
+                        'assessment_date' => $validated['assessment_date'],
+                        'academic_year' => $validated['academic_year'],
+                        'semester' => $validated['semester'],
+                        'raw_score' => $studentData['raw_score'],
+                        'max_score' => $validated['max_score'],
+                        'teacher_comments' => $studentData['comments'],
+                        'weight' => $validated['weight'] ?? 1.0,
+                        'counts_toward_final' => $request->boolean('counts_toward_final', true),
+                        'is_extra_credit' => $request->boolean('is_extra_credit', false),
+                    ];
+
+                    $grade = InternationalGrade::create($gradeData);
+
+                    // Set status
+                    if ($request->boolean('save_as_draft')) {
+                        $grade->status = 'draft';
+                    } else {
+                        $grade->submit();
+                    }
+                    $grade->save();
+
+                    $successCount++;
+
+                } catch (\Exception $e) {
+                    $student = Student::find($studentData['student_id']);
+                    $errors[] = "Failed to create grade for {$student->getDisplayName()}: {$e->getMessage()}";
+                }
+            }
+
+            DB::commit();
+
+            $message = "Successfully created {$successCount} grades.";
+            if (!empty($errors)) {
+                $message .= " Errors: " . implode(', ', $errors);
+            }
+
+            return redirect()->route('teacher.grades.index')
+                           ->with('success', $message);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->withErrors(['error' => 'Failed to create grades: ' . $e->getMessage()])
+                        ->withInput();
+        }
+    }
+
+    /**
+     * Grade analytics for teacher
+     */
+    public function analytics(Request $request)
+    {
+        $teacher = $request->user()->teacher;
+        
+        if (!$teacher) {
+            return redirect()->route('teacher.dashboard');
+        }
+
+        $academicYear = $request->get('academic_year', date('Y'));
+        $semester = $request->get('semester', $this->getCurrentSemester());
+
+        // Grade distribution by teacher's subjects
+        $gradeDistribution = InternationalGrade::where('teacher_id', $teacher->id)
+                                             ->where('academic_year', $academicYear)
+                                             ->where('semester', $semester)
+                                             ->where('status', 'published')
+                                             ->selectRaw('letter_grade, COUNT(*) as count')
+                                             ->groupBy('letter_grade')
+                                             ->orderBy('letter_grade')
+                                             ->get();
+
+        // Class performance for teacher's classes
+        $classPerformance = InternationalGrade::with('classRoom')
+                                            ->where('teacher_id', $teacher->id)
+                                            ->where('academic_year', $academicYear)
+                                            ->where('semester', $semester)
+                                            ->where('status', 'published')
+                                            ->selectRaw('class_id, AVG(percentage) as avg_percentage, COUNT(*) as total_grades')
+                                            ->groupBy('class_id')
+                                            ->orderBy('avg_percentage', 'desc')
+                                            ->get();
+
+        // Subject performance for teacher's subjects
+        $subjectPerformance = InternationalGrade::with('subject')
+                                              ->where('teacher_id', $teacher->id)
+                                              ->where('academic_year', $academicYear)
+                                              ->where('semester', $semester)
+                                              ->where('status', 'published')
+                                              ->selectRaw('subject_id, AVG(percentage) as avg_percentage, COUNT(*) as total_grades')
+                                              ->groupBy('subject_id')
+                                              ->orderBy('avg_percentage', 'desc')
+                                              ->get();
+
+        return view('teacher.grades.analytics', compact(
+            'gradeDistribution', 'classPerformance', 'subjectPerformance',
+            'academicYear', 'semester'
+        ));
+    }
+
+    /**
+     * Submit grade for admin approval
+     */
+    public function submit(InternationalGrade $grade)
+    {
+        $teacher = auth()->user()->teacher;
+        
+        if ($grade->teacher_id !== $teacher->id) {
+            return back()->withErrors(['error' => 'Unauthorized']);
+        }
+
+        if ($grade->status !== 'draft') {
+            return back()->withErrors(['error' => 'Only draft grades can be submitted.']);
+        }
+
+        $grade->submit();
+
+        return back()->with('success', 'Grade submitted for admin approval.');
+    }
+
+    /**
+     * Delete grade (only drafts)
+     */
+    public function destroy(InternationalGrade $grade)
+    {
+        $teacher = auth()->user()->teacher;
+        
+        if ($grade->teacher_id !== $teacher->id) {
+            return back()->withErrors(['error' => 'Unauthorized']);
+        }
+
+        if ($grade->status !== 'draft') {
+            return back()->withErrors(['error' => 'Only draft grades can be deleted.']);
+        }
+
+        $grade->delete();
+
+        return redirect()->route('teacher.grades.index')
+                       ->with('success', 'Grade deleted successfully.');
     }
 }
-
-

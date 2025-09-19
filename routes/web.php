@@ -234,6 +234,48 @@ Route::middleware(['auth', 'teacher'])->group(function () {
     // Teacher Dashboard
     Route::get('/teacher/dashboard', [TeacherController::class, 'dashboard'])->name('teacher.dashboard');
     
+    // Teacher Grade Management
+    Route::prefix('teacher/grades')->name('teacher.grades.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Teacher\GradeController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Teacher\GradeController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Teacher\GradeController::class, 'store'])->name('store');
+        Route::get('/bulk-create', [\App\Http\Controllers\Teacher\GradeController::class, 'bulkCreate'])->name('bulk-create');
+        Route::post('/bulk-store', [\App\Http\Controllers\Teacher\GradeController::class, 'bulkStore'])->name('bulk-store');
+        Route::get('/analytics', [\App\Http\Controllers\Teacher\GradeController::class, 'analytics'])->name('analytics');
+        Route::get('/{grade}', [\App\Http\Controllers\Teacher\GradeController::class, 'show'])->name('show');
+        Route::get('/{grade}/edit', [\App\Http\Controllers\Teacher\GradeController::class, 'edit'])->name('edit');
+        Route::put('/{grade}', [\App\Http\Controllers\Teacher\GradeController::class, 'update'])->name('update');
+        Route::post('/{grade}/submit', [\App\Http\Controllers\Teacher\GradeController::class, 'submit'])->name('submit');
+        Route::delete('/{grade}', [\App\Http\Controllers\Teacher\GradeController::class, 'destroy'])->name('destroy');
+        Route::get('/ajax/students', [\App\Http\Controllers\Teacher\GradeController::class, 'getStudents'])->name('get-students');
+    });
+    
+    // Teacher Exam Management
+    Route::prefix('teacher/exams')->name('teacher.exams.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Teacher\ExamController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Teacher\ExamController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Teacher\ExamController::class, 'store'])->name('store');
+        Route::get('/{exam}', [\App\Http\Controllers\Teacher\ExamController::class, 'show'])->name('show');
+        Route::get('/{exam}/edit', [\App\Http\Controllers\Teacher\ExamController::class, 'edit'])->name('edit');
+        Route::put('/{exam}', [\App\Http\Controllers\Teacher\ExamController::class, 'update'])->name('update');
+        Route::post('/{exam}/publish', [\App\Http\Controllers\Teacher\ExamController::class, 'publish'])->name('publish');
+        Route::post('/{exam}/unpublish', [\App\Http\Controllers\Teacher\ExamController::class, 'unpublish'])->name('unpublish');
+        Route::delete('/{exam}', [\App\Http\Controllers\Teacher\ExamController::class, 'destroy'])->name('destroy');
+    });
+    
+    // Teacher Homework Management
+    Route::prefix('teacher/homework')->name('teacher.homework.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Teacher\HomeworkController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Teacher\HomeworkController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Teacher\HomeworkController::class, 'store'])->name('store');
+        Route::get('/{assignment}', [\App\Http\Controllers\Teacher\HomeworkController::class, 'show'])->name('show');
+        Route::get('/{assignment}/edit', [\App\Http\Controllers\Teacher\HomeworkController::class, 'edit'])->name('edit');
+        Route::put('/{assignment}', [\App\Http\Controllers\Teacher\HomeworkController::class, 'update'])->name('update');
+        Route::post('/{assignment}/publish', [\App\Http\Controllers\Teacher\HomeworkController::class, 'publish'])->name('publish');
+        Route::delete('/{assignment}', [\App\Http\Controllers\Teacher\HomeworkController::class, 'destroy'])->name('destroy');
+        Route::post('/submissions/{submission}/grade', [\App\Http\Controllers\Teacher\HomeworkController::class, 'gradeSubmission'])->name('grade-submission');
+    });
+    
     // Teacher's assigned students
     Route::get('/teacher/students', [\App\Http\Controllers\Teacher\StudentController::class, 'index'])->name('teacher.students');
     Route::get('/teacher/students/{student}', [\App\Http\Controllers\Teacher\StudentController::class, 'show'])->name('teacher.students.show');
@@ -301,6 +343,33 @@ Route::middleware(['auth', 'teacher'])->group(function () {
 // Dashboard routes with authentication middleware
 Route::middleware(['auth'])->group(function () {
     Route::get('/student/dashboard', [StudentController::class, 'dashboard'])->name('student.dashboard');
+    
+    // Student Grade Access
+    Route::prefix('student/grades')->name('student.grades.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Student\GradeController::class, 'index'])->name('index');
+        Route::get('/{grade}', [\App\Http\Controllers\Student\GradeController::class, 'show'])->name('show');
+        Route::get('/transcript/view', [\App\Http\Controllers\Student\GradeController::class, 'transcript'])->name('transcript');
+        Route::get('/transcript/download', [\App\Http\Controllers\Student\GradeController::class, 'downloadTranscript'])->name('download-transcript');
+    });
+    
+    // Student Exam Access
+    Route::prefix('student/exams')->name('student.exams.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Student\ExamController::class, 'index'])->name('index');
+        Route::get('/{exam}', [\App\Http\Controllers\Student\ExamController::class, 'show'])->name('show');
+        Route::post('/{exam}/start', [\App\Http\Controllers\Student\ExamController::class, 'start'])->name('start');
+        Route::get('/{exam}/take/{attempt}', [\App\Http\Controllers\Student\ExamController::class, 'take'])->name('take');
+        Route::post('/{exam}/submit/{attempt}', [\App\Http\Controllers\Student\ExamController::class, 'submit'])->name('submit');
+        Route::get('/{exam}/result/{attempt}', [\App\Http\Controllers\Student\ExamController::class, 'result'])->name('result');
+        Route::post('/{exam}/save-answer/{attempt}', [\App\Http\Controllers\Student\ExamController::class, 'saveAnswer'])->name('save-answer');
+    });
+    
+    // Student Homework Access
+    Route::prefix('student/homework')->name('student.homework.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Student\HomeworkController::class, 'index'])->name('index');
+        Route::get('/{assignment}', [\App\Http\Controllers\Student\HomeworkController::class, 'show'])->name('show');
+        Route::get('/{assignment}/submit', [\App\Http\Controllers\Student\HomeworkController::class, 'create'])->name('create');
+        Route::post('/{assignment}/submit', [\App\Http\Controllers\Student\HomeworkController::class, 'store'])->name('store');
+    });
     
     // Student Exams
     Route::get('/student/exams', [ExamController::class, 'index'])->name('student.exams.index');
