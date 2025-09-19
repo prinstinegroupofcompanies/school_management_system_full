@@ -1,17 +1,19 @@
 @php 
 $userType = auth()->user()->user_type ?? 'guest'; 
 
-// Helper function to safely generate routes
-function safeRoute($name, $parameters = [], $fallback = '#') {
-    try {
-        if (Route::has($name)) {
-            return route($name, $parameters);
+// Helper function to safely generate routes (only declare once)
+if (!function_exists('safeRoute')) {
+    function safeRoute($name, $parameters = [], $fallback = '#') {
+        try {
+            if (Route::has($name)) {
+                return route($name, $parameters);
+            }
+        } catch (\Exception $e) {
+            // Log the error but don't break the page
+            \Log::warning("Navigation route error: {$name}", ['error' => $e->getMessage()]);
         }
-    } catch (\Exception $e) {
-        // Log the error but don't break the page
-        \Log::warning("Navigation route error: {$name}", ['error' => $e->getMessage()]);
+        return $fallback;
     }
-    return $fallback;
 }
 @endphp
 
