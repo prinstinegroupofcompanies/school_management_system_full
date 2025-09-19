@@ -25,6 +25,7 @@ class ProductionSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'user_type' => 'admin',
                 'is_active' => true,
+                'status' => 'active',
             ]
         );
 
@@ -36,68 +37,104 @@ class ProductionSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'user_type' => 'finance',
                 'is_active' => true,
+                'status' => 'active',
             ]
         );
 
         // Create teacher user
-        User::firstOrCreate(
+        $teacherUser1 = User::firstOrCreate(
             ['email' => 'teacher@school.com'],
             [
                 'name' => 'John Teacher',
                 'password' => Hash::make('password'),
                 'user_type' => 'teacher',
                 'is_active' => true,
+                'status' => 'active',
             ]
         );
 
+        // Create Teacher record for the first teacher user
+        if (!Teacher::where('user_id', $teacherUser1->id)->exists()) {
+            Teacher::create([
+                'user_id' => $teacherUser1->id,
+                'employee_id' => 'TCH001',
+                'department' => 'Mathematics',
+                'qualification' => 'BSc Mathematics',
+                'experience_years' => 3,
+                'joining_date' => now()->subYears(3),
+                'basic_salary' => 50000,
+                'employment_status' => 'active',
+                'currency' => 'LRD',
+            ]);
+        }
+
         // Create sample class
-        $class = ClassRoom::create([
+        $class = ClassRoom::firstOrCreate([
+            'code' => 'G10A'
+        ], [
             'name' => 'Grade 10A',
-            'code' => 'G10A',
             'description' => 'Grade 10 Class A',
         ]);
 
         // Create sample subject
-        $subject = Subject::create([
+        $subject = Subject::firstOrCreate([
+            'code' => 'MATH101'
+        ], [
             'name' => 'Mathematics',
-            'code' => 'MATH101',
             'description' => 'Basic Mathematics',
         ]);
 
         // Create sample student
-        $studentUser = User::create([
-            'name' => 'John Doe',
-            'email' => 'student@school.com',
-            'password' => Hash::make('password'),
-            'user_type' => 'student',
-            'is_active' => true,
-        ]);
+        $studentUser = User::firstOrCreate(
+            ['email' => 'student@school.com'],
+            [
+                'name' => 'John Doe',
+                'password' => Hash::make('password'),
+                'user_type' => 'student',
+                'is_active' => true,
+                'status' => 'active',
+            ]
+        );
 
-        Student::create([
-            'user_id' => $studentUser->id,
-            'class_id' => $class->id,
-            'student_id' => 'STU001',
-            'date_of_birth' => '2005-01-01',
-            'address' => 'Sample Address',
-            'phone' => '1234567890',
-        ]);
+        if (!Student::where('user_id', $studentUser->id)->exists()) {
+            Student::create([
+                'user_id' => $studentUser->id,
+                'class_id' => $class->id,
+                'student_id' => 'STU001',
+                'date_of_birth' => '2005-01-01',
+                'address' => 'Sample Address',
+                'phone' => '1234567890',
+                'admission_no' => 'ADM001',
+                'admission_date' => now()->subMonths(6),
+                'status' => 'active',
+            ]);
+        }
 
-        // Create sample teacher
-        $teacherUser = User::create([
-            'name' => 'Jane Teacher',
-            'email' => 'jane.teacher@school.com',
-            'password' => Hash::make('password'),
-            'user_type' => 'teacher',
-            'is_active' => true,
-        ]);
+        // Create additional teacher with proper relationships
+        $teacherUser2 = User::firstOrCreate(
+            ['email' => 'jane.teacher@school.com'],
+            [
+                'name' => 'Jane Teacher',
+                'password' => Hash::make('password'),
+                'user_type' => 'teacher',
+                'is_active' => true,
+                'status' => 'active',
+            ]
+        );
 
-        Teacher::create([
-            'user_id' => $teacherUser->id,
-            'employee_id' => 'TCH001',
-            'department' => 'Mathematics',
-            'qualification' => 'MSc Mathematics',
-            'experience_years' => 5,
-        ]);
+        if (!Teacher::where('user_id', $teacherUser2->id)->exists()) {
+            Teacher::create([
+                'user_id' => $teacherUser2->id,
+                'employee_id' => 'TCH002',
+                'department' => 'Science',
+                'qualification' => 'MSc Chemistry',
+                'experience_years' => 5,
+                'joining_date' => now()->subYears(5),
+                'basic_salary' => 60000,
+                'employment_status' => 'active',
+                'currency' => 'LRD',
+            ]);
+        }
 
         $this->command->info('Production data seeded successfully!');
         $this->command->info('Admin: admin@school.com / password');

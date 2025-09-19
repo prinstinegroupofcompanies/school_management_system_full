@@ -34,7 +34,7 @@ class AuthController extends Controller
                 case 'student':
                     return redirect()->intended(route('student.dashboard'));
                 case 'finance':
-                    return redirect()->intended(route('dashboard'));
+                    return redirect()->intended(route('finance.dashboard'));
                 default:
                     return redirect()->intended(route('dashboard'));
             }
