@@ -49,7 +49,22 @@ try {
         if ($exitCode === 0) {
             echo "✅ Seeders completed successfully\n\n";
         } else {
-            echo "❌ Seeders failed\n";
+            echo "❌ Seeders failed, trying individual seeders...\n";
+            
+            // Try individual seeders
+            $seeders = ['UserSeeder', 'ProductionSeeder'];
+            foreach ($seeders as $seeder) {
+                try {
+                    $exitCode = Artisan::call('db:seed', ['--class' => $seeder, '--force' => true]);
+                    if ($exitCode === 0) {
+                        echo "✅ $seeder completed successfully\n";
+                    } else {
+                        echo "❌ $seeder failed\n";
+                    }
+                } catch (Exception $e) {
+                    echo "❌ $seeder error: " . $e->getMessage() . "\n";
+                }
+            }
         }
         
     } else {

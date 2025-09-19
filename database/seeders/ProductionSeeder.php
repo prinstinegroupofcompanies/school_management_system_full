@@ -18,31 +18,37 @@ class ProductionSeeder extends Seeder
     public function run(): void
     {
         // Create admin user
-        User::create([
-            'name' => 'Admin',
-            'email' => 'admin@school.com',
-            'password' => Hash::make('password'),
-            'user_type' => 'admin',
-            'is_active' => true,
-        ]);
+        User::firstOrCreate(
+            ['email' => 'admin@school.com'],
+            [
+                'name' => 'Admin',
+                'password' => Hash::make('password'),
+                'user_type' => 'admin',
+                'is_active' => true,
+            ]
+        );
 
         // Create finance user
-        User::create([
-            'name' => 'Finance Officer',
-            'email' => 'finance@school.com',
-            'password' => Hash::make('password'),
-            'user_type' => 'finance',
-            'is_active' => true,
-        ]);
+        User::firstOrCreate(
+            ['email' => 'finance@school.com'],
+            [
+                'name' => 'Finance Officer',
+                'password' => Hash::make('password'),
+                'user_type' => 'finance',
+                'is_active' => true,
+            ]
+        );
 
         // Create teacher user
-        User::create([
-            'name' => 'John Teacher',
-            'email' => 'teacher@school.com',
-            'password' => Hash::make('password'),
-            'user_type' => 'teacher',
-            'is_active' => true,
-        ]);
+        User::firstOrCreate(
+            ['email' => 'teacher@school.com'],
+            [
+                'name' => 'John Teacher',
+                'password' => Hash::make('password'),
+                'user_type' => 'teacher',
+                'is_active' => true,
+            ]
+        );
 
         // Create sample class
         $class = ClassRoom::create([

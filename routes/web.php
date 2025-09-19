@@ -23,7 +23,7 @@ use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\Admin\StaffManagementController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\ReportController;
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
+// use App\Http\Controllers\Auth\AuthenticatedSessionController; // Not needed
 
 /*
 |--------------------------------------------------------------------------
@@ -139,7 +139,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
 // Teacher Routes (restricted access)
 Route::middleware(['auth', 'teacher'])->group(function () {
     // Teacher Dashboard
-    Route::get('/teacher/dashboard', [DashboardController::class, 'index'])->name('teacher.dashboard');
+    Route::get('/teacher/dashboard', [TeacherController::class, 'dashboard'])->name('teacher.dashboard');
     
     // Teacher's assigned students
     Route::get('/teacher/students', [\App\Http\Controllers\Teacher\StudentController::class, 'index'])->name('teacher.students');
@@ -241,7 +241,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/notifications/{notification}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
     
-    Route::get('/teacher/dashboard', [TeacherController::class, 'dashboard'])->name('teacher.dashboard');
     Route::get('/finance/dashboard', [FinanceController::class, 'dashboard'])->name('finance.dashboard');
     // Student Finance
     Route::get('/student/dashboard/finance', [\App\Http\Controllers\Student\FinanceController::class, 'index'])->name('student.finance.index');

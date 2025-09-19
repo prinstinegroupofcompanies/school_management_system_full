@@ -1,102 +1,92 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-2xl mx-auto">
-        <!-- Header -->
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">Edit Student</h1>
-                <p class="text-gray-600">Update student information and settings</p>
-            </div>
-            <a href="{{ route('admin.students.show', $student) }}" 
-               class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition duration-200">
-                <i class="fas fa-arrow-left mr-2"></i>Back to Student
-            </a>
-        </div>
-
-        <!-- Edit Form -->
-        <div class="bg-white rounded-lg shadow-lg p-6">
-            <form action="{{ route('admin.students.update', $student) }}" method="POST">
-                @csrf
-                @method('PUT')
-
-                <!-- Basic Information -->
-                <div class="mb-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                            <input type="text" name="name" id="name" 
-                                   value="{{ old('name', $student->user->name) }}" required
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            @error('name')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                            <input type="email" name="email" id="email" 
-                                   value="{{ old('email', $student->user->email) }}" required
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            @error('email')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
+<div class="min-h-screen bg-gray-50">
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="p-6 bg-white border-b border-gray-200">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Edit Student</h2>
+                    <a href="{{ route('students.show', $student) }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                        Back to Student
+                    </a>
                 </div>
 
-                <!-- Academic Information -->
-                <div class="mb-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Academic Information</h3>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @if($errors->any())
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                        <ul>
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <form action="{{ route('students.update', $student) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label for="class_id" class="block text-sm font-medium text-gray-700 mb-2">Class</label>
-                            <select name="class_id" id="class_id" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                <option value="">Select a class</option>
+                            <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                            <input type="text" name="name" id="name" value="{{ old('name', $student->user->name ?? '') }}" 
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" 
+                                   required>
+                        </div>
+
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" name="email" id="email" value="{{ old('email', $student->user->email ?? '') }}" 
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" 
+                                   required>
+                        </div>
+
+                        <div>
+                            <label for="class_id" class="block text-sm font-medium text-gray-700">Class</label>
+                            <select name="class_id" id="class_id" 
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" 
+                                    required>
+                                <option value="">Select Class</option>
                                 @foreach($classes as $class)
-                                    <option value="{{ $class->id }}" 
-                                            {{ old('class_id', $student->class_id) == $class->id ? 'selected' : '' }}>
-                                        {{ $class->name }} ({{ $class->code }})
+                                    <option value="{{ $class->id }}" {{ (old('class_id', $student->class_id) == $class->id) ? 'selected' : '' }}>
+                                        {{ $class->name }}
                                     </option>
                                 @endforeach
                             </select>
-                            @error('class_id')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <div>
-                            <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                            <select name="status" id="status" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                <option value="active" {{ old('status', $student->status) === 'active' ? 'selected' : '' }}>Active</option>
-                                <option value="inactive" {{ old('status', $student->status) === 'inactive' ? 'selected' : '' }}>Inactive</option>
-                                <option value="suspended" {{ old('status', $student->status) === 'suspended' ? 'selected' : '' }}>Suspended</option>
-                            </select>
-                            @error('status')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                            @enderror
+                            <label for="date_of_birth" class="block text-sm font-medium text-gray-700">Date of Birth</label>
+                            <input type="date" name="date_of_birth" id="date_of_birth" value="{{ old('date_of_birth', $student->date_of_birth) }}" 
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        </div>
+
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-gray-700">Phone</label>
+                            <input type="text" name="phone" id="phone" value="{{ old('phone', $student->phone) }}" 
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        </div>
+
+                        <div>
+                            <label for="student_id" class="block text-sm font-medium text-gray-700">Student ID</label>
+                            <input type="text" name="student_id" id="student_id" value="{{ $student->student_id }}" 
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100" 
+                                   readonly>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label for="address" class="block text-sm font-medium text-gray-700">Address</label>
+                            <textarea name="address" id="address" rows="3" 
+                                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">{{ old('address', $student->address) }}</textarea>
                         </div>
                     </div>
-                </div>
 
-                <!-- Form Actions -->
-                <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-                    <a href="{{ route('admin.students.show', $student) }}" 
-                       class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition duration-200">
-                        Cancel
-                    </a>
-                    <button type="submit" 
-                            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition duration-200">
-                        <i class="fas fa-save mr-2"></i>Update Student
-                    </button>
-                </div>
-            </form>
+                    <div class="mt-6">
+                        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            Update Student
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
