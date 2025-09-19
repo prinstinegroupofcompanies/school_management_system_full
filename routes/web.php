@@ -603,8 +603,14 @@ Route::middleware([\App\Http\Middleware\Authenticate::class])->group(function ()
         Route::post('/invoices/bulk-send', [\App\Http\Controllers\Finance\InvoiceController::class, 'bulkSend'])->name('invoices.bulk-send');
         Route::get('/invoices/{studentFee}/download', [\App\Http\Controllers\Finance\InvoiceController::class, 'download'])->name('invoices.download');
 
-        // Payment approvals
-        Route::get('/payments', [\App\Http\Controllers\Finance\PaymentApprovalController::class, 'index'])->name('payments.index');
+        // Enhanced Payment Management
+        Route::get('/payments', [\App\Http\Controllers\Finance\PaymentController::class, 'index'])->name('payments.index');
+        Route::get('/payments/{student}/create', [\App\Http\Controllers\Finance\PaymentController::class, 'create'])->name('payments.create');
+        Route::post('/payments/{student}', [\App\Http\Controllers\Finance\PaymentController::class, 'store'])->name('payments.store');
+        Route::get('/payments/view/{payment}', [\App\Http\Controllers\Finance\PaymentController::class, 'show'])->name('payments.show');
+        Route::get('/payments/analytics', [\App\Http\Controllers\Finance\PaymentController::class, 'analytics'])->name('payments.analytics');
+        
+        // Legacy payment approvals (keep for compatibility)
         Route::post('/payments/{payment}/approve', [\App\Http\Controllers\Finance\PaymentApprovalController::class, 'approve'])->name('payments.approve');
         Route::post('/payments/{payment}/reject', [\App\Http\Controllers\Finance\PaymentApprovalController::class, 'reject'])->name('payments.reject');
 

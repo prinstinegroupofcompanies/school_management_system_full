@@ -121,4 +121,37 @@ class ClassRoom extends Model
     {
         return $this->capacity - $this->total_students;
     }
+
+    /**
+     * Get fee structures for this class
+     */
+    public function feeStructures(): HasMany
+    {
+        return $this->hasMany(ClassFeeStructure::class, 'class_id');
+    }
+
+    /**
+     * Get active fee structure for current academic year
+     */
+    public function currentFeeStructure()
+    {
+        return $this->hasOne(ClassFeeStructure::class, 'class_id')
+                    ->where('is_active', true)
+                    ->where('academic_year', date('Y'))
+                    ->where('effective_from', '<=', now())
+                    ->where(function($query) {
+                        $query->whereNull('effective_to')
+                              ->orWhere('effective_to', '>=', now());
+                    });
+    }
+
+    /**
+     * Get fee structure for specific academic year
+     */
+    public function feeStructureForYear($year)
+    {
+        return $this->hasOne(ClassFeeStructure::class, 'class_id')
+                    ->where('is_active', true)
+                    ->where('academic_year', $year);
+    }
 }

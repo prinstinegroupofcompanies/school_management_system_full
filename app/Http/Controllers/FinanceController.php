@@ -8,6 +8,9 @@ use App\Models\Student;
 use App\Models\Scholarship;
 use App\Models\ScholarshipApplication;
 use App\Models\FeePayment;
+use App\Models\ClassFeeStructure;
+use App\Models\InternationalGrade;
+use App\Models\StudentActivityLog;
 use Illuminate\Support\Facades\DB;
 
 class FinanceController extends Controller
@@ -342,6 +345,32 @@ class FinanceController extends Controller
             return $callback();
         } catch (\Exception $e) {
             return $default ?? collect();
+        }
+    }
+
+    /**
+     * Get enhanced financial statistics with new fee structure system
+     */
+    public function getEnhancedFinancialData(): array
+    {
+        try {
+            $currentYear = date('Y');
+            
+            // Real-time statistics from new system
+            $enhancedStats = [
+                'total_fee_structures' => ClassFeeStructure::where('is_active', true)->count(),
+                'total_students_enrolled' => Student::where('academic_year', $currentYear)->count(),
+                'students_with_auto_fees' => Student::whereNotNull('total_fees')->where('total_fees', '>', 0)->count(),
+                'average_fee_per_student' => Student::where('total_fees', '>', 0)->avg('total_fees'),
+                'students_fully_paid' => Student::where('balance_fees', 0)->count(),
+                'students_partial_paid' => Student::where('paid_fees', '>', 0)->where('balance_fees', '>', 0)->count(),
+                'students_unpaid' => Student::where('paid_fees', 0)->where('balance_fees', '>', 0)->count(),
+            ];
+
+            return ['enhanced_stats' => $enhancedStats];
+
+        } catch (\Exception $e) {
+            return ['enhanced_stats' => []];
         }
     }
 }
