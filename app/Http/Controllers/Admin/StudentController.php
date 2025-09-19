@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Models\User;
 use App\Models\ClassRoom;
+use App\Models\StudentActivityLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class StudentController extends Controller
 {
@@ -59,34 +61,65 @@ class StudentController extends Controller
 
     public function store(Request $request)
     {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:8',
+            'class_id' => 'required|exists:class_rooms,id',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'date_of_birth' => 'required|date',
+            'gender' => 'required|in:male,female,other',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:500',
+            'nationality' => 'nullable|string|max:100',
+            'religion' => 'nullable|string|max:100',
+            'blood_group' => 'nullable|string|max:10',
+        ]);
+
+        DB::beginTransaction();
         try {
-            $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|unique:users,email',
-                'password' => 'required|min:8',
-                'class_id' => 'required|exists:class_rooms,id',
+            // Create user account
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => bcrypt($validated['password']),
+                'user_type' => 'student',
+                'phone' => $validated['phone'],
+                'address' => $validated['address'],
+                'status' => 'active',
             ]);
 
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => bcrypt($request->password),
-                'user_type' => 'student',
+            // Create student record (auto-generation will happen in boot method)
+            $student = Student::create([
+                'user_id' => $user->id,
+                'class_id' => $validated['class_id'],
+                'first_name' => $validated['first_name'],
+                'last_name' => $validated['last_name'],
+                'middle_name' => $validated['middle_name'],
+                'academic_year' => date('Y'),
+                'admission_date' => now(),
+                'date_of_birth' => $validated['date_of_birth'],
+                'gender' => $validated['gender'],
+                'phone' => $validated['phone'],
+                'address' => $validated['address'],
+                'nationality' => $validated['nationality'] ?? 'Liberian',
+                'religion' => $validated['religion'],
+                'blood_group' => $validated['blood_group'],
+                'status' => 'active',
                 'is_active' => true,
             ]);
 
-            Student::create([
-                'user_id' => $user->id,
-                'class_id' => $request->class_id,
-                'student_id' => 'STU' . str_pad(Student::count() + 1, 4, '0', STR_PAD_LEFT),
-                'date_of_birth' => $request->date_of_birth ?? '2000-01-01',
-                'address' => $request->address ?? '',
-                'phone' => $request->phone ?? '',
-            ]);
+            DB::commit();
 
-            return redirect()->route('students.index')->with('success', 'Student created successfully.');
+            return redirect()->route('admin.students.show', $student)
+                           ->with('success', 'Student created successfully! Admission Number: ' . $student->admission_number);
+
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to create student: ' . $e->getMessage()]);
+            DB::rollback();
+            return back()->withErrors(['error' => 'Failed to create student: ' . $e->getMessage()])
+                        ->withInput();
         }
     }
 

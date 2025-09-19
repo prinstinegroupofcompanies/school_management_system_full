@@ -110,6 +110,34 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::put('/{officer}', [\App\Http\Controllers\Admin\FinanceOfficerController::class, 'update'])->name('update');
         Route::delete('/{officer}', [\App\Http\Controllers\Admin\FinanceOfficerController::class, 'destroy'])->name('destroy');
     });
+
+    // Class Fee Structure Management Routes
+    Route::prefix('admin/fee-structures')->name('admin.fee-structures.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ClassFeeStructureController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\ClassFeeStructureController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\ClassFeeStructureController::class, 'store'])->name('store');
+        Route::get('/{feeStructure}', [\App\Http\Controllers\Admin\ClassFeeStructureController::class, 'show'])->name('show');
+        Route::get('/{feeStructure}/edit', [\App\Http\Controllers\Admin\ClassFeeStructureController::class, 'edit'])->name('edit');
+        Route::put('/{feeStructure}', [\App\Http\Controllers\Admin\ClassFeeStructureController::class, 'update'])->name('update');
+        Route::delete('/{feeStructure}', [\App\Http\Controllers\Admin\ClassFeeStructureController::class, 'destroy'])->name('destroy');
+        Route::post('/bulk-apply', [\App\Http\Controllers\Admin\ClassFeeStructureController::class, 'bulkApply'])->name('bulk-apply');
+    });
+
+    // International Grade Management Routes
+    Route::prefix('admin/grades')->name('admin.grades.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'store'])->name('store');
+        Route::get('/analytics', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'analytics'])->name('analytics');
+        Route::get('/{grade}', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'show'])->name('show');
+        Route::get('/{grade}/edit', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'edit'])->name('edit');
+        Route::put('/{grade}', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'update'])->name('update');
+        Route::delete('/{grade}', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'destroy'])->name('destroy');
+        Route::post('/{grade}/approve', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'approve'])->name('approve');
+        Route::post('/{grade}/reject', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'reject'])->name('reject');
+        Route::post('/{grade}/publish', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'publish'])->name('publish');
+        Route::post('/bulk-approve', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'bulkApprove'])->name('bulk-approve');
+    });
     
     // Staff Management Routes
     Route::prefix('admin/staff')->name('admin.staff.')->group(function () {
