@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             ScholarshipSeeder::class,
             ProductionSeeder::class, // Add production data for Render deployment
+            InternationalSystemSeeder::class, // Enhanced international features
         ]);
     }
 }

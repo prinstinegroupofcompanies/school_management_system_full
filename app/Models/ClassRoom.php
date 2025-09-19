@@ -72,7 +72,7 @@ class ClassRoom extends Model
         return $this->hasMany(Student::class, 'class_id');
     }
 
-    public function feeStructures(): HasMany
+    public function legacyFeeStructures(): HasMany
     {
         return $this->hasMany(FeeStructure::class, 'class_id');
     }
