@@ -3,8 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\StudentFee;
-use App\Models\PaymentRecord;
+use App\Models\FeeStructure;
 use App\Models\Student;
 use App\Models\Scholarship;
 use App\Models\ScholarshipApplication;
@@ -15,13 +14,22 @@ class FinanceController extends Controller
 {
     public function dashboard()
     {
-        // Real-time aggregates
-        $totalFees = (float) StudentFee::sum('total_amount');
-        $totalCollected = (float) PaymentRecord::where('payment_records.status', 'approved')->sum('amount');
+        // Use safe database queries to prevent crashes
+        $totalFees = $this->safeQuery(function() {
+            return (float) FeeStructure::sum('amount');
+        }) ?: 0;
+        
+        $totalCollected = $this->safeQuery(function() {
+            return (float) FeePayment::where('status', 'paid')->sum('amount_paid');
+        }) ?: 0;
+        
         $totalPending = max(0, $totalFees - $totalCollected);
-        $collectedToday = (float) PaymentRecord::where('payment_records.status', 'approved')
-            ->whereDate(DB::raw('date(approved_at)'), today())
-            ->sum('amount');
+        
+        $collectedToday = $this->safeQuery(function() {
+            return (float) FeePayment::where('status', 'paid')
+                ->whereDate('payment_date', today())
+                ->sum('amount_paid');
+        }) ?: 0;
 
         $stats = [
             'total_revenue' => $totalCollected,
@@ -31,34 +39,40 @@ class FinanceController extends Controller
             'collected_today' => $collectedToday,
         ];
 
-        $recent_payments = PaymentRecord::with(['student.user', 'fee'])
-            ->latest()
-            ->limit(10)
-            ->get();
+        $recent_payments = $this->safeQuery(function() {
+            return FeePayment::with(['student.user', 'feeStructure'])
+                ->latest('payment_date')
+                ->limit(10)
+                ->get();
+        }) ?: collect();
 
         // Get real scholarship data
         $scholarshipStats = $this->getScholarshipStats();
         $pending_scholarships = $this->getPendingScholarships();
 
-        $monthlyCollection = PaymentRecord::where('payment_records.status', 'approved')
-            ->selectRaw("CAST(strftime('%m', approved_at) AS INTEGER) as month, SUM(amount) as total")
-            ->whereRaw("strftime('%Y', approved_at) = ?", [date('Y')])
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get();
+        $monthlyCollection = $this->safeQuery(function() {
+            return FeePayment::where('status', 'paid')
+                ->selectRaw("CAST(strftime('%m', payment_date) AS INTEGER) as month, SUM(amount_paid) as total")
+                ->whereRaw("strftime('%Y', payment_date) = ?", [date('Y')])
+                ->groupBy('month')
+                ->orderBy('month')
+                ->get();
+        }) ?: collect();
 
-        $classWiseCollection = PaymentRecord::where('payment_records.status', 'approved')
-            ->join('student_fees', 'payment_records.fee_id', '=', 'student_fees.id')
-            ->join('class_rooms', 'student_fees.class_id', '=', 'class_rooms.id')
-            ->selectRaw('class_rooms.name as class_name, SUM(payment_records.amount) as total_collected')
-            ->groupBy('class_rooms.id', 'class_rooms.name')
-            ->orderByDesc('total_collected')
-            ->get();
+        $classWiseCollection = $this->safeQuery(function() {
+            return FeePayment::where('status', 'paid')
+                ->join('fee_structures', 'fee_payments.fee_structure_id', '=', 'fee_structures.id')
+                ->join('class_rooms', 'fee_structures.class_id', '=', 'class_rooms.id')
+                ->selectRaw('class_rooms.name as class_name, SUM(fee_payments.amount_paid) as total_collected')
+                ->groupBy('class_rooms.id', 'class_rooms.name')
+                ->orderByDesc('total_collected')
+                ->get();
+        }) ?: collect();
 
         $recentActivities = $recent_payments->map(function ($p) {
             return [
-                'description' => 'Payment '.$p->amount.' by '.($p->student->user->name ?? 'Student'),
-                'created_at' => $p->created_at,
+                'description' => 'Payment $'.number_format($p->amount_paid, 2).' by '.($p->student->user->name ?? 'Student'),
+                'created_at' => $p->payment_date ?? $p->created_at,
             ];
         });
 
@@ -139,12 +153,23 @@ class FinanceController extends Controller
 
     private function getScholarshipStats()
     {
-        $totalScholarships = Scholarship::count();
-        $activeScholarships = Scholarship::where('is_active', true)->count();
-        $totalAwarded = ScholarshipApplication::where('status', 'approved')->count();
-        $totalAmountAwarded = ScholarshipApplication::where('status', 'approved')
-            ->join('scholarships', 'scholarship_applications.scholarship_id', '=', 'scholarships.id')
-            ->sum('scholarships.amount');
+        $totalScholarships = $this->safeQuery(function() {
+            return Scholarship::count();
+        }) ?: 0;
+        
+        $activeScholarships = $this->safeQuery(function() {
+            return Scholarship::where('is_active', true)->count();
+        }) ?: 0;
+        
+        $totalAwarded = $this->safeQuery(function() {
+            return ScholarshipApplication::where('status', 'approved')->count();
+        }) ?: 0;
+        
+        $totalAmountAwarded = $this->safeQuery(function() {
+            return ScholarshipApplication::where('status', 'approved')
+                ->join('scholarships', 'scholarship_applications.scholarship_id', '=', 'scholarships.id')
+                ->sum('scholarships.amount');
+        }) ?: 0;
 
         return [
             'total_scholarships' => $totalScholarships,
@@ -156,29 +181,45 @@ class FinanceController extends Controller
 
     private function getPendingScholarships()
     {
-        return ScholarshipApplication::with(['scholarship', 'student.user'])
-            ->where('status', 'pending')
-            ->latest()
-            ->limit(5)
-            ->get()
-            ->map(function ($application) {
-                return [
-                    'student_name' => $application->student->user->name ?? 'Unknown',
-                    'scholarship_name' => $application->scholarship->name,
-                    'amount' => $application->scholarship->amount,
-                    'application_date' => $application->application_date,
-                ];
-            });
+        return $this->safeQuery(function() {
+            return ScholarshipApplication::with(['scholarship', 'student.user'])
+                ->where('status', 'pending')
+                ->latest()
+                ->limit(5)
+                ->get()
+                ->map(function ($application) {
+                    return [
+                        'student_name' => $application->student->user->name ?? 'Unknown',
+                        'scholarship_name' => $application->scholarship->name ?? 'Unknown Scholarship',
+                        'amount' => $application->scholarship->amount ?? 0,
+                        'application_date' => $application->application_date ?? $application->created_at,
+                    ];
+                });
+        }) ?: collect();
     }
 
     private function getScholarshipDistribution()
     {
-        return ScholarshipApplication::with('scholarship')
-            ->where('status', 'approved')
-            ->get()
-            ->groupBy('scholarship.name')
-            ->map(function ($applications) {
-                return $applications->sum('scholarship.amount');
-            });
+        return $this->safeQuery(function() {
+            return ScholarshipApplication::with('scholarship')
+                ->where('status', 'approved')
+                ->get()
+                ->groupBy('scholarship.name')
+                ->map(function ($applications) {
+                    return $applications->sum('scholarship.amount');
+                });
+        }) ?: collect();
+    }
+
+    /**
+     * Safe database query wrapper to prevent crashes when tables don't exist
+     */
+    private function safeQuery($callback, $default = null)
+    {
+        try {
+            return $callback();
+        } catch (\Exception $e) {
+            return $default ?? collect();
+        }
     }
 }

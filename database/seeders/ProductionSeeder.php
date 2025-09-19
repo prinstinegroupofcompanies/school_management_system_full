@@ -8,6 +8,9 @@ use App\Models\ClassRoom;
 use App\Models\Subject;
 use App\Models\Student;
 use App\Models\Teacher;
+use App\Models\FeeStructure;
+use App\Models\FeePayment;
+use App\Models\StudentAttendance;
 use Illuminate\Support\Facades\Hash;
 
 class ProductionSeeder extends Seeder
@@ -134,6 +137,59 @@ class ProductionSeeder extends Seeder
                 'employment_status' => 'active',
                 'currency' => 'LRD',
             ]);
+        }
+
+        // Create sample fee structures
+        if (!FeeStructure::where('class_id', $class->id)->exists()) {
+            FeeStructure::create([
+                'class_id' => $class->id,
+                'fee_type' => 'tuition',
+                'amount' => 50000, // 50,000 LRD
+                'due_date' => now()->addMonths(1),
+                'academic_year' => date('Y'),
+                'semester' => 1,
+                'description' => 'Tuition Fee for Grade 10A',
+            ]);
+
+            FeeStructure::create([
+                'class_id' => $class->id,
+                'fee_type' => 'library',
+                'amount' => 5000, // 5,000 LRD
+                'due_date' => now()->addMonths(1),
+                'academic_year' => date('Y'),
+                'semester' => 1,
+                'description' => 'Library Fee for Grade 10A',
+            ]);
+        }
+
+        // Create sample fee payments
+        if (!FeePayment::where('student_id', $studentUser->student->id ?? null)->exists() && $studentUser->student) {
+            $feeStructure = FeeStructure::where('class_id', $class->id)->first();
+            if ($feeStructure) {
+                FeePayment::create([
+                    'student_id' => $studentUser->student->id,
+                    'fee_structure_id' => $feeStructure->id,
+                    'amount' => $feeStructure->amount,
+                    'amount_paid' => $feeStructure->amount * 0.5, // 50% paid
+                    'payment_method' => 'cash',
+                    'payment_date' => now()->subDays(5),
+                    'status' => 'paid',
+                    'payment_notes' => 'Partial payment',
+                ]);
+            }
+        }
+
+        // Create sample student attendance
+        if (!StudentAttendance::where('student_id', $studentUser->student->id ?? null)->exists() && $studentUser->student) {
+            for ($i = 1; $i <= 10; $i++) {
+                StudentAttendance::create([
+                    'student_id' => $studentUser->student->id,
+                    'class_id' => $class->id,
+                    'date' => now()->subDays($i),
+                    'status' => $i <= 8 ? 'present' : 'absent', // 80% attendance
+                    'marked_by' => $teacherUser1->id,
+                ]);
+            }
         }
 
         $this->command->info('Production data seeded successfully!');

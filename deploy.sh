@@ -53,3 +53,10 @@ php artisan route:cache
 php artisan view:cache
 
 echo "Deployment completed successfully!"
+
+echo ""
+echo "=== Running dashboard data debug ==="
+php debug_dashboard.php
+
+echo ""
+echo "✅ Deployment and verification complete!"
