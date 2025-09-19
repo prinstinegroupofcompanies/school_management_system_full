@@ -137,7 +137,7 @@
                         @foreach($student->attendances->take(5) as $attendance)
                             <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                 <div>
-                                    <div class="text-sm font-medium text-gray-900">{{ $attendance->date->format('M d, Y') }}</div>
+                                    <div class="text-sm font-medium text-gray-900">{{ $attendance->date ? $attendance->date->format('M d, Y') : 'N/A' }}</div>
                                     <div class="text-xs text-gray-500">{{ $attendance->subject ?? 'General' }}</div>
                                 </div>
                                 <span class="px-2 py-1 text-xs font-semibold rounded-full

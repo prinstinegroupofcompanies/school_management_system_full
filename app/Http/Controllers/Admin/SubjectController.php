@@ -49,9 +49,9 @@ class SubjectController extends Controller
 
     public function create()
     {
-        $teachers = Teacher::all();
+        $teachers = Teacher::with('user')->get();
         $classes = ClassRoom::all();
-        return view('subjects.create', compact('teachers','classes'));
+        return view('admin.subjects.create', compact('teachers','classes'));
     }
 
     public function store(Request $request)
