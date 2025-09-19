@@ -591,16 +591,17 @@ class StudentController extends Controller
                 ]
             ];
         } else {
-        return [
-            'success' => false,
-            'message' => 'Invalid password',
-            'student' => [
-                'id' => $student->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'user_type' => $user->user_type
-            ]
-        ];
+            return [
+                'success' => false,
+                'message' => 'Invalid password',
+                'student' => [
+                    'id' => $student->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'user_type' => $user->user_type
+                ]
+            ];
+        }
     }
 
     /**
