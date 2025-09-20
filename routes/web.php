@@ -218,6 +218,22 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/vehicles', [\App\Http\Controllers\TransportController::class, 'vehicles'])->name('vehicles');
         Route::get('/schedule', [\App\Http\Controllers\TransportController::class, 'schedule'])->name('schedule');
     });
+
+    // Hostel Management (Admin/Teacher access)
+    Route::prefix('hostel')->name('hostel.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\HostelController::class, 'index'])->name('index');
+        Route::get('/rooms', [\App\Http\Controllers\HostelController::class, 'rooms'])->name('rooms');
+        Route::get('/students', [\App\Http\Controllers\HostelController::class, 'students'])->name('students');
+        Route::get('/facilities', [\App\Http\Controllers\HostelController::class, 'facilities'])->name('facilities');
+    });
+
+    // Attendance Management (Admin/Teacher access)
+    Route::prefix('attendance')->name('attendance.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\AttendanceController::class, 'index'])->name('index');
+        Route::get('/take', [\App\Http\Controllers\AttendanceController::class, 'take'])->name('take');
+        Route::post('/store', [\App\Http\Controllers\AttendanceController::class, 'store'])->name('store');
+        Route::get('/reports', [\App\Http\Controllers\AttendanceController::class, 'reports'])->name('reports');
+    });
 });
 
 // =============================================================================
@@ -317,6 +333,21 @@ Route::middleware(['auth', 'student'])->group(function () {
         Route::get('/', [\App\Http\Controllers\Student\TransportController::class, 'index'])->name('index');
         Route::get('/schedule', [\App\Http\Controllers\Student\TransportController::class, 'schedule'])->name('schedule');
         Route::get('/routes', [\App\Http\Controllers\Student\TransportController::class, 'routes'])->name('routes');
+    });
+
+    // Student Hostel Access
+    Route::prefix('student/hostel')->name('student.hostel.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Student\HostelController::class, 'index'])->name('index');
+        Route::get('/room', [\App\Http\Controllers\Student\HostelController::class, 'myRoom'])->name('room');
+        Route::get('/facilities', [\App\Http\Controllers\Student\HostelController::class, 'facilities'])->name('facilities');
+        Route::post('/requests', [\App\Http\Controllers\Student\HostelController::class, 'submitRequest'])->name('requests');
+    });
+
+    // Student Attendance Access
+    Route::prefix('student/attendance')->name('student.attendance.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Student\AttendanceController::class, 'index'])->name('index');
+        Route::get('/history', [\App\Http\Controllers\Student\AttendanceController::class, 'history'])->name('history');
+        Route::get('/summary', [\App\Http\Controllers\Student\AttendanceController::class, 'summary'])->name('summary');
     });
 });
 
