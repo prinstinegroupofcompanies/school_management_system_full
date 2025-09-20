@@ -1,0 +1,245 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\StudentController;
+use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\FinanceController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UserController;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes - CLEANED VERSION
+|--------------------------------------------------------------------------
+*/
+
+// Root redirect
+Route::get('/', function () {
+    return redirect()->route('dashboard');
+});
+
+// Authentication routes
+Route::middleware('guest')->group(function () {
+    Route::get('/login', function () {
+        return view('auth.login');
+    })->name('login.show');
+    
+    Route::post('/login', [AuthController::class, 'login'])->name('login');
+});
+
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+
+// Dashboard redirect
+Route::get('/dashboard', function () {
+    $user = auth()->user();
+    if (!$user) {
+        return redirect()->route('login');
+    }
+    
+    switch ($user->user_type) {
+        case 'admin':
+            return redirect()->route('admin.dashboard');
+        case 'teacher':
+            return redirect()->route('teacher.dashboard');
+        case 'student':
+            return redirect()->route('student.dashboard');
+        case 'finance':
+            return redirect()->route('finance.dashboard');
+        default:
+            return redirect()->route('admin.dashboard');
+    }
+})->name('dashboard')->middleware('auth');
+
+// =============================================================================
+// ADMIN ROUTES
+// =============================================================================
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    
+    // Student Management
+    Route::prefix('admin/students')->name('admin.students.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\StudentController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\StudentController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\StudentController::class, 'store'])->name('store');
+        Route::get('/{student}', [\App\Http\Controllers\Admin\StudentController::class, 'show'])->name('show');
+        Route::get('/{student}/edit', [\App\Http\Controllers\Admin\StudentController::class, 'edit'])->name('edit');
+        Route::put('/{student}', [\App\Http\Controllers\Admin\StudentController::class, 'update'])->name('update');
+        Route::delete('/{student}', [\App\Http\Controllers\Admin\StudentController::class, 'destroy'])->name('destroy');
+    });
+
+    // Teacher Management
+    Route::prefix('admin/teachers')->name('admin.teachers.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\TeacherController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\TeacherController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\TeacherController::class, 'store'])->name('store');
+        Route::get('/{teacher}', [\App\Http\Controllers\Admin\TeacherController::class, 'show'])->name('show');
+        Route::get('/{teacher}/edit', [\App\Http\Controllers\Admin\TeacherController::class, 'edit'])->name('edit');
+        Route::put('/{teacher}', [\App\Http\Controllers\Admin\TeacherController::class, 'update'])->name('update');
+        Route::delete('/{teacher}', [\App\Http\Controllers\Admin\TeacherController::class, 'destroy'])->name('destroy');
+    });
+
+    // Class Management
+    Route::prefix('admin/classes')->name('admin.classes.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ClassController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\ClassController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\ClassController::class, 'store'])->name('store');
+        Route::get('/{class}', [\App\Http\Controllers\Admin\ClassController::class, 'show'])->name('show');
+        Route::get('/{class}/edit', [\App\Http\Controllers\Admin\ClassController::class, 'edit'])->name('edit');
+        Route::put('/{class}', [\App\Http\Controllers\Admin\ClassController::class, 'update'])->name('update');
+        Route::delete('/{class}', [\App\Http\Controllers\Admin\ClassController::class, 'destroy'])->name('destroy');
+    });
+
+    // Subject Management
+    Route::prefix('admin/subjects')->name('admin.subjects.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\SubjectController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\SubjectController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\SubjectController::class, 'store'])->name('store');
+        Route::get('/{subject}', [\App\Http\Controllers\Admin\SubjectController::class, 'show'])->name('show');
+        Route::get('/{subject}/edit', [\App\Http\Controllers\Admin\SubjectController::class, 'edit'])->name('edit');
+        Route::put('/{subject}', [\App\Http\Controllers\Admin\SubjectController::class, 'update'])->name('update');
+        Route::delete('/{subject}', [\App\Http\Controllers\Admin\SubjectController::class, 'destroy'])->name('destroy');
+    });
+
+    // Grade Management
+    Route::prefix('admin/grades')->name('admin.grades.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'store'])->name('store');
+        Route::get('/analytics', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'analytics'])->name('analytics');
+        Route::get('/{grade}', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'show'])->name('show');
+        Route::get('/{grade}/edit', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'edit'])->name('edit');
+        Route::put('/{grade}', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'update'])->name('update');
+        Route::delete('/{grade}', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'destroy'])->name('destroy');
+        Route::post('/{grade}/approve', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'approve'])->name('approve');
+        Route::post('/{grade}/reject', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'reject'])->name('reject');
+        Route::post('/{grade}/publish', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'publish'])->name('publish');
+        Route::post('/bulk-approve', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'bulkApprove'])->name('bulk-approve');
+    });
+
+    // Fee Structure Management
+    Route::prefix('admin/fee-structures')->name('admin.fee-structures.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ClassFeeStructureController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\ClassFeeStructureController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\ClassFeeStructureController::class, 'store'])->name('store');
+        Route::get('/{feeStructure}', [\App\Http\Controllers\Admin\ClassFeeStructureController::class, 'show'])->name('show');
+        Route::get('/{feeStructure}/edit', [\App\Http\Controllers\Admin\ClassFeeStructureController::class, 'edit'])->name('edit');
+        Route::put('/{feeStructure}', [\App\Http\Controllers\Admin\ClassFeeStructureController::class, 'update'])->name('update');
+        Route::delete('/{feeStructure}', [\App\Http\Controllers\Admin\ClassFeeStructureController::class, 'destroy'])->name('destroy');
+    });
+});
+
+// =============================================================================
+// TEACHER ROUTES
+// =============================================================================
+Route::middleware(['auth', 'teacher'])->group(function () {
+    Route::get('/teacher/dashboard', [TeacherController::class, 'dashboard'])->name('teacher.dashboard');
+    
+    // Grade Management
+    Route::prefix('teacher/grades')->name('teacher.grades.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Teacher\GradeController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Teacher\GradeController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Teacher\GradeController::class, 'store'])->name('store');
+        Route::get('/{grade}', [\App\Http\Controllers\Teacher\GradeController::class, 'show'])->name('show');
+        Route::get('/{grade}/edit', [\App\Http\Controllers\Teacher\GradeController::class, 'edit'])->name('edit');
+        Route::put('/{grade}', [\App\Http\Controllers\Teacher\GradeController::class, 'update'])->name('update');
+    });
+    
+    // Exam Management
+    Route::prefix('teacher/exams')->name('teacher.exams.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Teacher\ExamController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Teacher\ExamController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Teacher\ExamController::class, 'store'])->name('store');
+        Route::get('/{exam}', [\App\Http\Controllers\Teacher\ExamController::class, 'show'])->name('show');
+        Route::get('/{exam}/edit', [\App\Http\Controllers\Teacher\ExamController::class, 'edit'])->name('edit');
+        Route::put('/{exam}', [\App\Http\Controllers\Teacher\ExamController::class, 'update'])->name('update');
+        Route::post('/{exam}/publish', [\App\Http\Controllers\Teacher\ExamController::class, 'publish'])->name('publish');
+        Route::post('/{exam}/unpublish', [\App\Http\Controllers\Teacher\ExamController::class, 'unpublish'])->name('unpublish');
+        Route::delete('/{exam}', [\App\Http\Controllers\Teacher\ExamController::class, 'destroy'])->name('destroy');
+    });
+    
+    // Homework Management
+    Route::prefix('teacher/homework')->name('teacher.homework.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Teacher\HomeworkController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Teacher\HomeworkController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Teacher\HomeworkController::class, 'store'])->name('store');
+        Route::get('/{assignment}', [\App\Http\Controllers\Teacher\HomeworkController::class, 'show'])->name('show');
+        Route::get('/{assignment}/edit', [\App\Http\Controllers\Teacher\HomeworkController::class, 'edit'])->name('edit');
+        Route::put('/{assignment}', [\App\Http\Controllers\Teacher\HomeworkController::class, 'update'])->name('update');
+        Route::post('/{assignment}/publish', [\App\Http\Controllers\Teacher\HomeworkController::class, 'publish'])->name('publish');
+        Route::delete('/{assignment}', [\App\Http\Controllers\Teacher\HomeworkController::class, 'destroy'])->name('destroy');
+        Route::post('/submissions/{submission}/grade', [\App\Http\Controllers\Teacher\HomeworkController::class, 'gradeSubmission'])->name('grade-submission');
+    });
+});
+
+// =============================================================================
+// STUDENT ROUTES
+// =============================================================================
+Route::middleware(['auth', 'student'])->group(function () {
+    Route::get('/student/dashboard', [StudentController::class, 'dashboard'])->name('student.dashboard');
+    
+    // Grade Access
+    Route::prefix('student/grades')->name('student.grades.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Student\GradeController::class, 'index'])->name('index');
+        Route::get('/{grade}', [\App\Http\Controllers\Student\GradeController::class, 'show'])->name('show');
+        Route::get('/transcript', [\App\Http\Controllers\Student\GradeController::class, 'transcript'])->name('transcript');
+        Route::get('/transcript/download', [\App\Http\Controllers\Student\GradeController::class, 'downloadTranscript'])->name('download-transcript');
+    });
+    
+    // Exam Taking
+    Route::prefix('student/exams')->name('student.exams.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Student\ExamController::class, 'index'])->name('index');
+        Route::get('/{exam}', [\App\Http\Controllers\Student\ExamController::class, 'show'])->name('show');
+        Route::post('/{exam}/start', [\App\Http\Controllers\Student\ExamController::class, 'start'])->name('start');
+        Route::get('/{attempt}/take', [\App\Http\Controllers\Student\ExamController::class, 'take'])->name('take');
+        Route::post('/{attempt}/submit', [\App\Http\Controllers\Student\ExamController::class, 'submit'])->name('submit');
+        Route::get('/{attempt}/result', [\App\Http\Controllers\Student\ExamController::class, 'result'])->name('result');
+        Route::post('/save-answer', [\App\Http\Controllers\Student\ExamController::class, 'saveAnswer'])->name('save-answer');
+        Route::get('/{attempt}/answers', [\App\Http\Controllers\Student\ExamController::class, 'getAnswers'])->name('get-answers');
+    });
+    
+    // Homework Submission
+    Route::prefix('student/homework')->name('student.homework.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Student\HomeworkController::class, 'index'])->name('index');
+        Route::get('/{assignment}', [\App\Http\Controllers\Student\HomeworkController::class, 'show'])->name('show');
+        Route::get('/{assignment}/submit', [\App\Http\Controllers\Student\HomeworkController::class, 'create'])->name('create');
+        Route::post('/{assignment}/submit', [\App\Http\Controllers\Student\HomeworkController::class, 'store'])->name('store');
+    });
+});
+
+// =============================================================================
+// FINANCE ROUTES
+// =============================================================================
+Route::middleware(['auth', 'finance'])->group(function () {
+    Route::get('/finance/dashboard', [FinanceController::class, 'dashboard'])->name('finance.dashboard');
+    
+    // Payment Management
+    Route::prefix('finance/payments')->name('finance.payments.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Finance\PaymentController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Finance\PaymentController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Finance\PaymentController::class, 'store'])->name('store');
+        Route::get('/{payment}', [\App\Http\Controllers\Finance\PaymentController::class, 'show'])->name('show');
+        Route::get('/analytics', [\App\Http\Controllers\Finance\PaymentController::class, 'analytics'])->name('analytics');
+    });
+});
+
+// =============================================================================
+// SHARED AUTHENTICATED ROUTES
+// =============================================================================
+Route::middleware(['auth'])->group(function () {
+    // Profile Management
+    Route::get('/profile', [UserController::class, 'profile'])->name('profile');
+    Route::get('/profile/edit', [UserController::class, 'editProfile'])->name('profile.edit');
+    Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
+    
+    // API Routes for AJAX calls
+    Route::get('/api/students/search', function () {
+        return response()->json([]);
+    })->name('api.students.search');
+});
+
+// Fallback route
+Route::fallback(function () {
+    return view('errors.404');
+});
