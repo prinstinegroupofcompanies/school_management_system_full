@@ -129,6 +129,17 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::delete('/{feeStructure}', [\App\Http\Controllers\Admin\ClassFeeStructureController::class, 'destroy'])->name('destroy');
     });
 
+    // Finance Officers Management
+    Route::prefix('admin/finance-officers')->name('admin.finance_officers.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\FinanceOfficerController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\FinanceOfficerController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\FinanceOfficerController::class, 'store'])->name('store');
+        Route::get('/{officer}', [\App\Http\Controllers\Admin\FinanceOfficerController::class, 'show'])->name('show');
+        Route::get('/{officer}/edit', [\App\Http\Controllers\Admin\FinanceOfficerController::class, 'edit'])->name('edit');
+        Route::put('/{officer}', [\App\Http\Controllers\Admin\FinanceOfficerController::class, 'update'])->name('update');
+        Route::delete('/{officer}', [\App\Http\Controllers\Admin\FinanceOfficerController::class, 'destroy'])->name('destroy');
+    });
+
     // Staff Management
     Route::prefix('admin/staff')->name('admin.staff.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\StaffManagementController::class, 'index'])->name('index');
@@ -164,6 +175,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/staff', [\App\Http\Controllers\Admin\ReportController::class, 'staff'])->name('staff');
         Route::post('/export', [\App\Http\Controllers\Admin\ReportController::class, 'export'])->name('export');
     });
+
+    // Fee Reports (alias for financial reports)
+    Route::get('/admin/fees/reports', [\App\Http\Controllers\Admin\ReportController::class, 'financial'])->name('admin.fees.reports');
 
     // Transport Management
     Route::prefix('admin/transport')->name('admin.transport.')->group(function () {
