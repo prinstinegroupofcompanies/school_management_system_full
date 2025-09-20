@@ -288,9 +288,62 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile/edit', [UserController::class, 'editProfile'])->name('profile.edit');
     Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
     
+    // Notifications for real-time updates
+    Route::get('/notifications.json', function (Illuminate\Http\Request $request) {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json([]);
+        }
+        try {
+            // Use the NotificationService to get notifications
+            $service = app(\App\Services\NotificationService::class);
+            $notifications = $service->getUnreadNotifications($user->id, 10);
+            return response()->json($notifications);
+        } catch (\Throwable $e) {
+            return response()->json([]);
+        }
+    })->name('notifications.json');
+    
+    Route::put('/notifications/{id}/read', function (Illuminate\Http\Request $request, $id) {
+        $user = $request->user();
+        $service = app(\App\Services\NotificationService::class);
+        $service->markAsRead($id, $user->id);
+        return response()->json(['success' => true]);
+    })->name('notifications.mark-read');
+    
     // API Routes for AJAX calls
-    Route::get('/api/students/search', function () {
-        return response()->json([]);
+    Route::get('/api/students/search', function (Illuminate\Http\Request $request) {
+        $query = $request->get('q', '');
+        if (strlen($query) < 2) {
+            return response()->json([]);
+        }
+        
+        try {
+            $students = \App\Models\Student::with(['user', 'classRoom'])
+                ->whereHas('user', function($q) use ($query) {
+                    $q->where('name', 'like', "%{$query}%");
+                })
+                ->orWhere('admission_number', 'like', "%{$query}%")
+                ->orWhere('student_number', 'like', "%{$query}%")
+                ->limit(10)
+                ->get()
+                ->map(function($student) {
+                    return [
+                        'id' => $student->id,
+                        'name' => $student->user->name,
+                        'admission_number' => $student->admission_number,
+                        'student_number' => $student->student_number,
+                        'class_name' => $student->classRoom->name ?? 'N/A',
+                        'total_fees' => $student->total_fees ?? 0,
+                        'paid_fees' => $student->paid_fees ?? 0,
+                        'balance_fees' => $student->balance_fees ?? 0,
+                    ];
+                });
+            
+            return response()->json($students);
+        } catch (\Exception $e) {
+            return response()->json([]);
+        }
     })->name('api.students.search');
 });
 
