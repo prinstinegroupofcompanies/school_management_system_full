@@ -234,6 +234,28 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::post('/store', [\App\Http\Controllers\AttendanceController::class, 'store'])->name('store');
         Route::get('/reports', [\App\Http\Controllers\AttendanceController::class, 'reports'])->name('reports');
     });
+
+    // User Management (Admin/Teacher access)
+    Route::prefix('users')->name('users.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\UserController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\UserController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\UserController::class, 'store'])->name('store');
+        Route::get('/{user}', [\App\Http\Controllers\UserController::class, 'show'])->name('show');
+        Route::get('/{user}/edit', [\App\Http\Controllers\UserController::class, 'edit'])->name('edit');
+        Route::put('/{user}', [\App\Http\Controllers\UserController::class, 'update'])->name('update');
+        Route::delete('/{user}', [\App\Http\Controllers\UserController::class, 'destroy'])->name('destroy');
+    });
+
+    // System Settings (Admin/Teacher access)
+    Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\SettingController::class, 'index'])->name('index');
+        Route::get('/general', [\App\Http\Controllers\SettingController::class, 'general'])->name('general');
+        Route::post('/general', [\App\Http\Controllers\SettingController::class, 'updateGeneral'])->name('general.update');
+        Route::get('/academic', [\App\Http\Controllers\SettingController::class, 'academic'])->name('academic');
+        Route::post('/academic', [\App\Http\Controllers\SettingController::class, 'updateAcademic'])->name('academic.update');
+        Route::get('/notifications', [\App\Http\Controllers\SettingController::class, 'notifications'])->name('notifications');
+        Route::post('/notifications', [\App\Http\Controllers\SettingController::class, 'updateNotifications'])->name('notifications.update');
+    });
 });
 
 // =============================================================================
@@ -348,6 +370,15 @@ Route::middleware(['auth', 'student'])->group(function () {
         Route::get('/', [\App\Http\Controllers\Student\AttendanceController::class, 'index'])->name('index');
         Route::get('/history', [\App\Http\Controllers\Student\AttendanceController::class, 'history'])->name('history');
         Route::get('/summary', [\App\Http\Controllers\Student\AttendanceController::class, 'summary'])->name('summary');
+    });
+
+    // Student Settings Access
+    Route::prefix('student/settings')->name('student.settings.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Student\SettingsController::class, 'index'])->name('index');
+        Route::get('/preferences', [\App\Http\Controllers\Student\SettingsController::class, 'preferences'])->name('preferences');
+        Route::post('/preferences', [\App\Http\Controllers\Student\SettingsController::class, 'updatePreferences'])->name('preferences.update');
+        Route::get('/notifications', [\App\Http\Controllers\Student\SettingsController::class, 'notifications'])->name('notifications');
+        Route::post('/notifications', [\App\Http\Controllers\Student\SettingsController::class, 'updateNotifications'])->name('notifications.update');
     });
 });
 
