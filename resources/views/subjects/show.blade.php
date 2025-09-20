@@ -10,10 +10,10 @@
                 <p class="text-gray-600 mt-2">Subject Code: {{ $subject->code }}</p>
             </div>
             <div class="flex space-x-4">
-                <a href="{{ route('subjects.edit', $subject) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                <a href="{{ route('admin.subjects.edit', $subject) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
                     <i class="fas fa-edit mr-2"></i>Edit Subject
                 </a>
-                <a href="{{ route('subjects.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">
+                <a href="{{ route('admin.subjects.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">
                     <i class="fas fa-arrow-left mr-2"></i>Back to Subjects
                 </a>
             </div>

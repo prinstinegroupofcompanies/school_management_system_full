@@ -82,4 +82,36 @@ class NotificationService
         
         return true;
     }
+
+    /**
+     * Get notification statistics
+     */
+    public function getNotificationStats()
+    {
+        try {
+            $total = DB::table('notifications')->count();
+            $unread = DB::table('notifications')->where('is_read', false)->count();
+            $today = DB::table('notifications')->whereDate('created_at', today())->count();
+            $thisWeek = DB::table('notifications')->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count();
+
+            return [
+                'total' => $total,
+                'unread' => $unread,
+                'read' => $total - $unread,
+                'today' => $today,
+                'this_week' => $thisWeek,
+                'read_percentage' => $total > 0 ? round(($total - $unread) / $total * 100, 1) : 0
+            ];
+        } catch (\Exception $e) {
+            Log::error('Failed to get notification stats: ' . $e->getMessage());
+            return [
+                'total' => 0,
+                'unread' => 0,
+                'read' => 0,
+                'today' => 0,
+                'this_week' => 0,
+                'read_percentage' => 0
+            ];
+        }
+    }
 }

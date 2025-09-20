@@ -152,6 +152,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/performance', [\App\Http\Controllers\Admin\StaffManagementController::class, 'performance'])->name('performance');
         Route::get('/payroll', [\App\Http\Controllers\Admin\StaffManagementController::class, 'payroll'])->name('payroll');
         Route::get('/schedules', [\App\Http\Controllers\Admin\StaffManagementController::class, 'schedules'])->name('schedules');
+        Route::get('/reports', [\App\Http\Controllers\Admin\StaffManagementController::class, 'reports'])->name('reports');
     });
 
     // Notifications Management
@@ -173,6 +174,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/financial', [\App\Http\Controllers\Admin\ReportController::class, 'financial'])->name('financial');
         Route::get('/attendance', [\App\Http\Controllers\Admin\ReportController::class, 'attendance'])->name('attendance');
         Route::get('/staff', [\App\Http\Controllers\Admin\ReportController::class, 'staff'])->name('staff');
+        Route::get('/library', [\App\Http\Controllers\Admin\ReportController::class, 'library'])->name('library');
         Route::post('/export', [\App\Http\Controllers\Admin\ReportController::class, 'export'])->name('export');
     });
 
@@ -222,6 +224,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Hostel Management (Admin/Teacher access)
     Route::prefix('hostel')->name('hostel.')->group(function () {
         Route::get('/', [\App\Http\Controllers\HostelController::class, 'index'])->name('index');
+        Route::get('/create-hostel', [\App\Http\Controllers\HostelController::class, 'createHostel'])->name('create-hostel');
+        Route::post('/create-hostel', [\App\Http\Controllers\HostelController::class, 'storeHostel'])->name('store-hostel');
         Route::get('/rooms', [\App\Http\Controllers\HostelController::class, 'rooms'])->name('rooms');
         Route::get('/students', [\App\Http\Controllers\HostelController::class, 'students'])->name('students');
         Route::get('/facilities', [\App\Http\Controllers\HostelController::class, 'facilities'])->name('facilities');
@@ -233,6 +237,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/take', [\App\Http\Controllers\AttendanceController::class, 'take'])->name('take');
         Route::post('/store', [\App\Http\Controllers\AttendanceController::class, 'store'])->name('store');
         Route::get('/reports', [\App\Http\Controllers\AttendanceController::class, 'reports'])->name('reports');
+        Route::get('/student', [\App\Http\Controllers\AttendanceController::class, 'studentAttendance'])->name('student');
+        Route::get('/teacher', [\App\Http\Controllers\AttendanceController::class, 'teacherAttendance'])->name('teacher');
     });
 
     // User Management (Admin/Teacher access)
