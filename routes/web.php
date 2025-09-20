@@ -148,6 +148,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\Admin\NotificationController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\Admin\NotificationController::class, 'store'])->name('store');
+        Route::get('/templates', [\App\Http\Controllers\Admin\NotificationController::class, 'templates'])->name('templates');
+        Route::get('/templates/create', [\App\Http\Controllers\Admin\NotificationController::class, 'createTemplate'])->name('templates.create');
+        Route::post('/templates', [\App\Http\Controllers\Admin\NotificationController::class, 'storeTemplate'])->name('templates.store');
         Route::get('/{notification}', [\App\Http\Controllers\Admin\NotificationController::class, 'show'])->name('show');
         Route::delete('/{notification}', [\App\Http\Controllers\Admin\NotificationController::class, 'destroy'])->name('destroy');
     });
