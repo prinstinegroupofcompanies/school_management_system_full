@@ -200,6 +200,24 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::put('/{hostel}', [\App\Http\Controllers\Admin\HostelController::class, 'update'])->name('update');
         Route::delete('/{hostel}', [\App\Http\Controllers\Admin\HostelController::class, 'destroy'])->name('destroy');
     });
+
+    // Library Management (Admin/Teacher access)
+    Route::prefix('library')->name('library.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\LibraryController::class, 'index'])->name('index');
+        Route::get('/books', [\App\Http\Controllers\LibraryController::class, 'books'])->name('books');
+        Route::get('/books/create', [\App\Http\Controllers\LibraryController::class, 'createBook'])->name('books.create');
+        Route::post('/books', [\App\Http\Controllers\LibraryController::class, 'storeBook'])->name('books.store');
+        Route::get('/members', [\App\Http\Controllers\LibraryController::class, 'members'])->name('members');
+        Route::get('/issued', [\App\Http\Controllers\LibraryController::class, 'issued'])->name('issued');
+    });
+
+    // Transport Management (Admin/Teacher access)
+    Route::prefix('transport')->name('transport.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\TransportController::class, 'index'])->name('index');
+        Route::get('/routes', [\App\Http\Controllers\TransportController::class, 'routes'])->name('routes');
+        Route::get('/vehicles', [\App\Http\Controllers\TransportController::class, 'vehicles'])->name('vehicles');
+        Route::get('/schedule', [\App\Http\Controllers\TransportController::class, 'schedule'])->name('schedule');
+    });
 });
 
 // =============================================================================
@@ -285,6 +303,21 @@ Route::middleware(['auth', 'student'])->group(function () {
     Route::put('/student/profile', [\App\Http\Controllers\Student\SettingsController::class, 'updateProfile'])->name('student.profile.update');
     Route::get('/student/change-password', [\App\Http\Controllers\Student\SettingsController::class, 'changePasswordForm'])->name('student.change-password');
     Route::post('/student/change-password', [\App\Http\Controllers\Student\SettingsController::class, 'changePassword'])->name('student.change-password.update');
+
+    // Student Library Access
+    Route::prefix('student/library')->name('student.library.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Student\LibraryController::class, 'index'])->name('index');
+        Route::get('/books', [\App\Http\Controllers\Student\LibraryController::class, 'books'])->name('books');
+        Route::get('/my-books', [\App\Http\Controllers\Student\LibraryController::class, 'myBooks'])->name('my-books');
+        Route::post('/books/{book}/request', [\App\Http\Controllers\Student\LibraryController::class, 'requestBook'])->name('request-book');
+    });
+
+    // Student Transport Access
+    Route::prefix('student/transport')->name('student.transport.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Student\TransportController::class, 'index'])->name('index');
+        Route::get('/schedule', [\App\Http\Controllers\Student\TransportController::class, 'schedule'])->name('schedule');
+        Route::get('/routes', [\App\Http\Controllers\Student\TransportController::class, 'routes'])->name('routes');
+    });
 });
 
 // =============================================================================
