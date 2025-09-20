@@ -128,6 +128,61 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::put('/{feeStructure}', [\App\Http\Controllers\Admin\ClassFeeStructureController::class, 'update'])->name('update');
         Route::delete('/{feeStructure}', [\App\Http\Controllers\Admin\ClassFeeStructureController::class, 'destroy'])->name('destroy');
     });
+
+    // Staff Management
+    Route::prefix('admin/staff')->name('admin.staff.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\StaffManagementController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\StaffManagementController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\StaffManagementController::class, 'store'])->name('store');
+        Route::get('/{staff}', [\App\Http\Controllers\Admin\StaffManagementController::class, 'show'])->name('show');
+        Route::get('/{staff}/edit', [\App\Http\Controllers\Admin\StaffManagementController::class, 'edit'])->name('edit');
+        Route::put('/{staff}', [\App\Http\Controllers\Admin\StaffManagementController::class, 'update'])->name('update');
+        Route::delete('/{staff}', [\App\Http\Controllers\Admin\StaffManagementController::class, 'destroy'])->name('destroy');
+        Route::get('/performance', [\App\Http\Controllers\Admin\StaffManagementController::class, 'performance'])->name('performance');
+        Route::get('/payroll', [\App\Http\Controllers\Admin\StaffManagementController::class, 'payroll'])->name('payroll');
+        Route::get('/schedules', [\App\Http\Controllers\Admin\StaffManagementController::class, 'schedules'])->name('schedules');
+    });
+
+    // Notifications Management
+    Route::prefix('admin/notifications')->name('admin.notifications.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\NotificationController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\NotificationController::class, 'store'])->name('store');
+        Route::get('/{notification}', [\App\Http\Controllers\Admin\NotificationController::class, 'show'])->name('show');
+        Route::delete('/{notification}', [\App\Http\Controllers\Admin\NotificationController::class, 'destroy'])->name('destroy');
+    });
+
+    // Reports Management
+    Route::prefix('admin/reports')->name('admin.reports.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ReportController::class, 'index'])->name('index');
+        Route::get('/academic', [\App\Http\Controllers\Admin\ReportController::class, 'academic'])->name('academic');
+        Route::get('/financial', [\App\Http\Controllers\Admin\ReportController::class, 'financial'])->name('financial');
+        Route::get('/attendance', [\App\Http\Controllers\Admin\ReportController::class, 'attendance'])->name('attendance');
+        Route::get('/staff', [\App\Http\Controllers\Admin\ReportController::class, 'staff'])->name('staff');
+        Route::post('/export', [\App\Http\Controllers\Admin\ReportController::class, 'export'])->name('export');
+    });
+
+    // Transport Management
+    Route::prefix('admin/transport')->name('admin.transport.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\TransportController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\TransportController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\TransportController::class, 'store'])->name('store');
+        Route::get('/{transport}', [\App\Http\Controllers\Admin\TransportController::class, 'show'])->name('show');
+        Route::get('/{transport}/edit', [\App\Http\Controllers\Admin\TransportController::class, 'edit'])->name('edit');
+        Route::put('/{transport}', [\App\Http\Controllers\Admin\TransportController::class, 'update'])->name('update');
+        Route::delete('/{transport}', [\App\Http\Controllers\Admin\TransportController::class, 'destroy'])->name('destroy');
+    });
+
+    // Hostel Management
+    Route::prefix('admin/hostel')->name('admin.hostel.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\HostelController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\HostelController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\HostelController::class, 'store'])->name('store');
+        Route::get('/{hostel}', [\App\Http\Controllers\Admin\HostelController::class, 'show'])->name('show');
+        Route::get('/{hostel}/edit', [\App\Http\Controllers\Admin\HostelController::class, 'edit'])->name('edit');
+        Route::put('/{hostel}', [\App\Http\Controllers\Admin\HostelController::class, 'update'])->name('update');
+        Route::delete('/{hostel}', [\App\Http\Controllers\Admin\HostelController::class, 'destroy'])->name('destroy');
+    });
 });
 
 // =============================================================================
