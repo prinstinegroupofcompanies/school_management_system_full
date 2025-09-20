@@ -261,6 +261,13 @@ Route::middleware(['auth', 'student'])->group(function () {
         Route::get('/{assignment}/submit', [\App\Http\Controllers\Student\HomeworkController::class, 'create'])->name('create');
         Route::post('/{assignment}/submit', [\App\Http\Controllers\Student\HomeworkController::class, 'store'])->name('store');
     });
+    
+    // Student Profile Management
+    Route::get('/student/profile', [\App\Http\Controllers\Student\SettingsController::class, 'profile'])->name('student.profile');
+    Route::get('/student/profile/edit', [\App\Http\Controllers\Student\SettingsController::class, 'editProfile'])->name('student.profile.edit');
+    Route::put('/student/profile', [\App\Http\Controllers\Student\SettingsController::class, 'updateProfile'])->name('student.profile.update');
+    Route::get('/student/change-password', [\App\Http\Controllers\Student\SettingsController::class, 'changePasswordForm'])->name('student.change-password');
+    Route::post('/student/change-password', [\App\Http\Controllers\Student\SettingsController::class, 'changePassword'])->name('student.change-password.update');
 });
 
 // =============================================================================
@@ -310,6 +317,12 @@ Route::middleware(['auth'])->group(function () {
         $service->markAsRead($id, $user->id);
         return response()->json(['success' => true]);
     })->name('notifications.mark-read');
+    
+    // User Profile Routes (for all user types)
+    Route::get('/users/{user}/profile', [UserController::class, 'profile'])->name('users.profile');
+    Route::get('/users/{user}/change-password', [UserController::class, 'changePasswordForm'])->name('users.change-password');
+    Route::post('/users/{user}/change-password', [UserController::class, 'changePassword'])->name('users.change-password.update');
+    Route::get('/me/profile', [UserController::class, 'myProfile'])->name('me.profile');
     
     // API Routes for AJAX calls
     Route::get('/api/students/search', function (Illuminate\Http\Request $request) {
