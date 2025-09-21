@@ -69,19 +69,57 @@ class AdminController extends Controller
             'monthly_revenue' => $collectedTodayFeePayments + $collectedTodayPaymentRecords,
         ];
 
-        // Real-time attendance data
-        $presentToday = StudentAttendance::whereDate('date', today())
+        // Real-time attendance data for students
+        $presentToday = StudentAttendance::whereDate('attendance_date', today())
             ->where('status', 'present')->count();
-        $absentToday = StudentAttendance::whereDate('date', today())
+        $absentToday = StudentAttendance::whereDate('attendance_date', today())
             ->where('status', 'absent')->count();
-        $lateToday = StudentAttendance::whereDate('date', today())
+        $lateToday = StudentAttendance::whereDate('attendance_date', today())
+            ->where('status', 'late')->count();
+        $excusedToday = StudentAttendance::whereDate('attendance_date', today())
+            ->where('status', 'excused')->count();
+        
+        // Recent student attendance records
+        $recentStudentAttendance = StudentAttendance::with(['student.user', 'student.classRoom'])
+            ->whereDate('attendance_date', today())
+            ->latest()
+            ->limit(10)
+            ->get();
+        
+        // Teacher attendance data
+        $teachersPresentToday = TeacherAttendance::whereDate('date', today())
+            ->where('status', 'present')->count();
+        $teachersAbsentToday = TeacherAttendance::whereDate('date', today())
+            ->where('status', 'absent')->count();
+        $teachersLateToday = TeacherAttendance::whereDate('date', today())
             ->where('status', 'late')->count();
         
+        // Recent teacher attendance records
+        $recentTeacherAttendance = TeacherAttendance::with(['teacher.user'])
+            ->whereDate('date', today())
+            ->latest()
+            ->limit(5)
+            ->get();
+        
         $attendanceStats = [
+            'students' => [
+                'present' => $presentToday,
+                'absent' => $absentToday,
+                'late' => $lateToday,
+                'excused' => $excusedToday,
+                'total' => $presentToday + $absentToday + $lateToday + $excusedToday,
+            ],
+            'teachers' => [
+                'present' => $teachersPresentToday,
+                'absent' => $teachersAbsentToday,
+                'late' => $teachersLateToday,
+                'total' => $teachersPresentToday + $teachersAbsentToday + $teachersLateToday,
+            ],
+            // Keep backward compatibility
             'present' => $presentToday,
             'absent' => $absentToday,
             'late' => $lateToday,
-            'total' => $presentToday + $absentToday + $lateToday,
+            'total' => $presentToday + $absentToday + $lateToday + $excusedToday,
         ];
 
         // Real-time recent activities from notifications
@@ -94,7 +132,10 @@ class AdminController extends Controller
             ->limit(5)
             ->get();
 
-        return view('dashboard.admin', compact('stats', 'feeStats', 'attendanceStats', 'recentActivities', 'upcoming_exams') + ['session' => $session]);
+        return view('dashboard.admin', compact(
+            'stats', 'feeStats', 'attendanceStats', 'recentActivities', 'upcoming_exams',
+            'recentStudentAttendance', 'recentTeacherAttendance'
+        ) + ['session' => $session]);
     }
 
     private function getAttendanceRate()
