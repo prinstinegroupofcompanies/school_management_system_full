@@ -266,6 +266,124 @@
             </div>
         </div>
 
+        <!-- Attendance Overview -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- My Attendance -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">📅 My Attendance</h3>
+                        <a href="{{ route('attendance.teacher', ['date' => now()->format('Y-m-d')]) }}" class="text-sm text-blue-600 hover:text-blue-800">Record Today</a>
+                    </div>
+                    
+                    <!-- Teacher Attendance Stats -->
+                    <div class="grid grid-cols-3 gap-4 mb-4">
+                        <div class="text-center">
+                            <div class="text-xl font-bold text-green-600">{{ $teacherAttendanceStats['present_days'] }}</div>
+                            <div class="text-xs text-gray-500">Present</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-xl font-bold text-red-600">{{ $teacherAttendanceStats['absent_days'] }}</div>
+                            <div class="text-xs text-gray-500">Absent</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-xl font-bold text-yellow-600">{{ $teacherAttendanceStats['late_days'] }}</div>
+                            <div class="text-xs text-gray-500">Late</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Teacher Attendance -->
+                    <div class="border-t pt-4">
+                        <h4 class="text-sm font-medium text-gray-900 mb-2">Recent Records</h4>
+                        <div class="space-y-2 max-h-32 overflow-y-auto">
+                            @forelse($recentTeacherAttendance as $attendance)
+                            <div class="flex items-center justify-between text-sm">
+                                <div class="flex items-center">
+                                    <span class="w-2 h-2 rounded-full mr-2 
+                                        @if($attendance->status === 'present') bg-green-500
+                                        @elseif($attendance->status === 'absent') bg-red-500
+                                        @elseif($attendance->status === 'late') bg-yellow-500
+                                        @else bg-blue-500 @endif"></span>
+                                    <span class="text-gray-900">{{ \Carbon\Carbon::parse($attendance->date)->format('M d, Y') }}</span>
+                                </div>
+                                <span class="px-2 py-1 text-xs rounded-full
+                                    @if($attendance->status === 'present') bg-green-100 text-green-800
+                                    @elseif($attendance->status === 'absent') bg-red-100 text-red-800
+                                    @elseif($attendance->status === 'late') bg-yellow-100 text-yellow-800
+                                    @else bg-blue-100 text-blue-800 @endif">
+                                    {{ ucfirst($attendance->status) }}
+                                </span>
+                            </div>
+                            @empty
+                            <p class="text-gray-500 text-sm text-center py-2">No attendance records yet</p>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Attendance -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">👥 Student Attendance Today</h3>
+                        <a href="{{ route('attendance.index') }}" class="text-sm text-blue-600 hover:text-blue-800">Take Attendance</a>
+                    </div>
+                    
+                    <!-- Student Attendance Stats -->
+                    <div class="grid grid-cols-4 gap-3 mb-4">
+                        <div class="text-center">
+                            <div class="text-lg font-bold text-green-600">{{ $studentAttendanceStats['present_today'] }}</div>
+                            <div class="text-xs text-gray-500">Present</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-lg font-bold text-red-600">{{ $studentAttendanceStats['absent_today'] }}</div>
+                            <div class="text-xs text-gray-500">Absent</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-lg font-bold text-yellow-600">{{ $studentAttendanceStats['late_today'] }}</div>
+                            <div class="text-xs text-gray-500">Late</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-lg font-bold text-blue-600">{{ $studentAttendanceStats['total_today'] }}</div>
+                            <div class="text-xs text-gray-500">Total</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Student Attendance Records -->
+                    <div class="border-t pt-4">
+                        <h4 class="text-sm font-medium text-gray-900 mb-2">Recently Recorded</h4>
+                        <div class="space-y-2 max-h-32 overflow-y-auto">
+                            @forelse($recentStudentAttendance as $attendance)
+                            <div class="flex items-center justify-between text-sm">
+                                <div class="flex items-center">
+                                    <span class="w-2 h-2 rounded-full mr-2 
+                                        @if($attendance->status === 'present') bg-green-500
+                                        @elseif($attendance->status === 'absent') bg-red-500
+                                        @elseif($attendance->status === 'late') bg-yellow-500
+                                        @else bg-blue-500 @endif"></span>
+                                    <span class="text-gray-900">{{ $attendance->student->user->name }}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-gray-500">{{ $attendance->student->classRoom->name ?? 'N/A' }}</span>
+                                    <span class="px-2 py-1 text-xs rounded-full
+                                        @if($attendance->status === 'present') bg-green-100 text-green-800
+                                        @elseif($attendance->status === 'absent') bg-red-100 text-red-800
+                                        @elseif($attendance->status === 'late') bg-yellow-100 text-yellow-800
+                                        @else bg-blue-100 text-blue-800 @endif">
+                                        {{ ucfirst($attendance->status) }}
+                                    </span>
+                                </div>
+                            </div>
+                            @empty
+                            <p class="text-gray-500 text-sm text-center py-2">No student attendance recorded yet</p>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Recent Activities -->
         <div class="bg-white shadow rounded-lg">
             <div class="px-4 py-5 sm:p-6">

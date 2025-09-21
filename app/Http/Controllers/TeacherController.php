@@ -12,6 +12,7 @@ use App\Models\Student;
 use App\Models\ExamSchedule;
 use App\Models\Homework;
 use App\Models\TeacherAttendance;
+use App\Models\StudentAttendance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -98,17 +99,55 @@ class TeacherController extends Controller
                 ];
             }));
 
-        // Recent attendance marking
-        $recentAttendanceActivities = collect(TeacherAttendance::where('teacher_id', $teacher->id)
+        // Recent teacher attendance records
+        $recentTeacherAttendance = TeacherAttendance::where('teacher_id', $teacher->id)
             ->latest('date')
-            ->take(2)
-            ->get()
-            ->map(function($attendance) {
+            ->limit(5)
+            ->get();
+            
+        // Recent student attendance records taken by this teacher
+        $recentStudentAttendance = StudentAttendance::with(['student.user', 'student.classRoom'])
+            ->where('marked_by', $user->id)
+            ->latest('attendance_date')
+            ->limit(10)
+            ->get();
+            
+        // Teacher's own attendance statistics
+        $teacherAttendanceStats = [
+            'total_days' => TeacherAttendance::where('teacher_id', $teacher->id)->count(),
+            'present_days' => TeacherAttendance::where('teacher_id', $teacher->id)->where('status', 'present')->count(),
+            'absent_days' => TeacherAttendance::where('teacher_id', $teacher->id)->where('status', 'absent')->count(),
+            'late_days' => TeacherAttendance::where('teacher_id', $teacher->id)->where('status', 'late')->count(),
+        ];
+        
+        // Today's attendance statistics for students in teacher's classes
+        $todayStudentAttendance = StudentAttendance::whereHas('student.classRoom.subjects', function($query) use ($teacher) {
+                $query->where('teacher_id', $teacher->id);
+            })
+            ->whereDate('attendance_date', today())
+            ->get();
+            
+        $studentAttendanceStats = [
+            'total_today' => $todayStudentAttendance->count(),
+            'present_today' => $todayStudentAttendance->where('status', 'present')->count(),
+            'absent_today' => $todayStudentAttendance->where('status', 'absent')->count(),
+            'late_today' => $todayStudentAttendance->where('status', 'late')->count(),
+        ];
+
+        // Recent attendance activities for display
+        $recentAttendanceActivities = $recentTeacherAttendance->take(2)->map(function($attendance) {
+            return [
+                'description' => 'My attendance: ' . ucfirst($attendance->status) . ' on ' . \Carbon\Carbon::parse($attendance->date)->format('M d, Y'),
+                'created_at' => $attendance->date,
+            ];
+        })->merge(
+            $recentStudentAttendance->take(3)->map(function($attendance) {
                 return [
-                    'description' => 'Attendance marked: ' . ucfirst($attendance->status) . ' on ' . \Carbon\Carbon::parse($attendance->date)->format('M d, Y'),
-                    'created_at' => $attendance->date,
+                    'description' => 'Recorded attendance for ' . $attendance->student->user->name . ' (' . $attendance->student->classRoom->name . ')',
+                    'created_at' => $attendance->attendance_date,
                 ];
-            }));
+            })
+        );
 
         // Merge and sort all activities
         $recent_activities = $recentHomeworkActivities
@@ -185,7 +224,11 @@ class TeacherController extends Controller
             'classes',
             'students',
             'subjects',
-            'upcomingExams'
+            'upcomingExams',
+            'recentTeacherAttendance',
+            'recentStudentAttendance',
+            'teacherAttendanceStats',
+            'studentAttendanceStats'
         ) + ['recentActivities' => $recent_activities, 'session' => $session]);
     }
 
