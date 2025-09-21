@@ -13,6 +13,7 @@ use App\Models\FeePayment;
 use App\Models\PaymentRecord;
 use App\Models\StudentFee;
 use App\Models\StudentAttendance;
+use App\Models\TeacherAttendance;
 use App\Models\Notification;
 
 class AdminController extends Controller
