@@ -3,7 +3,7 @@
 @section('content')
 <div class="container mx-auto px-4 py-8">
     <h1 class="text-2xl font-bold mb-4">Teacher Attendance ({{ $date }})</h1>
-    <form method="POST" action="{{ route('attendance.teacher.store') }}" class="space-y-4">
+    <form method="POST" action="{{ route('attendance.store') }}" class="space-y-4">
         @csrf
         <input type="hidden" name="date" value="{{ $date }}">
         <div class="overflow-x-auto">
