@@ -326,6 +326,8 @@ Route::middleware(['auth', 'teacher'])->group(function () {
         Route::get('/create', [\App\Http\Controllers\Teacher\GradeController::class, 'create'])->name('create');
         Route::get('/bulk-create', [\App\Http\Controllers\Teacher\GradeController::class, 'bulkCreate'])->name('bulk-create');
         Route::get('/exam-questions', [\App\Http\Controllers\Teacher\GradeController::class, 'examQuestions'])->name('exam-questions');
+        Route::get('/subjects', [\App\Http\Controllers\Teacher\GradeController::class, 'getSubjects'])->name('subjects');
+        Route::get('/students', [\App\Http\Controllers\Teacher\GradeController::class, 'getStudents'])->name('students');
         Route::post('/bulk-store', [\App\Http\Controllers\Teacher\GradeController::class, 'bulkStore'])->name('bulk-store');
         Route::post('/', [\App\Http\Controllers\Teacher\GradeController::class, 'store'])->name('store');
         Route::get('/{grade}', [\App\Http\Controllers\Teacher\GradeController::class, 'show'])->name('show');

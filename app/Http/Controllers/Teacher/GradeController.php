@@ -367,6 +367,34 @@ class GradeController extends Controller
     }
 
     /**
+     * Get subjects for a specific class (AJAX)
+     */
+    public function getSubjects(Request $request)
+    {
+        $teacher = $request->user()->teacher;
+        
+        $request->validate([
+            'class_id' => 'required|exists:class_rooms,id',
+        ]);
+
+        // Get subjects that the teacher teaches in the selected class
+        $subjects = Subject::where('teacher_id', $teacher->id)
+                          ->whereHas('classes', function($query) use ($request) {
+                              $query->where('class_rooms.id', $request->class_id);
+                          })
+                          ->get()
+                          ->map(function ($subject) {
+                              return [
+                                  'id' => $subject->id,
+                                  'name' => $subject->name,
+                                  'code' => $subject->code,
+                              ];
+                          });
+
+        return response()->json(['subjects' => $subjects]);
+    }
+
+    /**
      * Get students for a specific class and subject (AJAX)
      */
     public function getStudents(Request $request)
