@@ -45,6 +45,24 @@ class AttendanceController extends Controller
         return view('attendance.student-attendance', compact('class', 'date', 'students', 'existingAttendance'));
     }
 
+    public function store(Request $request)
+    {
+        // Determine what type of attendance is being stored based on request data
+        if ($request->has('attendance') && is_array($request->attendance)) {
+            // Check if it's student attendance (has student_id) or teacher attendance (has teacher_id)
+            $firstAttendance = reset($request->attendance);
+            
+            if (isset($firstAttendance['student_id'])) {
+                return $this->storeStudentAttendance($request);
+            } elseif (isset($firstAttendance['teacher_id'])) {
+                return $this->storeTeacherAttendance($request);
+            }
+        }
+        
+        // Default to student attendance if unclear
+        return $this->storeStudentAttendance($request);
+    }
+
     public function storeStudentAttendance(Request $request)
     {
         $request->validate([
