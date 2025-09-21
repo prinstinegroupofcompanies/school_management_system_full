@@ -288,8 +288,8 @@
                         <tbody>
                             @forelse($attendanceRecords as $record)
                             <tr>
-                                <td>{{ \Carbon\Carbon::parse($record->date)->format('M d, Y') }}</td>
-                                <td>{{ \Carbon\Carbon::parse($record->date)->format('l') }}</td>
+                                <td>{{ \Carbon\Carbon::parse($record->attendance_date)->format('M d, Y') }}</td>
+                                <td>{{ \Carbon\Carbon::parse($record->attendance_date)->format('l') }}</td>
                                 <td>
                                     <span class="status-badge status-{{ $record->status }}">
                                         {{ ucfirst($record->status) }}
