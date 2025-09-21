@@ -193,7 +193,6 @@ class StudentController extends Controller
             'stats', 
             'homework', 
             'user', 
-            'attendance',
             'subjects',
             'feeStatus',
             'upcomingExams',
