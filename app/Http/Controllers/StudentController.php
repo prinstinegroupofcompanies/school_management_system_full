@@ -44,23 +44,49 @@ class StudentController extends Controller
                 ->get(['subjects.id', 'subjects.name', 'subjects.code', 'subjects.description']);
         }) ?: collect();
 
-        // Get real attendance data with safe queries
-        $attendanceTotal = $this->safeQuery(function() use ($student) {
-            return StudentAttendance::where('student_id', $student->id)->count();
-        }) ?: 0;
-        
-        $attendancePresent = $this->safeQuery(function() use ($student) {
-            return StudentAttendance::where('student_id', $student->id)
-                ->where('status', 'present')->count();
-        }) ?: 0;
+        // Get comprehensive real-time attendance data
+        $attendanceTotal = StudentAttendance::where('student_id', $student->id)->count();
+        $attendancePresent = StudentAttendance::where('student_id', $student->id)
+            ->where('status', 'present')->count();
+        $attendanceAbsent = StudentAttendance::where('student_id', $student->id)
+            ->where('status', 'absent')->count();
+        $attendanceLate = StudentAttendance::where('student_id', $student->id)
+            ->where('status', 'late')->count();
+        $attendanceExcused = StudentAttendance::where('student_id', $student->id)
+            ->where('status', 'excused')->count();
         
         $attendanceRate = $attendanceTotal > 0 ? round(($attendancePresent / $attendanceTotal) * 100, 2) : 0;
 
         // Get today's attendance
-        $attendance = StudentAttendance::where('student_id', $student->id)
-            ->whereDate('date', today())
-            ->latest('date')
+        $todayAttendance = StudentAttendance::where('student_id', $student->id)
+            ->whereDate('attendance_date', today())
+            ->latest('attendance_date')
             ->first();
+            
+        // Get recent attendance records (last 10 days)
+        $recentAttendance = StudentAttendance::where('student_id', $student->id)
+            ->latest('attendance_date')
+            ->limit(10)
+            ->get();
+            
+        // Get this month's attendance
+        $thisMonthAttendance = StudentAttendance::where('student_id', $student->id)
+            ->whereMonth('attendance_date', now()->month)
+            ->whereYear('attendance_date', now()->year)
+            ->get();
+            
+        // Calculate attendance statistics
+        $attendanceStats = [
+            'total_days' => $attendanceTotal,
+            'present_days' => $attendancePresent,
+            'absent_days' => $attendanceAbsent,
+            'late_days' => $attendanceLate,
+            'excused_days' => $attendanceExcused,
+            'attendance_rate' => $attendanceRate,
+            'this_month_total' => $thisMonthAttendance->count(),
+            'this_month_present' => $thisMonthAttendance->where('status', 'present')->count(),
+            'today_status' => $todayAttendance ? $todayAttendance->status : 'not_recorded',
+        ];
 
         // Get upcoming exams for student's class
         $upcomingExams = ExamSchedule::with(['examType', 'subject'])
@@ -177,7 +203,11 @@ class StudentController extends Controller
             'transportStats',
             'myRoute',
             'hostelStats',
-            'myRoom'
+            'myRoom',
+            'attendanceStats',
+            'recentAttendance',
+            'todayAttendance',
+            'thisMonthAttendance'
         ));
     }
 

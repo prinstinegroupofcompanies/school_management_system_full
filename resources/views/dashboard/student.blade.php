@@ -60,18 +60,22 @@
                 <div class="p-5">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
-                            <div class="w-8 h-8 {{ $attendance && $attendance->status === 'present' ? 'bg-green-500' : ($attendance && $attendance->status === 'absent' ? 'bg-red-500' : 'bg-yellow-500') }} rounded-md flex items-center justify-center">
-                                @if($attendance && $attendance->status === 'present')
+                            <div class="w-8 h-8 {{ $attendanceStats['today_status'] === 'present' ? 'bg-green-500' : ($attendanceStats['today_status'] === 'absent' ? 'bg-red-500' : ($attendanceStats['today_status'] === 'late' ? 'bg-yellow-500' : 'bg-gray-500')) }} rounded-md flex items-center justify-center">
+                                @if($attendanceStats['today_status'] === 'present')
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                @elseif($attendance && $attendance->status === 'absent')
+                                @elseif($attendanceStats['today_status'] === 'absent')
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
-                                @else
+                                @elseif($attendanceStats['today_status'] === 'late')
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                @else
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                                 @endif
                             </div>
@@ -80,7 +84,7 @@
                             <dl>
                                 <dt class="text-sm font-medium text-gray-500 truncate">Today's Status</dt>
                                 <dd class="text-lg font-medium text-gray-900">
-                                    {{ $attendance ? ucfirst($attendance->status) : 'Not Marked' }}
+                                    {{ $attendanceStats['today_status'] !== 'not_recorded' ? ucfirst($attendanceStats['today_status']) : 'Not Marked' }}
                                 </dd>
                             </dl>
                         </div>
@@ -130,6 +134,119 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Attendance Overview -->
+        <div class="bg-white shadow rounded-lg mb-8">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">📅 My Attendance Records</h3>
+                    <a href="{{ route('student.attendance.index') }}" class="text-sm text-blue-600 hover:text-blue-800">View Full History</a>
+                </div>
+                
+                <!-- Attendance Statistics -->
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                    <div class="bg-green-50 p-3 rounded-lg text-center">
+                        <div class="text-lg font-bold text-green-600">{{ $attendanceStats['present_days'] }}</div>
+                        <div class="text-xs text-green-600">Present Days</div>
+                    </div>
+                    <div class="bg-red-50 p-3 rounded-lg text-center">
+                        <div class="text-lg font-bold text-red-600">{{ $attendanceStats['absent_days'] }}</div>
+                        <div class="text-xs text-red-600">Absent Days</div>
+                    </div>
+                    <div class="bg-yellow-50 p-3 rounded-lg text-center">
+                        <div class="text-lg font-bold text-yellow-600">{{ $attendanceStats['late_days'] }}</div>
+                        <div class="text-xs text-yellow-600">Late Days</div>
+                    </div>
+                    <div class="bg-blue-50 p-3 rounded-lg text-center">
+                        <div class="text-lg font-bold text-blue-600">{{ $attendanceStats['excused_days'] }}</div>
+                        <div class="text-xs text-blue-600">Excused Days</div>
+                    </div>
+                    <div class="bg-purple-50 p-3 rounded-lg text-center">
+                        <div class="text-lg font-bold text-purple-600">{{ $attendanceStats['attendance_rate'] }}%</div>
+                        <div class="text-xs text-purple-600">Attendance Rate</div>
+                    </div>
+                </div>
+                
+                <!-- Recent Attendance Records -->
+                <div class="border-t pt-4">
+                    <h4 class="text-sm font-medium text-gray-900 mb-3">Recent Attendance Records</h4>
+                    <div class="space-y-3">
+                        @forelse($recentAttendance as $record)
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div class="flex items-center">
+                                <span class="w-3 h-3 rounded-full mr-3 
+                                    @if($record->status === 'present') bg-green-500
+                                    @elseif($record->status === 'absent') bg-red-500
+                                    @elseif($record->status === 'late') bg-yellow-500
+                                    @elseif($record->status === 'excused') bg-blue-500
+                                    @else bg-gray-500 @endif"></span>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ \Carbon\Carbon::parse($record->attendance_date)->format('l, M d, Y') }}
+                                    </div>
+                                    @if($record->remarks)
+                                    <div class="text-xs text-gray-500">{{ $record->remarks }}</div>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="px-3 py-1 text-xs font-medium rounded-full
+                                    @if($record->status === 'present') bg-green-100 text-green-800
+                                    @elseif($record->status === 'absent') bg-red-100 text-red-800
+                                    @elseif($record->status === 'late') bg-yellow-100 text-yellow-800
+                                    @elseif($record->status === 'excused') bg-blue-100 text-blue-800
+                                    @else bg-gray-100 text-gray-800 @endif">
+                                    {{ ucfirst($record->status) }}
+                                </span>
+                                @if($record->marked_by)
+                                <span class="text-xs text-gray-400">
+                                    by {{ \App\Models\User::find($record->marked_by)->name ?? 'Teacher' }}
+                                </span>
+                                @endif
+                            </div>
+                        </div>
+                        @empty
+                        <div class="text-center py-8">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">No attendance records</h3>
+                            <p class="mt-1 text-sm text-gray-500">Your teachers haven't recorded your attendance yet.</p>
+                        </div>
+                        @endforelse
+                    </div>
+                </div>
+                
+                <!-- This Month Summary -->
+                @if($thisMonthAttendance->count() > 0)
+                <div class="border-t pt-4 mt-4">
+                    <h4 class="text-sm font-medium text-gray-900 mb-3">This Month Summary</h4>
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                            <div>
+                                <div class="text-lg font-bold text-blue-600">{{ $attendanceStats['this_month_total'] }}</div>
+                                <div class="text-xs text-blue-600">Total Days</div>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-green-600">{{ $attendanceStats['this_month_present'] }}</div>
+                                <div class="text-xs text-green-600">Present</div>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-red-600">{{ $thisMonthAttendance->where('status', 'absent')->count() }}</div>
+                                <div class="text-xs text-red-600">Absent</div>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-purple-600">
+                                    {{ $attendanceStats['this_month_total'] > 0 ? round(($attendanceStats['this_month_present'] / $attendanceStats['this_month_total']) * 100, 1) : 0 }}%
+                                </div>
+                                <div class="text-xs text-purple-600">Monthly Rate</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
 
