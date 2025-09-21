@@ -49,12 +49,13 @@ class AttendanceController extends Controller
     {
         // Determine what type of attendance is being stored based on request data
         if ($request->has('attendance') && is_array($request->attendance)) {
-            // Check if it's student attendance (has student_id) or teacher attendance (has teacher_id)
-            $firstAttendance = reset($request->attendance);
+            // Get the attendance array and check the first element
+            $attendanceArray = $request->input('attendance');
+            $firstAttendance = !empty($attendanceArray) ? $attendanceArray[0] : null;
             
-            if (isset($firstAttendance['student_id'])) {
+            if ($firstAttendance && isset($firstAttendance['student_id'])) {
                 return $this->storeStudentAttendance($request);
-            } elseif (isset($firstAttendance['teacher_id'])) {
+            } elseif ($firstAttendance && isset($firstAttendance['teacher_id'])) {
                 return $this->storeTeacherAttendance($request);
             }
         }
