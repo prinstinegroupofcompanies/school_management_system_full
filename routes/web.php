@@ -102,6 +102,17 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::delete('/{subject}', [\App\Http\Controllers\Admin\SubjectController::class, 'destroy'])->name('destroy');
     });
 
+    // Exam Types Management
+    Route::prefix('admin/exams/types')->name('admin.exams.types.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ExamTypeController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\ExamTypeController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\ExamTypeController::class, 'store'])->name('store');
+        Route::get('/{examType}', [\App\Http\Controllers\Admin\ExamTypeController::class, 'show'])->name('show');
+        Route::get('/{examType}/edit', [\App\Http\Controllers\Admin\ExamTypeController::class, 'edit'])->name('edit');
+        Route::put('/{examType}', [\App\Http\Controllers\Admin\ExamTypeController::class, 'update'])->name('update');
+        Route::delete('/{examType}', [\App\Http\Controllers\Admin\ExamTypeController::class, 'destroy'])->name('destroy');
+    });
+
     // Grade Management
     Route::prefix('admin/grades')->name('admin.grades.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\InternationalGradeController::class, 'index'])->name('index');
@@ -145,14 +156,26 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\StaffManagementController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\Admin\StaffManagementController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\Admin\StaffManagementController::class, 'store'])->name('store');
+        Route::get('/performance', [\App\Http\Controllers\Admin\StaffManagementController::class, 'performance'])->name('performance');
+        Route::get('/create-performance', [\App\Http\Controllers\Admin\StaffManagementController::class, 'createPerformance'])->name('create-performance');
+        Route::post('/store-performance', [\App\Http\Controllers\Admin\StaffManagementController::class, 'storePerformance'])->name('store-performance');
+        Route::get('/payroll', [\App\Http\Controllers\Admin\StaffManagementController::class, 'payroll'])->name('payroll');
+        Route::get('/create-payroll', [\App\Http\Controllers\Admin\StaffManagementController::class, 'createPayroll'])->name('create-payroll');
+        Route::post('/store-payroll', [\App\Http\Controllers\Admin\StaffManagementController::class, 'storePayroll'])->name('store-payroll');
+        Route::get('/payroll/{payroll}/edit', [\App\Http\Controllers\Admin\StaffManagementController::class, 'editPayroll'])->name('payroll.edit');
+        Route::put('/payroll/{payroll}', [\App\Http\Controllers\Admin\StaffManagementController::class, 'updatePayroll'])->name('payroll.update');
+        Route::delete('/payroll/{payroll}', [\App\Http\Controllers\Admin\StaffManagementController::class, 'destroyPayroll'])->name('payroll.destroy');
+        Route::get('/schedules', [\App\Http\Controllers\Admin\StaffManagementController::class, 'schedules'])->name('schedules');
+        Route::get('/create-schedule', [\App\Http\Controllers\Admin\StaffManagementController::class, 'createSchedule'])->name('create-schedule');
+        Route::post('/store-schedule', [\App\Http\Controllers\Admin\StaffManagementController::class, 'storeSchedule'])->name('store-schedule');
+        Route::get('/schedules/{schedule}/edit', [\App\Http\Controllers\Admin\StaffManagementController::class, 'editSchedule'])->name('schedules.edit');
+        Route::put('/schedules/{schedule}', [\App\Http\Controllers\Admin\StaffManagementController::class, 'updateSchedule'])->name('schedules.update');
+        Route::delete('/schedules/{schedule}', [\App\Http\Controllers\Admin\StaffManagementController::class, 'destroySchedule'])->name('schedules.destroy');
+        Route::get('/reports', [\App\Http\Controllers\Admin\StaffManagementController::class, 'reports'])->name('reports');
         Route::get('/{staff}', [\App\Http\Controllers\Admin\StaffManagementController::class, 'show'])->name('show');
         Route::get('/{staff}/edit', [\App\Http\Controllers\Admin\StaffManagementController::class, 'edit'])->name('edit');
         Route::put('/{staff}', [\App\Http\Controllers\Admin\StaffManagementController::class, 'update'])->name('update');
         Route::delete('/{staff}', [\App\Http\Controllers\Admin\StaffManagementController::class, 'destroy'])->name('destroy');
-        Route::get('/performance', [\App\Http\Controllers\Admin\StaffManagementController::class, 'performance'])->name('performance');
-        Route::get('/payroll', [\App\Http\Controllers\Admin\StaffManagementController::class, 'payroll'])->name('payroll');
-        Route::get('/schedules', [\App\Http\Controllers\Admin\StaffManagementController::class, 'schedules'])->name('schedules');
-        Route::get('/reports', [\App\Http\Controllers\Admin\StaffManagementController::class, 'reports'])->name('reports');
     });
 
     // Notifications Management
@@ -163,6 +186,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/templates', [\App\Http\Controllers\Admin\NotificationController::class, 'templates'])->name('templates');
         Route::get('/templates/create', [\App\Http\Controllers\Admin\NotificationController::class, 'createTemplate'])->name('templates.create');
         Route::post('/templates', [\App\Http\Controllers\Admin\NotificationController::class, 'storeTemplate'])->name('templates.store');
+        Route::get('/reports', [\App\Http\Controllers\Admin\NotificationController::class, 'reports'])->name('reports');
+        Route::post('/bulk-action', [\App\Http\Controllers\Admin\NotificationController::class, 'bulkAction'])->name('bulk-action');
         Route::get('/{notification}', [\App\Http\Controllers\Admin\NotificationController::class, 'show'])->name('show');
         Route::delete('/{notification}', [\App\Http\Controllers\Admin\NotificationController::class, 'destroy'])->name('destroy');
     });
@@ -176,6 +201,16 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/staff', [\App\Http\Controllers\Admin\ReportController::class, 'staff'])->name('staff');
         Route::get('/library', [\App\Http\Controllers\Admin\ReportController::class, 'library'])->name('library');
         Route::post('/export', [\App\Http\Controllers\Admin\ReportController::class, 'export'])->name('export');
+    });
+    
+    // Admin Financial Analytics (using Finance controllers for real-time data)
+    Route::prefix('admin/finance')->name('admin.finance.')->group(function () {
+        Route::get('/analytics', [\App\Http\Controllers\Finance\FinancialReportController::class, 'index'])->name('analytics');
+        Route::get('/payments', [\App\Http\Controllers\Finance\PaymentController::class, 'index'])->name('payments');
+        Route::get('/reports', [\App\Http\Controllers\Finance\FeeReportController::class, 'index'])->name('reports');
+        Route::get('/payments/analytics', [\App\Http\Controllers\Finance\PaymentController::class, 'analytics'])->name('payments.analytics');
+        Route::get('/income', [\App\Http\Controllers\Finance\FinancialReportController::class, 'income'])->name('income');
+        Route::get('/expenses', [\App\Http\Controllers\Finance\FinancialReportController::class, 'expenses'])->name('expenses');
     });
 
     // Fee Reports (alias for financial reports)
@@ -231,21 +266,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/facilities', [\App\Http\Controllers\HostelController::class, 'facilities'])->name('facilities');
     });
 
-    // Attendance Management (Admin/Teacher access)
-    Route::prefix('attendance')->name('attendance.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\AttendanceController::class, 'index'])->name('index');
-        Route::get('/take', [\App\Http\Controllers\AttendanceController::class, 'take'])->name('take');
-        Route::post('/store', [\App\Http\Controllers\AttendanceController::class, 'store'])->name('store');
-        Route::get('/reports', [\App\Http\Controllers\AttendanceController::class, 'reports'])->name('reports');
-        Route::get('/student', [\App\Http\Controllers\AttendanceController::class, 'studentAttendance'])->name('student');
-        Route::get('/teacher', [\App\Http\Controllers\AttendanceController::class, 'teacherAttendance'])->name('teacher');
-    });
 
     // User Management (Admin/Teacher access)
     Route::prefix('users')->name('users.')->group(function () {
         Route::get('/', [\App\Http\Controllers\UserController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\UserController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\UserController::class, 'store'])->name('store');
+        Route::post('/reset-all-passwords', [\App\Http\Controllers\UserController::class, 'resetAllPasswords'])->name('reset-all-passwords');
         Route::get('/{user}', [\App\Http\Controllers\UserController::class, 'show'])->name('show');
         Route::get('/{user}/edit', [\App\Http\Controllers\UserController::class, 'edit'])->name('edit');
         Route::put('/{user}', [\App\Http\Controllers\UserController::class, 'update'])->name('update');
@@ -270,10 +297,36 @@ Route::middleware(['auth', 'admin'])->group(function () {
 Route::middleware(['auth', 'teacher'])->group(function () {
     Route::get('/teacher/dashboard', [TeacherController::class, 'dashboard'])->name('teacher.dashboard');
     
+    // Teacher Class Management
+    Route::prefix('teacher/classes')->name('teacher.classes.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Teacher\ClassController::class, 'index'])->name('index');
+        Route::get('/{class}', [\App\Http\Controllers\Teacher\ClassController::class, 'show'])->name('show');
+    });
+    
+    // Teacher Student Management
+    Route::prefix('teacher/students')->name('teacher.students.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Teacher\StudentController::class, 'index'])->name('index');
+        Route::get('/{student}', [\App\Http\Controllers\Teacher\StudentController::class, 'show'])->name('show');
+    });
+    
+    // Teacher Subject Management
+    Route::prefix('teacher/subjects')->name('teacher.subjects.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Teacher\SubjectController::class, 'index'])->name('index');
+        Route::get('/{subject}', [\App\Http\Controllers\Teacher\SubjectController::class, 'show'])->name('show');
+    });
+    
+    // Alias routes for teacher navigation
+    Route::get('/teacher/students', [\App\Http\Controllers\Teacher\StudentController::class, 'index'])->name('teacher.students');
+    Route::get('/teacher/subjects', [\App\Http\Controllers\Teacher\SubjectController::class, 'index'])->name('teacher.subjects');
+    Route::get('/teacher/classes', [\App\Http\Controllers\Teacher\ClassController::class, 'index'])->name('teacher.classes');
+    
     // Grade Management
     Route::prefix('teacher/grades')->name('teacher.grades.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Teacher\GradeController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\Teacher\GradeController::class, 'create'])->name('create');
+        Route::get('/bulk-create', [\App\Http\Controllers\Teacher\GradeController::class, 'bulkCreate'])->name('bulk-create');
+        Route::get('/exam-questions', [\App\Http\Controllers\Teacher\GradeController::class, 'examQuestions'])->name('exam-questions');
+        Route::post('/bulk-store', [\App\Http\Controllers\Teacher\GradeController::class, 'bulkStore'])->name('bulk-store');
         Route::post('/', [\App\Http\Controllers\Teacher\GradeController::class, 'store'])->name('store');
         Route::get('/{grade}', [\App\Http\Controllers\Teacher\GradeController::class, 'show'])->name('show');
         Route::get('/{grade}/edit', [\App\Http\Controllers\Teacher\GradeController::class, 'edit'])->name('edit');
@@ -284,6 +337,7 @@ Route::middleware(['auth', 'teacher'])->group(function () {
     Route::prefix('teacher/exams')->name('teacher.exams.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Teacher\ExamController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\Teacher\ExamController::class, 'create'])->name('create');
+        Route::get('/upcoming', [\App\Http\Controllers\Teacher\ExamController::class, 'upcoming'])->name('upcoming');
         Route::post('/', [\App\Http\Controllers\Teacher\ExamController::class, 'store'])->name('store');
         Route::get('/{exam}', [\App\Http\Controllers\Teacher\ExamController::class, 'show'])->name('show');
         Route::get('/{exam}/edit', [\App\Http\Controllers\Teacher\ExamController::class, 'edit'])->name('edit');
@@ -292,6 +346,16 @@ Route::middleware(['auth', 'teacher'])->group(function () {
         Route::post('/{exam}/unpublish', [\App\Http\Controllers\Teacher\ExamController::class, 'unpublish'])->name('unpublish');
         Route::delete('/{exam}', [\App\Http\Controllers\Teacher\ExamController::class, 'destroy'])->name('destroy');
     });
+    
+    // Teacher Profile Management
+    Route::prefix('teacher/profile')->name('teacher.profile.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Teacher\ProfileController::class, 'show'])->name('show');
+        Route::get('/edit', [\App\Http\Controllers\Teacher\ProfileController::class, 'edit'])->name('edit');
+        Route::put('/', [\App\Http\Controllers\Teacher\ProfileController::class, 'update'])->name('update');
+    });
+    
+    // Teacher Profile alias route
+    Route::get('/teacher/profile', [\App\Http\Controllers\Teacher\ProfileController::class, 'show'])->name('teacher.profile');
     
     // Homework Management
     Route::prefix('teacher/homework')->name('teacher.homework.')->group(function () {
@@ -304,6 +368,17 @@ Route::middleware(['auth', 'teacher'])->group(function () {
         Route::post('/{assignment}/publish', [\App\Http\Controllers\Teacher\HomeworkController::class, 'publish'])->name('publish');
         Route::delete('/{assignment}', [\App\Http\Controllers\Teacher\HomeworkController::class, 'destroy'])->name('destroy');
         Route::post('/submissions/{submission}/grade', [\App\Http\Controllers\Teacher\HomeworkController::class, 'gradeSubmission'])->name('grade-submission');
+    });
+    
+    // Study Materials Management
+    Route::prefix('teacher/study-materials')->name('teacher.study-materials.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Teacher\StudyMaterialController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Teacher\StudyMaterialController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Teacher\StudyMaterialController::class, 'store'])->name('store');
+        Route::get('/{material}', [\App\Http\Controllers\Teacher\StudyMaterialController::class, 'show'])->name('show');
+        Route::get('/{material}/edit', [\App\Http\Controllers\Teacher\StudyMaterialController::class, 'edit'])->name('edit');
+        Route::put('/{material}', [\App\Http\Controllers\Teacher\StudyMaterialController::class, 'update'])->name('update');
+        Route::delete('/{material}', [\App\Http\Controllers\Teacher\StudyMaterialController::class, 'destroy'])->name('destroy');
     });
 });
 
@@ -324,6 +399,8 @@ Route::middleware(['auth', 'student'])->group(function () {
     // Exam Taking
     Route::prefix('student/exams')->name('student.exams.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Student\ExamController::class, 'index'])->name('index');
+        Route::get('/marks', [\App\Http\Controllers\Student\ExamController::class, 'marks'])->name('marks');
+        Route::get('/upcoming', [\App\Http\Controllers\Student\ExamController::class, 'upcoming'])->name('upcoming');
         Route::get('/{exam}', [\App\Http\Controllers\Student\ExamController::class, 'show'])->name('show');
         Route::post('/{exam}/start', [\App\Http\Controllers\Student\ExamController::class, 'start'])->name('start');
         Route::get('/{attempt}/take', [\App\Http\Controllers\Student\ExamController::class, 'take'])->name('take');
@@ -341,6 +418,37 @@ Route::middleware(['auth', 'student'])->group(function () {
         Route::post('/{assignment}/submit', [\App\Http\Controllers\Student\HomeworkController::class, 'store'])->name('store');
     });
     
+    // Student Subject Access
+    Route::prefix('student/subjects')->name('student.subjects.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Student\SubjectController::class, 'index'])->name('index');
+        Route::get('/{subject}', [\App\Http\Controllers\Student\SubjectController::class, 'show'])->name('show');
+    });
+    
+    // Student Study Materials Access
+    Route::prefix('student/study-materials')->name('student.study-materials.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Student\StudyMaterialController::class, 'index'])->name('index');
+        Route::get('/{material}', [\App\Http\Controllers\Student\StudyMaterialController::class, 'show'])->name('show');
+        Route::get('/{material}/download', [\App\Http\Controllers\Student\StudyMaterialController::class, 'download'])->name('download');
+    });
+    
+    // Student Gradesheet Access
+    Route::prefix('student/gradesheet')->name('student.gradesheet.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Student\GradesheetController::class, 'show'])->name('show');
+        Route::get('/pdf', [\App\Http\Controllers\Student\GradesheetController::class, 'pdf'])->name('pdf');
+    });
+    
+    // Student Finance Access
+    Route::prefix('student/finance')->name('student.finance.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Student\FinanceController::class, 'index'])->name('index');
+        Route::get('/{fee}/pay', [\App\Http\Controllers\Student\FinanceController::class, 'createPayment'])->name('pay');
+        Route::post('/{fee}/pay', [\App\Http\Controllers\Student\FinanceController::class, 'storePayment'])->name('store-payment');
+    });
+    
+    // Student Invoice Downloads
+    Route::prefix('student/invoices')->name('student.invoices.')->group(function () {
+        Route::get('/{fee}/download', [\App\Http\Controllers\Student\FinanceController::class, 'downloadInvoice'])->name('download');
+    });
+    
     // Student Profile Management
     Route::get('/student/profile', [\App\Http\Controllers\Student\SettingsController::class, 'profile'])->name('student.profile');
     Route::get('/student/profile/edit', [\App\Http\Controllers\Student\SettingsController::class, 'editProfile'])->name('student.profile.edit');
@@ -351,6 +459,7 @@ Route::middleware(['auth', 'student'])->group(function () {
     // Student Library Access
     Route::prefix('student/library')->name('student.library.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Student\LibraryController::class, 'index'])->name('index');
+        Route::get('/search', [\App\Http\Controllers\Student\LibraryController::class, 'search'])->name('search');
         Route::get('/books', [\App\Http\Controllers\Student\LibraryController::class, 'books'])->name('books');
         Route::get('/my-books', [\App\Http\Controllers\Student\LibraryController::class, 'myBooks'])->name('my-books');
         Route::post('/books/{book}/request', [\App\Http\Controllers\Student\LibraryController::class, 'requestBook'])->name('request-book');
@@ -361,14 +470,18 @@ Route::middleware(['auth', 'student'])->group(function () {
         Route::get('/', [\App\Http\Controllers\Student\TransportController::class, 'index'])->name('index');
         Route::get('/schedule', [\App\Http\Controllers\Student\TransportController::class, 'schedule'])->name('schedule');
         Route::get('/routes', [\App\Http\Controllers\Student\TransportController::class, 'routes'])->name('routes');
+        Route::post('/request', [\App\Http\Controllers\Student\TransportController::class, 'request'])->name('request');
     });
 
     // Student Hostel Access
     Route::prefix('student/hostel')->name('student.hostel.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Student\HostelController::class, 'index'])->name('index');
+        Route::get('/rooms', [\App\Http\Controllers\Student\HostelController::class, 'rooms'])->name('rooms');
+        Route::get('/payments', [\App\Http\Controllers\Student\HostelController::class, 'payments'])->name('payments');
         Route::get('/room', [\App\Http\Controllers\Student\HostelController::class, 'myRoom'])->name('room');
         Route::get('/facilities', [\App\Http\Controllers\Student\HostelController::class, 'facilities'])->name('facilities');
-        Route::post('/requests', [\App\Http\Controllers\Student\HostelController::class, 'submitRequest'])->name('requests');
+        Route::post('/request', [\App\Http\Controllers\Student\HostelController::class, 'request'])->name('request');
+        Route::post('/requests', [\App\Http\Controllers\Student\HostelController::class, 'request'])->name('requests');
     });
 
     // Student Attendance Access
@@ -378,13 +491,24 @@ Route::middleware(['auth', 'student'])->group(function () {
         Route::get('/summary', [\App\Http\Controllers\Student\AttendanceController::class, 'summary'])->name('summary');
     });
 
+    // Student Notifications Access
+    Route::prefix('student/notifications')->name('student.notifications.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Student\NotificationController::class, 'index'])->name('index');
+        Route::get('/{notification}', [\App\Http\Controllers\Student\NotificationController::class, 'show'])->name('show');
+        Route::post('/{notification}/mark-read', [\App\Http\Controllers\Student\NotificationController::class, 'markAsRead'])->name('mark-read');
+    });
+
     // Student Settings Access
     Route::prefix('student/settings')->name('student.settings.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Student\SettingsController::class, 'index'])->name('index');
+        Route::put('/profile', [\App\Http\Controllers\Student\SettingsController::class, 'updateProfile'])->name('profile.update');
+        Route::put('/password', [\App\Http\Controllers\Student\SettingsController::class, 'updatePassword'])->name('password.update');
         Route::get('/preferences', [\App\Http\Controllers\Student\SettingsController::class, 'preferences'])->name('preferences');
         Route::post('/preferences', [\App\Http\Controllers\Student\SettingsController::class, 'updatePreferences'])->name('preferences.update');
         Route::get('/notifications', [\App\Http\Controllers\Student\SettingsController::class, 'notifications'])->name('notifications');
         Route::post('/notifications', [\App\Http\Controllers\Student\SettingsController::class, 'updateNotifications'])->name('notifications.update');
+        Route::get('/privacy', [\App\Http\Controllers\Student\SettingsController::class, 'privacy'])->name('privacy');
+        Route::post('/privacy', [\App\Http\Controllers\Student\SettingsController::class, 'updatePrivacy'])->name('privacy.update');
     });
 });
 
@@ -401,13 +525,217 @@ Route::middleware(['auth', 'finance'])->group(function () {
         Route::post('/', [\App\Http\Controllers\Finance\PaymentController::class, 'store'])->name('store');
         Route::get('/{payment}', [\App\Http\Controllers\Finance\PaymentController::class, 'show'])->name('show');
         Route::get('/analytics', [\App\Http\Controllers\Finance\PaymentController::class, 'analytics'])->name('analytics');
+        
+        // Payment Approval Actions
+        Route::post('/{payment}/approve', [\App\Http\Controllers\Finance\PaymentApprovalController::class, 'approve'])->name('approve');
+        Route::post('/{payment}/reject', [\App\Http\Controllers\Finance\PaymentApprovalController::class, 'reject'])->name('reject');
+    });
+    
+    // Scholarship Management
+    Route::prefix('finance/scholarships')->name('finance.scholarships.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Finance\ScholarshipController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Finance\ScholarshipController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Finance\ScholarshipController::class, 'store'])->name('store');
+        Route::get('/{scholarship}', [\App\Http\Controllers\Finance\ScholarshipController::class, 'show'])->name('show');
+        Route::get('/{scholarship}/edit', [\App\Http\Controllers\Finance\ScholarshipController::class, 'edit'])->name('edit');
+        Route::put('/{scholarship}', [\App\Http\Controllers\Finance\ScholarshipController::class, 'update'])->name('update');
+        Route::delete('/{scholarship}', [\App\Http\Controllers\Finance\ScholarshipController::class, 'destroy'])->name('destroy');
+        Route::get('/applications', [\App\Http\Controllers\Finance\ScholarshipController::class, 'applications'])->name('applications');
+        Route::post('/applications/{application}/approve', [\App\Http\Controllers\Finance\ScholarshipController::class, 'approveApplication'])->name('applications.approve');
+        Route::post('/applications/{application}/reject', [\App\Http\Controllers\Finance\ScholarshipController::class, 'rejectApplication'])->name('applications.reject');
+    });
+    
+    // Fee Structure Management
+    Route::prefix('finance/fees/structures')->name('finance.fees.structures.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Finance\FeeStructureController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Finance\FeeStructureController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Finance\FeeStructureController::class, 'store'])->name('store');
+        Route::get('/{feeStructure}', [\App\Http\Controllers\Finance\FeeStructureController::class, 'show'])->name('show');
+        Route::get('/{feeStructure}/edit', [\App\Http\Controllers\Finance\FeeStructureController::class, 'edit'])->name('edit');
+        Route::put('/{feeStructure}', [\App\Http\Controllers\Finance\FeeStructureController::class, 'update'])->name('update');
+        Route::delete('/{feeStructure}', [\App\Http\Controllers\Finance\FeeStructureController::class, 'destroy'])->name('destroy');
+    });
+    
+    // Fee Reports
+    Route::prefix('finance/fees')->name('finance.fees.')->group(function () {
+        Route::get('/reports', [\App\Http\Controllers\Finance\FeeReportController::class, 'index'])->name('reports');
+        Route::get('/reports/export', [\App\Http\Controllers\Finance\FeeReportController::class, 'export'])->name('reports.export');
+        Route::get('/reports/class/{class}', [\App\Http\Controllers\Finance\FeeReportController::class, 'classReport'])->name('reports.class');
+        Route::get('/reports/student/{student}', [\App\Http\Controllers\Finance\FeeReportController::class, 'studentReport'])->name('reports.student');
+    });
+    
+    // Financial Reports
+    Route::prefix('finance/reports')->name('finance.reports.')->group(function () {
+        Route::get('/financial', [\App\Http\Controllers\Finance\FinancialReportController::class, 'index'])->name('financial');
+        Route::get('/financial/export', [\App\Http\Controllers\Finance\FinancialReportController::class, 'export'])->name('financial.export');
+        Route::get('/payments', [\App\Http\Controllers\Finance\FinancialReportController::class, 'payments'])->name('payments');
+        Route::get('/income', [\App\Http\Controllers\Finance\FinancialReportController::class, 'income'])->name('income');
+        Route::get('/expenses', [\App\Http\Controllers\Finance\FinancialReportController::class, 'expenses'])->name('expenses');
+    });
+    
+    // Staff Payroll Management (Finance Officer Access)
+    Route::prefix('finance/staff')->name('finance.staff.')->group(function () {
+        Route::get('/payroll', [\App\Http\Controllers\Admin\StaffManagementController::class, 'payroll'])->name('payroll');
+        Route::get('/payroll/{payroll}', [\App\Http\Controllers\Admin\StaffManagementController::class, 'showPayroll'])->name('payroll.show');
+        Route::get('/create-payroll', [\App\Http\Controllers\Admin\StaffManagementController::class, 'createPayroll'])->name('create-payroll');
+        Route::post('/store-payroll', [\App\Http\Controllers\Admin\StaffManagementController::class, 'storePayroll'])->name('store-payroll');
+        Route::get('/payroll/{payroll}/edit', [\App\Http\Controllers\Admin\StaffManagementController::class, 'editPayroll'])->name('payroll.edit');
+        Route::put('/payroll/{payroll}', [\App\Http\Controllers\Admin\StaffManagementController::class, 'updatePayroll'])->name('payroll.update');
+        Route::delete('/payroll/{payroll}', [\App\Http\Controllers\Admin\StaffManagementController::class, 'destroyPayroll'])->name('payroll.destroy');
     });
 });
 
 // =============================================================================
-// SHARED AUTHENTICATED ROUTES
+// GENERIC ROUTES (redirects to appropriate user-specific routes)
 // =============================================================================
 Route::middleware(['auth'])->group(function () {
+    // Generic Classes route - redirects based on user type
+    Route::get('/classes', function () {
+        $user = auth()->user();
+        switch ($user->user_type) {
+            case 'admin':
+                return redirect()->route('admin.classes.index');
+            case 'teacher':
+                return redirect()->route('teacher.classes.index');
+            case 'student':
+                return redirect()->route('student.dashboard'); // Students don't have a classes index
+            default:
+                return redirect()->route('admin.classes.index');
+        }
+    })->name('classes.index');
+
+    // Generic Exam Types route - redirects based on user type
+    Route::get('/exams/types', function () {
+        $user = auth()->user();
+        switch ($user->user_type) {
+            case 'admin':
+                return redirect()->route('admin.exams.types.index');
+            case 'teacher':
+                return redirect()->route('teacher.exams.index'); // Teachers see exam schedules, not types
+            case 'student':
+                return redirect()->route('student.exams.index'); // Students see their exams
+            default:
+                return redirect()->route('admin.exams.types.index');
+        }
+    })->name('exams.types.index');
+
+    // Generic Homework Create route - redirects based on user type
+    Route::get('/homework/create', function () {
+        $user = auth()->user();
+        switch ($user->user_type) {
+            case 'admin':
+            case 'teacher':
+                return redirect()->route('teacher.homework.create');
+            case 'student':
+                return redirect()->route('student.homework.index'); // Students view homework, don't create
+            default:
+                return redirect()->route('teacher.homework.create');
+        }
+    })->name('homework.create');
+
+    // Generic Study Materials Create route - redirects based on user type  
+    Route::get('/study-materials/create', function () {
+        $user = auth()->user();
+        switch ($user->user_type) {
+            case 'admin':
+            case 'teacher':
+                return redirect()->route('teacher.study-materials.create');
+            case 'student':
+                return redirect()->route('student.dashboard');
+            default:
+                return redirect()->route('teacher.study-materials.create');
+        }
+    })->name('study-materials.create');
+
+    // Generic Attendance History route - redirects based on user type
+    Route::get('/attendance/history/students', function () {
+        $user = auth()->user();
+        switch ($user->user_type) {
+            case 'admin':
+            case 'teacher':
+                return redirect()->route('attendance.reports');
+            case 'student':
+                return redirect()->route('student.attendance.history');
+            default:
+                return redirect()->route('attendance.reports');
+        }
+    })->name('attendance.history.students');
+
+    // Generic Teacher Attendance History route
+    Route::get('/attendance/history/teacher', function () {
+        $user = auth()->user();
+        switch ($user->user_type) {
+            case 'admin':
+            case 'teacher':
+                return redirect()->route('attendance.teacher');
+            case 'student':
+                return redirect()->route('student.attendance.index');
+            default:
+                return redirect()->route('attendance.teacher');
+        }
+    })->name('attendance.history.teacher');
+
+    // Generic Homework Index route
+    Route::get('/homework', function () {
+        $user = auth()->user();
+        switch ($user->user_type) {
+            case 'admin':
+            case 'teacher':
+                return redirect()->route('teacher.homework.index');
+            case 'student':
+                return redirect()->route('student.homework.index');
+            default:
+                return redirect()->route('teacher.homework.index');
+        }
+    })->name('homework.index');
+
+    // Generic Study Materials Index route
+    Route::get('/study-materials', function () {
+        $user = auth()->user();
+        switch ($user->user_type) {
+            case 'admin':
+            case 'teacher':
+                return redirect()->route('teacher.study-materials.index');
+            case 'student':
+                return redirect()->route('student.study-materials.index');
+            default:
+                return redirect()->route('teacher.study-materials.index');
+        }
+    })->name('study-materials.index');
+
+    // Generic Notifications route - redirects based on user type
+    Route::get('/notifications', function () {
+        $user = auth()->user();
+        switch ($user->user_type) {
+            case 'admin':
+                return redirect()->route('admin.notifications.index');
+            case 'teacher':
+                return redirect()->route('student.notifications.index'); // Teachers can see student-style notifications
+            case 'student':
+                return redirect()->route('student.notifications.index');
+            case 'finance':
+                return redirect()->route('admin.notifications.index');
+            default:
+                return redirect()->route('student.notifications.index');
+        }
+    })->name('notifications.index');
+
+});
+
+// =============================================================================
+// SHARED AUTHENTICATED ROUTES (Admin/Teacher Access)
+// =============================================================================
+Route::middleware(['auth'])->group(function () {
+    // Attendance Management (Admin/Teacher access)
+    Route::prefix('attendance')->name('attendance.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\AttendanceController::class, 'index'])->name('index');
+        Route::get('/take', [\App\Http\Controllers\AttendanceController::class, 'take'])->name('take');
+        Route::post('/store', [\App\Http\Controllers\AttendanceController::class, 'store'])->name('store');
+        Route::get('/reports', [\App\Http\Controllers\AttendanceController::class, 'reports'])->name('reports');
+        Route::get('/student', [\App\Http\Controllers\AttendanceController::class, 'studentAttendance'])->name('student');
+        Route::get('/teacher', [\App\Http\Controllers\AttendanceController::class, 'teacherAttendance'])->name('teacher');
+    });
+    
     // Profile Management
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
     Route::get('/profile/edit', [UserController::class, 'editProfile'])->name('profile.edit');
@@ -438,9 +766,13 @@ Route::middleware(['auth'])->group(function () {
     
     // User Profile Routes (for all user types)
     Route::get('/users/{user}/profile', [UserController::class, 'profile'])->name('users.profile');
+    Route::get('/users/{user}/profile/edit', [UserController::class, 'editProfile'])->name('users.profile.edit');
+    Route::put('/users/{user}/profile', [UserController::class, 'updateProfile'])->name('users.profile.update');
     Route::get('/users/{user}/change-password', [UserController::class, 'changePasswordForm'])->name('users.change-password');
     Route::post('/users/{user}/change-password', [UserController::class, 'changePassword'])->name('users.change-password.update');
     Route::get('/me/profile', [UserController::class, 'myProfile'])->name('me.profile');
+    Route::get('/me/profile/edit', [UserController::class, 'editProfile'])->name('me.profile.edit');
+    Route::put('/me/profile', [UserController::class, 'updateProfile'])->name('me.profile.update');
     
     // API Routes for AJAX calls
     Route::get('/api/students/search', function (Illuminate\Http\Request $request) {

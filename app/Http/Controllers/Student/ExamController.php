@@ -37,8 +37,26 @@ class ExamController extends Controller
                          ->with(['subject', 'teacher.user']);
 
         $exams = $query->orderBy('start_time', 'asc')->paginate(15);
+        
+        // Also get upcoming exams for the view
+        $upcomingExams = ExamPaper::where('class_id', $student->class_id)
+                                 ->where('is_published', true)
+                                 ->where('is_active', true)
+                                 ->where('start_time', '>', now())
+                                 ->with(['subject', 'teacher.user'])
+                                 ->orderBy('start_time', 'asc')
+                                 ->limit(5)
+                                 ->get();
 
-        return view('student.exams.index', compact('exams'));
+        // Also get completed exams for the view
+        $completedExams = StudentExamAttempt::where('student_id', $student->id)
+            ->where('status', 'completed')
+            ->with(['examPaper.subject', 'examPaper.classRoom'])
+            ->orderBy('completed_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        return view('student.exams.index', compact('exams', 'upcomingExams', 'completedExams'));
     }
 
     /**
@@ -163,5 +181,50 @@ class ExamController extends Controller
             'status' => 'auto_submitted',
             'time_spent_minutes' => now()->diffInMinutes($attempt->started_at),
         ]);
+    }
+    
+    /**
+     * Display student's exam marks/results
+     */
+    public function marks(Request $request)
+    {
+        $student = $request->user()->student;
+        
+        if (!$student) {
+            return redirect()->route('student.dashboard')
+                           ->withErrors(['error' => 'Student profile not found.']);
+        }
+
+        // Get all completed exam attempts with results
+        $examResults = StudentExamAttempt::where('student_id', $student->id)
+            ->where('status', 'completed')
+            ->with(['examPaper.subject', 'examPaper.classRoom'])
+            ->orderBy('completed_at', 'desc')
+            ->paginate(15);
+
+        return view('student.exams.marks', compact('examResults'))->with('examAttempts', $examResults);
+    }
+    
+    /**
+     * Display upcoming exams for student
+     */
+    public function upcoming(Request $request)
+    {
+        $student = $request->user()->student;
+        
+        if (!$student) {
+            return redirect()->route('student.dashboard')
+                           ->withErrors(['error' => 'Student profile not found.']);
+        }
+
+        // Get upcoming exams for the student's class
+        $upcomingExams = \App\Models\ExamSchedule::where('class_id', $student->class_id)
+            ->where('status', 'published')
+            ->where('start_date', '>', now())
+            ->with(['subject', 'examType'])
+            ->orderBy('start_date', 'asc')
+            ->paginate(15);
+
+        return view('student.exams.upcoming', compact('upcomingExams'));
     }
 }

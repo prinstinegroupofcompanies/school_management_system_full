@@ -79,7 +79,29 @@ class ExamController extends Controller
                                      ->count(),
         ];
 
-        return view('teacher.exams.index', compact('exams', 'subjects', 'classes', 'examTypes', 'stats'));
+        return view('teacher.exams.index', compact('exams', 'subjects', 'classes', 'examTypes', 'stats'))->with('examSchedules', $exams);
+    }
+
+    /**
+     * Display upcoming exams for teacher
+     */
+    public function upcoming(Request $request)
+    {
+        $teacher = $request->user()->teacher;
+        
+        if (!$teacher) {
+            return redirect()->route('teacher.dashboard')
+                           ->withErrors(['error' => 'Teacher profile not found.']);
+        }
+
+        $upcomingExams = ExamPaper::where('teacher_id', $teacher->id)
+                                 ->where('is_published', true)
+                                 ->where('start_time', '>', now())
+                                 ->with(['subject', 'classRoom'])
+                                 ->orderBy('start_time', 'asc')
+                                 ->paginate(15);
+
+        return view('teacher.exams.upcoming', compact('upcomingExams'));
     }
 
     /**

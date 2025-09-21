@@ -75,7 +75,7 @@ class HomeworkController extends Controller
                                                       ->where('is_published', true)
                                                       ->where('due_date', '<', now())
                                                       ->count(),
-            'pending_submissions' => HomeworkSubmission::whereHas('homeworkAssignment', function($query) use ($teacher) {
+            'pending_submissions' => HomeworkSubmission::whereHas('homework', function($query) use ($teacher) {
                                                           $query->where('teacher_id', $teacher->id);
                                                       })
                                                       ->where('status', 'submitted')

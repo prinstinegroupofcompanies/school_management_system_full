@@ -10,7 +10,10 @@ use App\Models\ClassRoom;
 use App\Models\Subject;
 use App\Models\ExamSchedule;
 use App\Models\FeePayment;
+use App\Models\PaymentRecord;
+use App\Models\StudentFee;
 use App\Models\StudentAttendance;
+use App\Models\Notification;
 
 class AdminController extends Controller
 {
@@ -20,54 +23,76 @@ class AdminController extends Controller
             'academic_year' => (int) date('Y'),
             'semester' => (int) (date('n') <= 6 ? 1 : 2),
         ];
-        // Get real data with fallbacks to demo data
-        $studentCount = $this->safeCount(Student::class);
-        $teacherCount = $this->safeCount(Teacher::class);
-        $classCount = $this->safeCount(ClassRoom::class);
-        $subjectCount = $this->safeCount(Subject::class);
+        
+        // REAL-TIME DATA - NO MOCK DATA
+        $studentCount = Student::count();
+        $teacherCount = Teacher::count();
+        $classCount = ClassRoom::count();
+        $subjectCount = Subject::count();
+        $examCount = ExamSchedule::count();
+        
+        // Real-time financial data from both payment sources
+        $feePaymentTotal = FeePayment::where('status', 'paid')->sum('amount_paid');
+        $paymentRecordTotal = PaymentRecord::where('status', 'approved')->sum('amount');
+        $totalFeePayments = $feePaymentTotal + $paymentRecordTotal;
         
         $stats = [
-            'total_students' => $studentCount > 0 ? $studentCount : 1247, // Demo data if empty
-            'total_teachers' => $teacherCount > 0 ? $teacherCount : 89,
-            'total_classes' => $classCount > 0 ? $classCount : 32,
-            'total_subjects' => $subjectCount > 0 ? $subjectCount : 45,
-            'total_exams' => $this->safeCount(ExamSchedule::class) ?: 12,
-            'total_fee_payments' => $this->safeSum(FeePayment::class, 'amount_paid') ?: 125000,
-            'attendance_rate' => $this->getAttendanceRate() ?: 94.2,
+            'total_students' => $studentCount,
+            'total_teachers' => $teacherCount,
+            'total_classes' => $classCount,
+            'total_subjects' => $subjectCount,
+            'total_exams' => $examCount,
+            'total_fee_payments' => $totalFeePayments,
+            'attendance_rate' => $this->getAttendanceRate(),
         ];
 
-        $collectedToday = $this->safeQuery(function() {
-            return FeePayment::whereDate('payment_date', today())->sum('amount_paid');
-        });
+        // Real-time fee collection data
+        $collectedTodayFeePayments = FeePayment::whereDate('payment_date', today())
+            ->where('status', 'paid')
+            ->sum('amount_paid');
+        $collectedTodayPaymentRecords = PaymentRecord::whereDate('created_at', today())
+            ->where('status', 'approved')
+            ->sum('amount');
+        $collectedToday = $collectedTodayFeePayments + $collectedTodayPaymentRecords;
+        
+        // Comprehensive financial statistics for admin dashboard
+        $totalExpenses = 0; // TODO: Implement expense tracking
+        $netProfit = $totalFeePayments - $totalExpenses;
         
         $feeStats = [
-            'collected_today' => $collectedToday > 0 ? $collectedToday : 15000, // Demo data
-            'pending' => $this->getPendingPayments() ?: 85000, // Demo pending amount
+            'collected_today' => $collectedToday,
+            'pending' => $this->getPendingPayments(),
+            'pending_approvals' => PaymentRecord::where('status', 'pending')->count(),
+            'total_revenue' => $totalFeePayments,
+            'total_expenses' => $totalExpenses,
+            'net_profit' => $netProfit,
+            'monthly_revenue' => $collectedTodayFeePayments + $collectedTodayPaymentRecords,
         ];
 
-        $presentToday = $this->safeQuery(function() {
-            return StudentAttendance::whereDate('date', today())->where('status', 'present')->count();
-        });
+        // Real-time attendance data
+        $presentToday = StudentAttendance::whereDate('date', today())
+            ->where('status', 'present')->count();
+        $absentToday = StudentAttendance::whereDate('date', today())
+            ->where('status', 'absent')->count();
+        $lateToday = StudentAttendance::whereDate('date', today())
+            ->where('status', 'late')->count();
         
         $attendanceStats = [
-            'present' => $presentToday > 0 ? $presentToday : 1156, // Demo data
-            'absent' => $this->safeQuery(function() {
-                return StudentAttendance::whereDate('date', today())->where('status', 'absent')->count();
-            }) ?: 91,
-            'late' => $this->safeQuery(function() {
-                return StudentAttendance::whereDate('date', today())->where('status', 'late')->count();
-            }) ?: 23,
-            'total' => $presentToday > 0 ? $presentToday + 91 + 23 : 1270,
+            'present' => $presentToday,
+            'absent' => $absentToday,
+            'late' => $lateToday,
+            'total' => $presentToday + $absentToday + $lateToday,
         ];
 
+        // Real-time recent activities from notifications
         $recentActivities = $this->getRecentActivities();
-        $upcoming_exams = $this->safeQuery(function() {
-            return ExamSchedule::with('examType', 'subject')
-                ->where('exam_date', '>=', now())
-                ->orderBy('exam_date')
-                ->limit(5)
-                ->get();
-        }) ?: collect();
+        
+        // Real-time upcoming exams
+        $upcoming_exams = ExamSchedule::with(['examType', 'subject'])
+            ->where('exam_date', '>=', now())
+            ->orderBy('exam_date')
+            ->limit(5)
+            ->get();
 
         return view('dashboard.admin', compact('stats', 'feeStats', 'attendanceStats', 'recentActivities', 'upcoming_exams') + ['session' => $session]);
     }
@@ -91,12 +116,8 @@ class AdminController extends Controller
     private function getPendingPayments()
     {
         try {
-            // Calculate pending payments based on fee structures and existing payments
-            $total_students = Student::count();
-            $total_paid = FeePayment::where('status', 'paid')->sum('amount');
-            
-            // This is a simplified calculation - in reality, you'd check against fee structures
-            return $total_students * 1000 - $total_paid; // Assuming 1000 LRD per student
+            // Real-time pending payments calculation using StudentFee balances
+            return StudentFee::where('status', '!=', 'paid')->sum('balance');
         } catch (\Exception $e) {
             return 0;
         }
@@ -104,56 +125,62 @@ class AdminController extends Controller
 
     private function getRecentActivities()
     {
-        // This would typically come from an activity log
-        return collect([
-            [
-                'description' => 'New student registered',
-                'created_at' => now()->subMinutes(5),
-            ],
-            [
-                'description' => 'New exam scheduled',
-                'created_at' => now()->subMinutes(15),
-            ],
-            [
-                'description' => 'Fee payment received',
-                'created_at' => now()->subMinutes(30),
-            ],
-        ]);
-    }
-
-    /**
-     * Safely count records from a model, returning 0 if table doesn't exist
-     */
-    private function safeCount($model)
-    {
         try {
-            return $model::count();
+            // Real-time activities from notifications and system events
+            $recentNotifications = Notification::where('user_id', auth()->id())
+                ->latest()
+                ->limit(3)
+                ->get()
+                ->map(function($notification) {
+                    return [
+                        'description' => $notification->title,
+                        'created_at' => $notification->created_at,
+                        'type' => $notification->type,
+                    ];
+                });
+            
+            // Add recent system activities
+            $recentStudents = Student::latest()->limit(1)->get()->map(function($student) {
+                return [
+                    'description' => 'New student registered: ' . $student->user->name,
+                    'created_at' => $student->created_at,
+                    'type' => 'student_registration',
+                ];
+            });
+            
+            $recentExams = ExamSchedule::latest()->limit(1)->get()->map(function($exam) {
+                return [
+                    'description' => 'New exam scheduled: ' . ($exam->subject->name ?? 'Unknown Subject'),
+                    'created_at' => $exam->created_at,
+                    'type' => 'exam_scheduled',
+                ];
+            });
+            
+            $recentPayments = PaymentRecord::where('status', 'approved')
+                ->latest()
+                ->limit(1)
+                ->get()
+                ->map(function($payment) {
+                    return [
+                        'description' => 'Payment approved: $' . number_format($payment->amount, 2) . ' from ' . $payment->student->user->name,
+                        'created_at' => $payment->approved_at ?? $payment->created_at,
+                        'type' => 'payment_approved',
+                    ];
+                });
+            
+            // Combine all activities and sort by date
+            return $recentNotifications
+                ->concat($recentStudents)
+                ->concat($recentExams)
+                ->concat($recentPayments)
+                ->sortByDesc('created_at')
+                ->take(5)
+                ->values();
+                
         } catch (\Exception $e) {
-            return 0;
+            // Fallback to empty collection if there's an error
+            return collect();
         }
     }
 
-    /**
-     * Safely sum a column from a model, returning 0 if table doesn't exist
-     */
-    private function safeSum($model, $column)
-    {
-        try {
-            return $model::sum($column) ?? 0;
-        } catch (\Exception $e) {
-            return 0;
-        }
-    }
-
-    /**
-     * Safely execute a database query, returning 0 if it fails
-     */
-    private function safeQuery($callback)
-    {
-        try {
-            return $callback();
-        } catch (\Exception $e) {
-            return 0;
-        }
-    }
 }

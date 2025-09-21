@@ -237,6 +237,14 @@ class Student extends Model
     }
 
     /**
+     * Get the student fees.
+     */
+    public function studentFees(): HasMany
+    {
+        return $this->hasMany(StudentFee::class);
+    }
+
+    /**
      * Get the homework submissions.
      */
     public function homeworkSubmissions(): HasMany

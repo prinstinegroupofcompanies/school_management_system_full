@@ -7,9 +7,11 @@ use App\Models\PaymentRecord;
 use App\Models\StudentFee;
 use App\Models\SystemSetting;
 use App\Notifications\PaymentSubmittedNotification;
+use App\Services\StudentFeeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class FinanceController extends Controller
 {
@@ -24,19 +26,20 @@ class FinanceController extends Controller
         $student = $user->student ?? null;
         abort_if(!$student, 403);
 
-        $fees = StudentFee::query()
-            ->where('student_id', $student->id)
+        // Ensure student has fees assigned for their current class
+        StudentFeeService::assignClassFeesToStudent($student);
+        
+        // Use the service to get real-time financial data
+        $financialSummary = StudentFeeService::getStudentFinancialSummary($student);
+        
+        // Get updated student fees with all relationships
+        $fees = StudentFee::where('student_id', $student->id)
+            ->with(['student.classRoom', 'student.user', 'feeStructure'])
             ->orderByDesc('year')
             ->orderBy('semester')
             ->get();
 
-        $firstUnpaidFee = StudentFee::query()
-            ->where('student_id', $student->id)
-            ->where('balance', '>', 0)
-            ->orderBy('due_date')
-            ->orderByDesc('year')
-            ->orderBy('semester')
-            ->first();
+        $firstUnpaidFee = $fees->where('balance', '>', 0)->sortBy('due_date')->first();
 
         $bankDetails = [
             'bank_name' => SystemSetting::get('bank_name', ''),
@@ -47,21 +50,31 @@ class FinanceController extends Controller
             'number' => SystemSetting::get('mobile_money_number', ''),
         ];
 
-        // Only approved payments should show as history
+        // Real-time approved payments with fee details
         $payments = PaymentRecord::query()
             ->where('student_id', $student->id)
             ->where('status', 'approved')
+            ->with(['studentFee'])
             ->latest()
             ->get();
 
-        // Pending payments to show separately
+        // Real-time pending payments with fee details
         $pendingPayments = PaymentRecord::query()
             ->where('student_id', $student->id)
             ->where('status', 'pending')
+            ->with(['studentFee'])
             ->latest()
             ->get();
 
-        return view('student.finance.index', compact('fees', 'bankDetails', 'mobileMoney', 'payments', 'pendingPayments', 'firstUnpaidFee'));
+        // Extract summary data
+        $totalAmount = $financialSummary['total_fees'];
+        $paidAmount = $financialSummary['paid_amount'];
+        $balanceAmount = $financialSummary['balance_amount'];
+
+        return view('student.finance.index', compact(
+            'fees', 'bankDetails', 'mobileMoney', 'payments', 'pendingPayments', 
+            'firstUnpaidFee', 'totalAmount', 'paidAmount', 'balanceAmount'
+        ));
     }
 
     public function createPayment(StudentFee $fee)
@@ -108,11 +121,51 @@ class FinanceController extends Controller
             'status' => 'pending',
         ]);
 
-        // Notify finance officers (users with user_type = finance)
+        // Notify finance officers directly using the custom notification model
         $financeUsers = \App\Models\User::query()->where('user_type', 'finance')->get();
-        Notification::send($financeUsers, new PaymentSubmittedNotification($payment));
+        
+        foreach ($financeUsers as $financeUser) {
+            \App\Models\Notification::create([
+                'user_id' => $financeUser->id,
+                'title' => 'New Payment Submitted',
+                'message' => 'A student submitted a payment of $' . number_format($payment->amount, 2) . ' for approval.',
+                'type' => 'payment_submission',
+                'category' => 'finance',
+                'subcategory' => 'payment',
+                'priority' => 7, // High priority
+                'status' => 'pending',
+                'action_url' => route('finance.payments.index'),
+                'action_text' => 'Review Payment',
+                'related_model' => 'PaymentRecord',
+                'related_id' => $payment->id,
+                'metadata' => [
+                    'payment_id' => $payment->id,
+                    'student_id' => $payment->student_id,
+                    'amount' => $payment->amount,
+                    'payment_method' => $payment->payment_method,
+                    'transaction_reference' => $payment->transaction_reference,
+                ],
+                'delivery_method' => 'in_app',
+                'delivery_status' => 'delivered',
+                'is_active' => true,
+            ]);
+        }
 
-        return redirect()->route('student.finance.index')->with('success', 'Payment submitted for approval.');
+        // Update student fee balances in real-time
+        StudentFeeService::updateStudentFeeBalances($user->student);
+
+        return redirect()->route('student.finance.index')->with('success', 'Payment submitted for approval. Your balance will be updated once payment is verified.');
+    }
+    
+    public function downloadInvoice(StudentFee $fee)
+    {
+        $user = Auth::user();
+        abort_if($fee->student_id !== ($user->student->id ?? 0), 403);
+
+        // Generate PDF invoice
+        $pdf = Pdf::loadView('student.finance.invoice', compact('fee'));
+        
+        return $pdf->download('invoice-' . $fee->id . '.pdf');
     }
 }
 

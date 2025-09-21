@@ -21,6 +21,18 @@ class SettingsController extends Controller
 
         return view('student.settings.index', compact('user', 'student'));
     }
+    
+    public function profile()
+    {
+        $user = auth()->user();
+        $student = $user->student;
+        
+        if (!$student) {
+            abort(403, 'Student record not found');
+        }
+
+        return view('student.profile', compact('user', 'student'));
+    }
 
     public function updateProfile(Request $request)
     {
@@ -171,5 +183,33 @@ class SettingsController extends Controller
 
         return redirect()->route('student.settings.privacy')
             ->with('success', 'Privacy settings updated successfully!');
+    }
+    
+    public function updatePassword(Request $request)
+    {
+        $user = auth()->user();
+        $student = $user->student;
+        
+        if (!$student) {
+            abort(403, 'Student record not found');
+        }
+
+        $request->validate([
+            'current_password' => 'required',
+            'password' => ['required', 'confirmed', Password::defaults()],
+        ]);
+
+        // Check current password
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors(['current_password' => 'The current password is incorrect.']);
+        }
+
+        // Update password
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        return redirect()->route('student.settings.index')
+            ->with('success', 'Password updated successfully!');
     }
 }

@@ -139,6 +139,16 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
+                        {{-- Debug: Show payment count and status --}}
+                        @if(config('app.debug'))
+                        <tr class="bg-yellow-50">
+                            <td colspan="6" class="px-6 py-2 text-xs text-gray-600">
+                                Debug: {{ count($payments) }} payments found. 
+                                Pending: {{ collect($payments)->where('status', 'pending')->count() }}
+                            </td>
+                        </tr>
+                        @endif
+                        
                         @forelse($payments as $payment)
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -155,8 +165,8 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">${{ number_format($payment->amount, 2) }}</div>
-                                @if($payment->fee_type)
+                                <div class="text-sm font-medium text-gray-900">${{ number_format($payment->amount ?? $payment->amount_paid ?? 0, 2) }}</div>
+                                @if($payment->fee_type ?? false)
                                 <div class="text-sm text-gray-500">{{ ucfirst(str_replace('_', ' ', $payment->fee_type)) }}</div>
                                 @endif
                             </td>
@@ -170,10 +180,10 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $payment->payment_reference }}
+                                {{ $payment->payment_reference ?? $payment->transaction_reference ?? 'N/A' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ $payment->payment_date->format('M d, Y') }}
+                                {{ $payment->payment_date ? $payment->payment_date->format('M d, Y') : ($payment->created_at ? $payment->created_at->format('M d, Y') : 'N/A') }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
@@ -191,13 +201,19 @@
                                     </a>
                                     @if($payment->status === 'pending')
                                     <button onclick="approvePayment({{ $payment->id }})" 
-                                            class="text-green-600 hover:text-green-900">
-                                        <i class="fas fa-check"></i>
+                                            class="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded hover:bg-green-200 transition-colors"
+                                            title="Approve Payment">
+                                        <i class="fas fa-check mr-1"></i>
+                                        Approve
                                     </button>
                                     <button onclick="rejectPayment({{ $payment->id }})" 
-                                            class="text-red-600 hover:text-red-900">
-                                        <i class="fas fa-times"></i>
+                                            class="inline-flex items-center px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded hover:bg-red-200 transition-colors"
+                                            title="Reject Payment">
+                                        <i class="fas fa-times mr-1"></i>
+                                        Reject
                                     </button>
+                                    @else
+                                    <span class="text-xs text-gray-500">{{ ucfirst($payment->status) }}</span>
                                     @endif
                                     <a href="#" onclick="downloadReceipt({{ $payment->id }})" 
                                        class="text-purple-600 hover:text-purple-900">
@@ -233,37 +249,48 @@
 <!-- Approval/Rejection Modals would go here -->
 <script>
 function approvePayment(paymentId) {
-    if (confirm('Are you sure you want to approve this payment?')) {
-        // AJAX call to approve payment
-        fetch(`/finance/payments/${paymentId}/approve`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Content-Type': 'application/json',
-            }
-        }).then(response => {
-            if (response.ok) {
-                location.reload();
-            }
-        });
+    if (confirm('Are you sure you want to approve this payment? This action cannot be undone.')) {
+        // Create form to submit approval
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/finance/payments/${paymentId}/approve`;
+        
+        // Add CSRF token
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = '_token';
+        csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        form.appendChild(csrfToken);
+        
+        document.body.appendChild(form);
+        form.submit();
     }
 }
 
 function rejectPayment(paymentId) {
     const reason = prompt('Please provide a reason for rejection:');
-    if (reason) {
-        fetch(`/finance/payments/${paymentId}/reject`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ reason })
-        }).then(response => {
-            if (response.ok) {
-                location.reload();
-            }
-        });
+    if (reason !== null) { // Check for null (cancel) vs empty string
+        // Create form to submit rejection
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/finance/payments/${paymentId}/reject`;
+        
+        // Add CSRF token
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = '_token';
+        csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        form.appendChild(csrfToken);
+        
+        // Add reason field
+        const reasonField = document.createElement('input');
+        reasonField.type = 'hidden';
+        reasonField.name = 'reason';
+        reasonField.value = reason;
+        form.appendChild(reasonField);
+        
+        document.body.appendChild(form);
+        form.submit();
     }
 }
 

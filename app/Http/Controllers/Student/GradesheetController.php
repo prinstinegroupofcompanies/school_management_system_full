@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Grade;
 use App\Models\Student;
 use Illuminate\Http\Request;
-use PDF;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class GradesheetController extends Controller
 {
@@ -42,7 +42,7 @@ class GradesheetController extends Controller
             ->with(['subject','teacher.user'])
             ->get();
 
-        $pdf = PDF::loadView('student.gradesheet.pdf', [
+        $pdf = Pdf::loadView('student.gradesheet.pdf', [
             'student' => $student,
             'grades' => $grades,
             'year' => $year,

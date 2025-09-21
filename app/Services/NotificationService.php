@@ -94,10 +94,22 @@ class NotificationService
             $today = DB::table('notifications')->whereDate('created_at', today())->count();
             $thisWeek = DB::table('notifications')->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count();
 
+            // Get failed notifications if status column exists
+            $failed = 0;
+            try {
+                $failed = DB::table('notifications')->where('status', 'failed')->count();
+            } catch (\Exception $e) {
+                // Status column might not exist, default to 0
+                $failed = 0;
+            }
+
             return [
                 'total' => $total,
                 'unread' => $unread,
                 'read' => $total - $unread,
+                'sent' => $total, // All notifications are considered "sent" once created
+                'pending' => $unread, // Unread notifications can be considered "pending"
+                'failed' => $failed, // Failed notifications
                 'today' => $today,
                 'this_week' => $thisWeek,
                 'read_percentage' => $total > 0 ? round(($total - $unread) / $total * 100, 1) : 0
@@ -108,6 +120,9 @@ class NotificationService
                 'total' => 0,
                 'unread' => 0,
                 'read' => 0,
+                'sent' => 0,
+                'pending' => 0,
+                'failed' => 0,
                 'today' => 0,
                 'this_week' => 0,
                 'read_percentage' => 0

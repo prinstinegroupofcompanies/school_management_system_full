@@ -45,7 +45,7 @@ class FeeStructure extends Model
         'is_active' => 'boolean',
     ];
 
-    public function class(): BelongsTo
+    public function classRoom(): BelongsTo
     {
         return $this->belongsTo(ClassRoom::class, 'class_id');
     }
@@ -53,6 +53,11 @@ class FeeStructure extends Model
     public function students(): HasMany
     {
         return $this->hasMany(Student::class);
+    }
+
+    public function studentFees(): HasMany
+    {
+        return $this->hasMany(StudentFee::class);
     }
 
     public function feePayments(): HasMany

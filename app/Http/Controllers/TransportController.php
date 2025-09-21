@@ -14,14 +14,14 @@ class TransportController extends Controller
 {
     public function index()
     {
-        $routes = TransportRoute::with(['vehicle', 'driver'])->paginate(15);
-        $vehicles = Vehicle::with(['driver', 'route'])->paginate(15);
+        $routes = TransportRoute::with(['transport'])->paginate(15);
+        $vehicles = Vehicle::with(['driver'])->paginate(15);
         return view('transport.index', compact('routes', 'vehicles'));
     }
 
     public function routes()
     {
-        $routes = TransportRoute::with(['vehicle', 'driver', 'stops'])->paginate(15);
+        $routes = TransportRoute::with(['transport'])->paginate(15);
         return view('transport.routes', compact('routes'));
     }
 

@@ -25,6 +25,9 @@ class AppServiceProvider extends ServiceProvider
         // Register Blade components
         Blade::component('app-layout', \App\View\Components\AppLayout::class);
 
+        // Register model observers
+        \App\Models\Student::observe(\App\Observers\StudentObserver::class);
+
         if (config('app.env') === 'production') {
             URL::forceScheme('https');
         }

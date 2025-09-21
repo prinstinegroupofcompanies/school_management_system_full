@@ -78,14 +78,16 @@ class StudentController extends Controller
             ->take(5)
             ->get(['id', 'title', 'due_date']);
 
-        // Get real fee status
-        $totalFees = FeeStructure::where('class_id', $student->class_id)->sum('amount');
-        $totalPaid = FeePayment::where('student_id', $student->id)->sum('amount_paid');
+        // Ensure student has fees assigned for their current class
+        \App\Services\StudentFeeService::assignClassFeesToStudent($student);
+        
+        // Get real-time fee status using the service
+        $financialSummary = \App\Services\StudentFeeService::getStudentFinancialSummary($student);
         $feeStatus = [
-            'total_fees' => $totalFees,
-            'total_paid' => $totalPaid,
-            'pending' => max($totalFees - $totalPaid, 0),
-            'percentage_paid' => $totalFees > 0 ? round(($totalPaid / $totalFees) * 100, 2) : 0,
+            'total_fees' => $financialSummary['total_fees'],
+            'total_paid' => $financialSummary['paid_amount'],
+            'pending' => $financialSummary['balance_amount'],
+            'percentage_paid' => $financialSummary['total_fees'] > 0 ? round(($financialSummary['paid_amount'] / $financialSummary['total_fees']) * 100, 2) : 0,
         ];
 
         // Get recent activities from real data

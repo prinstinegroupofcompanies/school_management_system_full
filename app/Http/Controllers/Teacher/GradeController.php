@@ -451,6 +451,27 @@ class GradeController extends Controller
     }
 
     /**
+     * Show exam questions interface
+     */
+    public function examQuestions(Request $request)
+    {
+        $teacher = $request->user()->teacher;
+        
+        if (!$teacher) {
+            return redirect()->route('teacher.dashboard')
+                           ->withErrors(['error' => 'Teacher profile not found.']);
+        }
+
+        // Get teacher's subjects and classes for filtering
+        $subjects = Subject::where('teacher_id', $teacher->id)->get();
+        $classes = ClassRoom::whereHas('subjects', function($query) use ($teacher) {
+            $query->where('teacher_id', $teacher->id);
+        })->get();
+
+        return view('teacher.grades.exam-questions', compact('subjects', 'classes'));
+    }
+
+    /**
      * Store bulk grades
      */
     public function bulkStore(Request $request)

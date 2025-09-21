@@ -180,6 +180,25 @@ class UserController extends Controller
         return view('users.profile', compact('user'));
     }
 
+    public function myProfile()
+    {
+        $user = auth()->user();
+        
+        // Route to appropriate profile view based on user type
+        switch ($user->user_type) {
+            case 'student':
+                return view('student.profile', compact('user'));
+            case 'teacher':
+                return view('teacher.profile.show', compact('user'));
+            case 'finance':
+                return view('finance.profile', compact('user'));
+            case 'admin':
+                return view('admin.profile', compact('user'));
+            default:
+                return view('users.profile', compact('user'));
+        }
+    }
+
     public function editProfile(User $user = null)
     {
         // If no user is provided, use the authenticated user

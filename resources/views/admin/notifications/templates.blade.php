@@ -34,7 +34,7 @@
                             <div class="flex flex-wrap gap-2">
                                 @foreach($template['variables'] as $variable)
                                     <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                                        {{{{ $variable }}}}
+                                        @{{ '{{' }} {{ $variable }} @{{ '}}' }}
                                     </span>
                                 @endforeach
                             </div>

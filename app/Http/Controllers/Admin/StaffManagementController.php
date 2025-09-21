@@ -10,6 +10,7 @@ use App\Models\Payroll;
 use App\Models\User;
 use App\Models\Department;
 use App\Models\Designation;
+use App\Models\AcademicPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -589,5 +590,87 @@ class StaffManagementController extends Controller
         ];
 
         return view('admin.staff.reports', compact('stats'));
+    }
+
+    // Schedule Management Methods
+    public function editSchedule(StaffSchedule $schedule)
+    {
+        $staff = Staff::all();
+        return view('admin.staff.edit-schedule', compact('schedule', 'staff'));
+    }
+
+    public function updateSchedule(Request $request, StaffSchedule $schedule)
+    {
+        $request->validate([
+            'staff_id' => 'required|exists:staff,id',
+            'schedule_date' => 'required|date',
+            'start_time' => 'required',
+            'end_time' => 'required|after:start_time',
+            'schedule_type' => 'required|in:regular,overtime,holiday',
+            'description' => 'nullable|string',
+            'status' => 'required|in:scheduled,completed,cancelled',
+        ]);
+
+        $schedule->update($request->all());
+
+        return redirect()->route('admin.staff.schedules')
+                        ->with('success', 'Schedule updated successfully.');
+    }
+
+    public function destroySchedule(StaffSchedule $schedule)
+    {
+        $schedule->delete();
+        return redirect()->route('admin.staff.schedules')
+                        ->with('success', 'Schedule deleted successfully.');
+    }
+
+    // Payroll Management Methods
+    public function editPayroll(Payroll $payroll)
+    {
+        $staff = Staff::all();
+        $academicPeriods = AcademicPeriod::all();
+        return view('admin.staff.edit-payroll', compact('payroll', 'staff', 'academicPeriods'));
+    }
+
+    public function updatePayroll(Request $request, Payroll $payroll)
+    {
+        $request->validate([
+            'staff_id' => 'required|exists:staff,id',
+            'academic_period_id' => 'required|exists:academic_periods,id',
+            'basic_salary' => 'required|numeric|min:0',
+            'allowances' => 'nullable|numeric|min:0',
+            'deductions' => 'nullable|numeric|min:0',
+            'overtime_hours' => 'nullable|numeric|min:0',
+            'overtime_rate' => 'nullable|numeric|min:0',
+            'bonus' => 'nullable|numeric|min:0',
+            'tax_deduction' => 'nullable|numeric|min:0',
+            'status' => 'required|in:pending,processed,paid',
+        ]);
+
+        $data = $request->all();
+        
+        // Calculate net pay
+        $grossPay = $data['basic_salary'] + ($data['allowances'] ?? 0) + ($data['bonus'] ?? 0) + 
+                   (($data['overtime_hours'] ?? 0) * ($data['overtime_rate'] ?? 0));
+        $totalDeductions = ($data['deductions'] ?? 0) + ($data['tax_deduction'] ?? 0);
+        $data['gross_pay'] = $grossPay;
+        $data['net_pay'] = $grossPay - $totalDeductions;
+
+        $payroll->update($data);
+
+        return redirect()->route('admin.staff.payroll')
+                        ->with('success', 'Payroll updated successfully.');
+    }
+
+    public function destroyPayroll(Payroll $payroll)
+    {
+        if ($payroll->status === 'paid') {
+            return redirect()->route('admin.staff.payroll')
+                            ->with('error', 'Cannot delete payroll that has been paid.');
+        }
+
+        $payroll->delete();
+        return redirect()->route('admin.staff.payroll')
+                        ->with('success', 'Payroll deleted successfully.');
     }
 }

@@ -32,9 +32,11 @@ class ClassController extends Controller
             abort(403, 'Teacher profile not found.');
         }
         
-        // Check if class is assigned to this teacher (either class teacher or via pivot assignment)
+        // Check if class is assigned to this teacher (class teacher, direct assignment, or teaches subjects in this class)
         $isAssigned = ($class->class_teacher_id === $teacher->id)
-            || $class->teachers()->where('teachers.id', $teacher->id)->exists();
+            || $class->teachers()->where('teachers.id', $teacher->id)->exists()
+            || $class->subjects()->where('teacher_id', $teacher->id)->exists();
+        
         if (!$isAssigned) {
             abort(403, 'Access denied. Class not assigned to you.');
         }

@@ -35,11 +35,16 @@ class PaymentSubmittedNotification extends Notification implements ShouldQueue
     public function toArray($notifiable)
     {
         return [
+            'title' => 'New Payment Submitted',
+            'message' => 'A student submitted a payment of $' . number_format($this->payment->amount, 2) . ' for approval.',
             'payment_id' => $this->payment->id,
             'student_id' => $this->payment->student_id,
             'fee_id' => $this->payment->fee_id,
             'amount' => $this->payment->amount,
+            'payment_method' => $this->payment->payment_method,
+            'transaction_reference' => $this->payment->transaction_reference,
             'status' => $this->payment->status,
+            'action_url' => route('finance.payments.index'),
         ];
     }
 }
