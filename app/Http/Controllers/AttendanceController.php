@@ -474,11 +474,13 @@ class AttendanceController extends Controller
         
         // Get recent attendance records
         $recentStudentAttendance = StudentAttendance::with(['student.user', 'student.classRoom'])
+            ->whereHas('student.user') // Only get records where student and user exist
             ->latest('attendance_date')
             ->limit(10)
             ->get();
             
         $recentTeacherAttendance = TeacherAttendance::with(['teacher.user'])
+            ->whereHas('teacher.user') // Only get records where teacher and user exist
             ->latest('date')
             ->limit(10)
             ->get();

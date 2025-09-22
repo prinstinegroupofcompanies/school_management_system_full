@@ -235,6 +235,7 @@
                     @if($recentStudentAttendance->count() > 0)
                     <div class="space-y-3">
                         @foreach($recentStudentAttendance as $record)
+                        @if($record->student && $record->student->user)
                         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                             <div class="flex items-center">
                                 <span class="w-3 h-3 rounded-full mr-3 
@@ -255,6 +256,7 @@
                                 {{ ucfirst($record->status) }}
                             </span>
                         </div>
+                        @endif
                         @endforeach
                     </div>
                     @else
@@ -276,6 +278,7 @@
                     @if($recentTeacherAttendance->count() > 0)
                     <div class="space-y-3">
                         @foreach($recentTeacherAttendance as $record)
+                        @if($record->teacher && $record->teacher->user)
                         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                             <div class="flex items-center">
                                 <span class="w-3 h-3 rounded-full mr-3 
@@ -296,6 +299,7 @@
                                 {{ ucfirst($record->status) }}
                             </span>
                         </div>
+                        @endif
                         @endforeach
                     </div>
                     @else
