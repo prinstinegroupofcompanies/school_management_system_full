@@ -431,6 +431,71 @@ class AttendanceController extends Controller
         return redirect()->back()->with('success', $message);
     }
 
+    public function reports(Request $request)
+    {
+        // Get current date for default values
+        $today = now();
+        $currentMonth = $today->format('Y-m');
+        
+        // Get basic statistics for overview
+        $studentStats = [
+            'total_today' => StudentAttendance::whereDate('attendance_date', today())->count(),
+            'present_today' => StudentAttendance::whereDate('attendance_date', today())->where('status', 'present')->count(),
+            'absent_today' => StudentAttendance::whereDate('attendance_date', today())->where('status', 'absent')->count(),
+            'late_today' => StudentAttendance::whereDate('attendance_date', today())->where('status', 'late')->count(),
+        ];
+        
+        $teacherStats = [
+            'total_today' => TeacherAttendance::whereDate('date', today())->count(),
+            'present_today' => TeacherAttendance::whereDate('date', today())->where('status', 'present')->count(),
+            'absent_today' => TeacherAttendance::whereDate('date', today())->where('status', 'absent')->count(),
+            'late_today' => TeacherAttendance::whereDate('date', today())->where('status', 'late')->count(),
+        ];
+        
+        // Get monthly statistics
+        $monthStart = $today->copy()->startOfMonth();
+        $monthEnd = $today->copy()->endOfMonth();
+        
+        $monthlyStudentStats = [
+            'total' => StudentAttendance::whereBetween('attendance_date', [$monthStart, $monthEnd])->count(),
+            'present' => StudentAttendance::whereBetween('attendance_date', [$monthStart, $monthEnd])->where('status', 'present')->count(),
+            'absent' => StudentAttendance::whereBetween('attendance_date', [$monthStart, $monthEnd])->where('status', 'absent')->count(),
+        ];
+        
+        $monthlyTeacherStats = [
+            'total' => TeacherAttendance::whereBetween('date', [$monthStart, $monthEnd])->count(),
+            'present' => TeacherAttendance::whereBetween('date', [$monthStart, $monthEnd])->where('status', 'present')->count(),
+            'absent' => TeacherAttendance::whereBetween('date', [$monthStart, $monthEnd])->where('status', 'absent')->count(),
+        ];
+        
+        // Get classes for filtering
+        $classes = ClassRoom::all();
+        $teachers = Teacher::with('user')->get();
+        
+        // Get recent attendance records
+        $recentStudentAttendance = StudentAttendance::with(['student.user', 'student.classRoom'])
+            ->latest('attendance_date')
+            ->limit(10)
+            ->get();
+            
+        $recentTeacherAttendance = TeacherAttendance::with(['teacher.user'])
+            ->latest('date')
+            ->limit(10)
+            ->get();
+        
+        return view('attendance.reports', compact(
+            'studentStats',
+            'teacherStats',
+            'monthlyStudentStats',
+            'monthlyTeacherStats',
+            'classes',
+            'teachers',
+            'recentStudentAttendance',
+            'recentTeacherAttendance',
+            'currentMonth'
+        ));
+    }
+
     public function export(Request $request)
     {
         $request->validate([
@@ -446,8 +511,8 @@ class AttendanceController extends Controller
         $format = $request->format;
 
         if ($type === 'student') {
-            $data = StudentAttendance::whereBetween('date', [$startDate, $endDate])
-                ->with(['student.user', 'class'])
+            $data = StudentAttendance::whereBetween('attendance_date', [$startDate, $endDate])
+                ->with(['student.user', 'student.classRoom'])
                 ->get();
         } else {
             $data = TeacherAttendance::whereBetween('date', [$startDate, $endDate])
