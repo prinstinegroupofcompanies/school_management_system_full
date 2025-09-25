@@ -26,16 +26,29 @@ class AdminController extends Controller
         ];
         
         // REAL-TIME DATA - NO MOCK DATA
-        $studentCount = Student::count();
-        $teacherCount = Teacher::count();
-        $classCount = ClassRoom::count();
-        $subjectCount = Subject::count();
-        $examCount = ExamSchedule::count();
+        try {
+            $studentCount = Student::count();
+            $teacherCount = Teacher::count();
+            $classCount = ClassRoom::count();
+            $subjectCount = Subject::count();
+            $examCount = ExamSchedule::count();
+        } catch (\Exception $e) {
+            // If tables don't exist yet, use default values
+            $studentCount = 0;
+            $teacherCount = 0;
+            $classCount = 0;
+            $subjectCount = 0;
+            $examCount = 0;
+        }
         
         // Real-time financial data from both payment sources
-        $feePaymentTotal = FeePayment::where('status', 'paid')->sum('amount_paid');
-        $paymentRecordTotal = PaymentRecord::where('status', 'approved')->sum('amount');
-        $totalFeePayments = $feePaymentTotal + $paymentRecordTotal;
+        try {
+            $feePaymentTotal = FeePayment::where('status', 'paid')->sum('amount_paid');
+            $paymentRecordTotal = PaymentRecord::where('status', 'approved')->sum('amount');
+            $totalFeePayments = $feePaymentTotal + $paymentRecordTotal;
+        } catch (\Exception $e) {
+            $totalFeePayments = 0;
+        }
         
         $stats = [
             'total_students' => $studentCount,

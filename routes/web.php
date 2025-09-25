@@ -9,6 +9,9 @@ use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 
+// Include health check routes
+require_once __DIR__ . '/health.php';
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes - CLEANED VERSION
