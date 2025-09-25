@@ -118,6 +118,14 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::post('/bulk-reject', [\App\Http\Controllers\Admin\GradeApprovalController::class, 'bulkReject'])->name('bulk-reject');
     });
 
+    // Staff Management Routes
+    Route::prefix('admin/staff')->name('admin.staff.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\StaffManagementController::class, 'index'])->name('index');
+        Route::get('/performance', [\App\Http\Controllers\Admin\StaffManagementController::class, 'performance'])->name('performance');
+        Route::get('/schedules', [\App\Http\Controllers\Admin\StaffManagementController::class, 'schedules'])->name('schedules');
+        Route::get('/payroll', [\App\Http\Controllers\Admin\StaffManagementController::class, 'payroll'])->name('payroll');
+    });
+
     // Exam Types Management
     Route::prefix('admin/exams/types')->name('admin.exams.types.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\ExamTypeController::class, 'index'])->name('index');

@@ -12,14 +12,32 @@ if (!function_exists('safeRoute')) {
             // Log the error but don't break the page
             \Log::warning("Navigation route error: {$name}", ['error' => $e->getMessage()]);
         }
-        return $fallback;
+        
+        // Provide fallback routes for common navigation items
+        $fallbackRoutes = [
+            'admin.students.index' => '/admin/students',
+            'admin.students.create' => '/admin/students/create',
+            'admin.teachers.index' => '/admin/teachers',
+            'admin.teachers.create' => '/admin/teachers/create',
+            'admin.classes.index' => '/admin/classes',
+            'admin.classes.create' => '/admin/classes/create',
+            'admin.subjects.index' => '/admin/subjects',
+            'admin.subjects.create' => '/admin/subjects/create',
+            'admin.grades.index' => '/admin/grades',
+            'admin.grades.analytics' => '/admin/grades/analytics',
+            'student.dashboard' => '/student/dashboard',
+            'teacher.dashboard' => '/teacher/dashboard',
+            'finance.dashboard' => '/finance/dashboard',
+        ];
+        
+        return $fallbackRoutes[$name] ?? $fallback;
     }
 }
 @endphp
 
 <nav class="flex-1 px-6 py-6 space-y-3">
     <!-- Premium Dashboard -->
-    <a href="{{ $userType === 'student' ? route('student.dashboard') : route('dashboard') }}" 
+    <a href="{{ $userType === 'student' ? safeRoute('student.dashboard', [], route('dashboard')) : safeRoute('dashboard') }}" 
        class="nav-item-premium group flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-premium {{ (request()->routeIs('dashboard') || request()->routeIs('student.dashboard')) ? 'bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 shadow-lg' : 'text-gray-700 hover:bg-white/50 hover:text-gray-900' }}">
         <svg class="mr-3 h-5 w-5 {{ (request()->routeIs('dashboard') || request()->routeIs('student.dashboard')) ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
@@ -43,7 +61,7 @@ if (!function_exists('safeRoute')) {
             </svg>
         </button>
         <div x-show="open" x-transition class="ml-6 space-y-2 mt-2">
-            <a href="{{ route('admin.students.index') }}" class="group flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-premium {{ request()->routeIs('admin.students.index') ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-600 shadow-md' : 'text-gray-600 hover:bg-white/30 hover:text-gray-900' }}">
+            <a href="{{ safeRoute('admin.students.index', [], '#') }}" class="group flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-premium {{ request()->routeIs('admin.students.index') ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-600 shadow-md' : 'text-gray-600 hover:bg-white/30 hover:text-gray-900' }}">
                 <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
