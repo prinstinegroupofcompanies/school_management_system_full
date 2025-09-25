@@ -32,8 +32,18 @@ class AdminController extends Controller
             $classCount = ClassRoom::count();
             $subjectCount = Subject::count();
             $examCount = ExamSchedule::count();
+            
+            // Debug logging for deployment
+            \Log::info('Admin Dashboard Data', [
+                'students' => $studentCount,
+                'teachers' => $teacherCount,
+                'classes' => $classCount,
+                'subjects' => $subjectCount,
+                'exams' => $examCount,
+            ]);
         } catch (\Exception $e) {
             // If tables don't exist yet, use default values
+            \Log::error('Admin Dashboard Data Error', ['error' => $e->getMessage()]);
             $studentCount = 0;
             $teacherCount = 0;
             $classCount = 0;
