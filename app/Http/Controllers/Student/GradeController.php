@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
-use App\Models\InternationalGrade;
+use App\Models\Grade;
 use App\Models\Student;
 use App\Models\Subject;
-use App\Models\ClassRoom;
+use App\Helpers\GradeHelper;
 use Illuminate\Http\Request;
 
 class GradeController extends Controller
@@ -17,7 +17,7 @@ class GradeController extends Controller
     }
 
     /**
-     * Display student's grades
+     * Display student's approved grades
      */
     public function index(Request $request)
     {
@@ -28,307 +28,184 @@ class GradeController extends Controller
                            ->withErrors(['error' => 'Student profile not found.']);
         }
 
-        $query = InternationalGrade::where('student_id', $student->id)
-                                  ->where('status', 'published')
-                                  ->where('visible_to_student', true)
-                                  ->with(['subject', 'teacher.user', 'classRoom']);
+        $academicYear = $request->get('year', date('Y'));
+        $classId = $student->class_id;
+
+        // Ensure student has grade records for all class subjects
+        GradeHelper::ensureStudentHasAllSubjectGrades($student, $academicYear, $classId);
+
+        $query = Grade::where('student_id', $student->id)
+                     ->where('class_id', $classId)
+                     ->where('academic_year', $academicYear)
+                     ->where('status', 'approved')
+                     ->with(['subject', 'class', 'teacher.user']);
 
         // Apply filters
         if ($request->filled('subject_id')) {
             $query->where('subject_id', $request->subject_id);
         }
 
-        if ($request->filled('academic_year')) {
-            $query->where('academic_year', $request->academic_year);
-        }
+        $grades = $query->orderBy('subject_id')->get();
 
-        if ($request->filled('semester')) {
-            $query->where('semester', $request->semester);
-        }
-
-        if ($request->filled('assessment_type')) {
-            $query->where('assessment_type', $request->assessment_type);
-        }
-
-        $grades = $query->orderBy('assessment_date', 'desc')->paginate(15);
-        
         // Get filter options
-        $subjects = Subject::whereIn('id', $student->assigned_subjects ? 
-                                   collect($student->assigned_subjects)->pluck('id') : [])->get();
-        
-        $academicYears = InternationalGrade::where('student_id', $student->id)
-                                         ->where('status', 'published')
-                                         ->distinct()
-                                         ->pluck('academic_year')
-                                         ->sort()
-                                         ->values();
+        $classes = $student->classRoom;
+        $subjects = GradeHelper::getClassSubjects($classId);
 
-        // Calculate GPA and academic standing
-        $currentGPA = $this->calculateCurrentGPA($student);
-        $academicStanding = $this->getAcademicStanding($currentGPA);
-        
-        // Get grade summary by subject
-        $subjectSummary = $this->getSubjectGradeSummary($student);
+        // Get comprehensive grade summary
+        $gradeSummary = GradeHelper::getStudentGradeSummary($student, $academicYear, $classId);
 
-        // Get recent achievements
-        $recentAchievements = InternationalGrade::where('student_id', $student->id)
-                                              ->where('status', 'published')
-                                              ->where('letter_grade', 'in', ['A+', 'A', 'A-'])
-                                              ->orderBy('published_at', 'desc')
-                                              ->take(5)
-                                              ->get();
+        // Calculate summary statistics
+        $stats = [
+            'total_subjects' => $gradeSummary['total_subjects'],
+            'average_score' => $gradeSummary['overall_average'],
+            'highest_score' => $grades->whereNotNull('year_avg')->max('year_avg'),
+            'lowest_score' => $grades->whereNotNull('year_avg')->min('year_avg'),
+            'semester1_average' => $gradeSummary['semester1_average'],
+            'semester2_average' => $gradeSummary['semester2_average'],
+            'is_eligible_for_promotion' => $gradeSummary['is_eligible_for_promotion'],
+            'period_averages' => $gradeSummary['period_averages'],
+        ];
 
-        return view('student.grades.index', compact(
-            'grades', 'subjects', 'academicYears', 'currentGPA', 
-            'academicStanding', 'subjectSummary', 'recentAchievements'
-        ));
+        return view('student.grades.index', compact('grades', 'classes', 'subjects', 'stats', 'gradeSummary', 'academicYear'));
     }
 
     /**
-     * Show specific grade details
+     * Show detailed grade for a specific subject
      */
-    public function show(InternationalGrade $grade)
+    public function show(Grade $grade)
     {
         $student = auth()->user()->student;
         
-        // Verify student owns this grade and it's published
-        if ($grade->student_id !== $student->id || 
-            $grade->status !== 'published' || 
-            !$grade->visible_to_student) {
+        // Verify the grade belongs to the authenticated student
+        if ($grade->student_id !== $student->id) {
             return redirect()->route('student.grades.index')
-                           ->withErrors(['error' => 'Grade not found or not accessible.']);
+                           ->withErrors(['error' => 'You are not authorized to view this grade.']);
         }
 
-        $grade->load(['subject', 'teacher.user', 'classRoom', 'approvedBy']);
-        
-        // Get related grades for context
-        $relatedGrades = InternationalGrade::where('student_id', $student->id)
-                                         ->where('subject_id', $grade->subject_id)
-                                         ->where('academic_year', $grade->academic_year)
-                                         ->where('status', 'published')
-                                         ->where('id', '!=', $grade->id)
-                                         ->orderBy('assessment_date', 'desc')
-                                         ->take(5)
-                                         ->get();
+        // Only show approved grades to students
+        if ($grade->status !== 'approved') {
+            return redirect()->route('student.grades.index')
+                           ->withErrors(['error' => 'This grade has not been approved yet.']);
+        }
 
-        return view('student.grades.show', compact('grade', 'relatedGrades'));
+        $grade->load(['subject', 'class', 'teacher.user', 'approvedBy']);
+        
+        return view('student.grades.show', compact('grade'));
     }
 
     /**
-     * Display grade report/transcript
+     * Get grade summary/transcript
      */
     public function transcript(Request $request)
     {
-        $student = $request->user()->student;
+        $student = auth()->user()->student;
         
         if (!$student) {
             return redirect()->route('student.dashboard')
                            ->withErrors(['error' => 'Student profile not found.']);
         }
 
-        $academicYear = $request->get('academic_year', $student->academic_year ?? date('Y'));
-        
-        // Get all published grades for the academic year
-        $grades = InternationalGrade::where('student_id', $student->id)
-                                   ->where('academic_year', $academicYear)
-                                   ->where('status', 'published')
-                                   ->where('visible_to_student', true)
-                                   ->with(['subject', 'teacher.user'])
-                                   ->orderBy('semester')
-                                   ->orderBy('subject_id')
-                                   ->orderBy('assessment_date')
-                                   ->get();
+        $grades = Grade::where('student_id', $student->id)
+                      ->where('status', 'approved')
+                      ->with(['subject', 'class', 'teacher.user'])
+                      ->orderBy('subject_id')
+                      ->get()
+                      ->groupBy('subject.name');
 
-        // Group grades by semester and subject
-        $gradesBySubject = $grades->groupBy(['semester', 'subject_id']);
-        
-        // Calculate semester GPAs
-        $semesterGPAs = [];
-        foreach (['fall', 'spring', 'summer'] as $semester) {
-            $semesterGrades = $grades->where('semester', $semester)
-                                   ->where('counts_toward_final', true);
-            
-            if ($semesterGrades->isNotEmpty()) {
-                $totalPoints = 0;
-                $totalCredits = 0;
-                
-                foreach ($semesterGrades as $grade) {
-                    $credits = $grade->weight ?? 1;
-                    $totalPoints += $grade->gpa_points * $credits;
-                    $totalCredits += $credits;
-                }
-                
-                $semesterGPAs[$semester] = $totalCredits > 0 ? round($totalPoints / $totalCredits, 2) : 0.0;
-            }
-        }
+        // Calculate overall statistics
+        $stats = [
+            'total_subjects' => $grades->count(),
+            'average_score' => Grade::where('student_id', $student->id)
+                                  ->where('status', 'approved')
+                                  ->whereNotNull('year_avg')
+                                  ->avg('year_avg'),
+            'total_credits' => $grades->count(), // Assuming each subject is worth 1 credit
+        ];
 
-        // Calculate overall GPA
-        $overallGPA = $this->calculateCurrentGPA($student, $academicYear);
-        $academicStanding = $this->getAcademicStanding($overallGPA);
-
-        // Get student info
-        $student->load(['user', 'classRoom']);
-
-        return view('student.grades.transcript', compact(
-            'student', 'gradesBySubject', 'semesterGPAs', 'overallGPA', 
-            'academicStanding', 'academicYear'
-        ));
+        return view('student.grades.transcript', compact('grades', 'stats', 'student'));
     }
 
     /**
-     * Calculate current GPA for student
+     * Download transcript as PDF
      */
-    private function calculateCurrentGPA(Student $student, $academicYear = null): float
+    public function downloadTranscript()
     {
-        $academicYear = $academicYear ?? $student->academic_year ?? date('Y');
-        
-        $grades = InternationalGrade::where('student_id', $student->id)
-                                   ->where('academic_year', $academicYear)
-                                   ->where('status', 'published')
-                                   ->where('counts_toward_final', true)
-                                   ->get();
-
-        if ($grades->isEmpty()) return 0.0;
-
-        $totalPoints = 0;
-        $totalCredits = 0;
-
-        foreach ($grades as $grade) {
-            $credits = $grade->weight ?? 1;
-            $totalPoints += $grade->gpa_points * $credits;
-            $totalCredits += $credits;
-        }
-
-        return $totalCredits > 0 ? round($totalPoints / $totalCredits, 2) : 0.0;
-    }
-
-    /**
-     * Get academic standing based on GPA
-     */
-    private function getAcademicStanding($gpa): array
-    {
-        if ($gpa >= 3.85) {
-            return ['status' => 'Summa Cum Laude', 'color' => 'text-yellow-600', 'bg' => 'bg-yellow-100'];
-        } elseif ($gpa >= 3.7) {
-            return ['status' => 'Magna Cum Laude', 'color' => 'text-yellow-600', 'bg' => 'bg-yellow-50'];
-        } elseif ($gpa >= 3.5) {
-            return ['status' => 'Cum Laude', 'color' => 'text-blue-600', 'bg' => 'bg-blue-100'];
-        } elseif ($gpa >= 3.0) {
-            return ['status' => 'Good Standing', 'color' => 'text-green-600', 'bg' => 'bg-green-100'];
-        } elseif ($gpa >= 2.5) {
-            return ['status' => 'Satisfactory', 'color' => 'text-gray-600', 'bg' => 'bg-gray-100'];
-        } elseif ($gpa >= 2.0) {
-            return ['status' => 'Academic Probation', 'color' => 'text-orange-600', 'bg' => 'bg-orange-100'];
-        } else {
-            return ['status' => 'Academic Warning', 'color' => 'text-red-600', 'bg' => 'bg-red-100'];
-        }
-    }
-
-    /**
-     * Get grade summary by subject
-     */
-    private function getSubjectGradeSummary(Student $student): array
-    {
-        $academicYear = $student->academic_year ?? date('Y');
-        
-        $grades = InternationalGrade::where('student_id', $student->id)
-                                   ->where('academic_year', $academicYear)
-                                   ->where('status', 'published')
-                                   ->with('subject')
-                                   ->get();
-
-        $summary = [];
-        
-        foreach ($grades->groupBy('subject_id') as $subjectId => $subjectGrades) {
-            $subject = $subjectGrades->first()->subject;
-            $finalGrades = $subjectGrades->where('counts_toward_final', true);
-            
-            if ($finalGrades->isNotEmpty()) {
-                $totalPoints = 0;
-                $totalCredits = 0;
-                
-                foreach ($finalGrades as $grade) {
-                    $credits = $grade->weight ?? 1;
-                    $totalPoints += $grade->gpa_points * $credits;
-                    $totalCredits += $credits;
-                }
-                
-                $subjectGPA = $totalCredits > 0 ? round($totalPoints / $totalCredits, 2) : 0.0;
-                $latestGrade = $finalGrades->sortByDesc('assessment_date')->first();
-                
-                $summary[] = [
-                    'subject' => $subject,
-                    'gpa' => $subjectGPA,
-                    'letter_grade' => $latestGrade->letter_grade,
-                    'latest_percentage' => $latestGrade->percentage,
-                    'total_assessments' => $finalGrades->count(),
-                    'avg_percentage' => $finalGrades->avg('percentage'),
-                ];
-            }
-        }
-
-        return collect($summary)->sortByDesc('gpa')->values()->all();
-    }
-
-    /**
-     * Download grade report as PDF
-     */
-    public function downloadTranscript(Request $request)
-    {
-        $student = $request->user()->student;
+        $student = auth()->user()->student;
         
         if (!$student) {
             return redirect()->route('student.dashboard')
                            ->withErrors(['error' => 'Student profile not found.']);
         }
 
-        $academicYear = $request->get('academic_year', $student->academic_year ?? date('Y'));
-        
-        // Get all published grades for the academic year
-        $grades = InternationalGrade::where('student_id', $student->id)
-                                   ->where('academic_year', $academicYear)
-                                   ->where('status', 'published')
-                                   ->where('visible_to_student', true)
-                                   ->with(['subject', 'teacher.user'])
-                                   ->orderBy('semester')
-                                   ->orderBy('subject_id')
-                                   ->orderBy('assessment_date')
-                                   ->get();
+        $grades = Grade::where('student_id', $student->id)
+                      ->where('status', 'approved')
+                      ->with(['subject', 'class', 'teacher.user'])
+                      ->orderBy('subject_id')
+                      ->get()
+                      ->groupBy('subject.name');
 
-        // Group grades by semester and subject
-        $gradesBySubject = $grades->groupBy(['semester', 'subject_id']);
+        $stats = [
+            'total_subjects' => $grades->count(),
+            'average_score' => Grade::where('student_id', $student->id)
+                                  ->where('status', 'approved')
+                                  ->whereNotNull('year_avg')
+                                  ->avg('year_avg'),
+        ];
+
+        // Generate PDF (you can implement PDF generation here)
+        // For now, just return the transcript view
+        return view('student.grades.transcript-pdf', compact('grades', 'stats', 'student'));
+    }
+
+    /**
+     * Display official grade sheet
+     */
+    public function gradeSheet($year = null)
+    {
+        $student = auth()->user()->student;
         
-        // Calculate GPAs
-        $semesterGPAs = [];
-        foreach (['fall', 'spring', 'summer'] as $semester) {
-            $semesterGrades = $grades->where('semester', $semester)
-                                   ->where('counts_toward_final', true);
-            
-            if ($semesterGrades->isNotEmpty()) {
-                $totalPoints = 0;
-                $totalCredits = 0;
-                
-                foreach ($semesterGrades as $grade) {
-                    $credits = $grade->weight ?? 1;
-                    $totalPoints += $grade->gpa_points * $credits;
-                    $totalCredits += $credits;
-                }
-                
-                $semesterGPAs[$semester] = $totalCredits > 0 ? round($totalPoints / $totalCredits, 2) : 0.0;
+        if (!$student) {
+            return redirect()->route('student.dashboard')
+                           ->withErrors(['error' => 'Student profile not found.']);
+        }
+
+        $academicYear = $year ?? date('Y');
+        $classId = $student->class_id;
+
+        // Ensure student has grade records for all class subjects
+        GradeHelper::ensureStudentHasAllSubjectGrades($student, $academicYear, $classId);
+        
+        $grades = Grade::where('student_id', $student->id)
+                      ->where('class_id', $classId)
+                      ->where('status', 'approved')
+                      ->where('academic_year', $academicYear)
+                      ->with(['subject', 'class', 'teacher.user', 'approvedBy'])
+                      ->orderBy('subject_id')
+                      ->get();
+
+        // Get comprehensive grade summary
+        $gradeSummary = GradeHelper::getStudentGradeSummary($student, $academicYear, $classId);
+
+        // Calculate statistics
+        $stats = [
+            'total_subjects' => $gradeSummary['total_subjects'],
+            'average_score' => $gradeSummary['overall_average'],
+            'highest_score' => $grades->whereNotNull('year_avg')->max('year_avg'),
+            'lowest_score' => $grades->whereNotNull('year_avg')->min('year_avg'),
+            'semester1_average' => $gradeSummary['semester1_average'],
+            'semester2_average' => $gradeSummary['semester2_average'],
+            'is_eligible_for_promotion' => $gradeSummary['is_eligible_for_promotion'],
+        ];
+
+        // Get admin signature (from the user who approved the grades)
+        $adminSignature = null;
+        if ($grades->count() > 0) {
+            $approvedBy = $grades->first()->approvedBy;
+            if ($approvedBy && $approvedBy->signature) {
+                $adminSignature = $approvedBy->signature;
             }
         }
 
-        $overallGPA = $this->calculateCurrentGPA($student, $academicYear);
-        $academicStanding = $this->getAcademicStanding($overallGPA);
-
-        $student->load(['user', 'classRoom']);
-
-        // Generate PDF (you can use a package like dompdf or tcpdf)
-        $pdf = \PDF::loadView('student.grades.transcript-pdf', compact(
-            'student', 'gradesBySubject', 'semesterGPAs', 'overallGPA', 
-            'academicStanding', 'academicYear'
-        ));
-
-        return $pdf->download("transcript_{$student->student_number}_{$academicYear}.pdf");
+        return view('student.grades.grade-sheet', compact('grades', 'stats', 'student', 'academicYear', 'adminSignature', 'gradeSummary'));
     }
 }

@@ -37,6 +37,9 @@
                     <button onclick="showTab('notifications')" class="tab-button border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700" id="tab-notifications">
                         Notifications
                     </button>
+                    <button onclick="showTab('signature')" class="tab-button border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700" id="tab-signature">
+                        Signature Settings
+                    </button>
                 </nav>
             </div>
 
@@ -242,6 +245,35 @@
                         </button>
                     </div>
                 </form>
+            </div>
+
+            <!-- Signature Settings Tab -->
+            <div id="tab-content-signature" class="tab-content hidden p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Signature Settings</h3>
+                <div class="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-blue-800">Digital Signature Management</h3>
+                            <div class="mt-2 text-sm text-blue-700">
+                                <p>Upload and manage your digital signature that will appear on all grade sheets and official documents. This signature will be automatically applied to approved grades.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <a href="{{ route('admin.settings.signature') }}" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                        Manage Digital Signature
+                    </a>
+                </div>
             </div>
         </div>
     </div>

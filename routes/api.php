@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\LibraryController;
 use App\Http\Controllers\Api\TransportController;
 use App\Http\Controllers\Api\HostelController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\RealtimeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -228,6 +229,13 @@ Route::middleware('auth:sanctum')->group(function () {
         $notification = $user->notifications()->findOrFail($id);
         $notification->markAsRead();
         return response()->json(['success' => true]);
+    });
+
+    // Real-time updates
+    Route::prefix('realtime')->group(function () {
+        Route::get('/check-updates', [RealtimeController::class, 'checkUpdates']);
+        Route::post('/mark-read', [RealtimeController::class, 'markAsRead']);
+        Route::get('/unread-count', [RealtimeController::class, 'unreadCount']);
     });
 
     // Settings

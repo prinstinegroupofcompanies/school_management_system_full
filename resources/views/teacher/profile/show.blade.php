@@ -1,6 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
+@if(!isset($teacher) || !$teacher)
+    <div class="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div class="text-center">
+            <h1 class="text-2xl font-bold text-red-600 mb-4">Error: Teacher profile not found</h1>
+            <p class="text-gray-600">Please contact the administrator to set up your teacher profile.</p>
+        </div>
+    </div>
+@else
 <div class="min-h-screen bg-gray-50">
     <!-- Header -->
     <div class="bg-white shadow">
@@ -106,4 +114,5 @@
         </div>
     </div>
 </div>
+@endif
 @endsection

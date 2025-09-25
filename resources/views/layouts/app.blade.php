@@ -701,5 +701,18 @@
             }
         });
     </script>
+
+    <!-- Real-time Updates Script -->
+    <!-- Realtime.js removed to prevent 401 errors -->
+    <script>
+        // Add CSRF token to meta tags for AJAX requests
+        const csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (!csrfToken) {
+            const meta = document.createElement('meta');
+            meta.name = 'csrf-token';
+            meta.content = '{{ csrf_token() }}';
+            document.getElementsByTagName('head')[0].appendChild(meta);
+        }
+    </script>
 </body>
 </html>

@@ -165,9 +165,11 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                            @if($performance->status == 'completed') bg-green-100 text-green-800
+                                            @if($performance->status == 'approved') bg-green-100 text-green-800
                                             @elseif($performance->status == 'draft') bg-yellow-100 text-yellow-800
-                                            @elseif($performance->status == 'pending') bg-blue-100 text-blue-800
+                                            @elseif($performance->status == 'submitted') bg-blue-100 text-blue-800
+                                            @elseif($performance->status == 'reviewed') bg-purple-100 text-purple-800
+                                            @elseif($performance->status == 'disputed') bg-red-100 text-red-800
                                             @else bg-gray-100 text-gray-800
                                             @endif">
                                             {{ ucfirst($performance->status) }}
@@ -175,9 +177,13 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <div class="flex space-x-2">
-                                            <a href="#" class="text-blue-600 hover:text-blue-900">View</a>
-                                            <a href="#" class="text-green-600 hover:text-green-900">Edit</a>
-                                            <a href="#" class="text-red-600 hover:text-red-900">Delete</a>
+                                            <a href="{{ route('admin.staff.performance.show', $performance) }}" class="text-blue-600 hover:text-blue-900">View</a>
+                                            <a href="{{ route('admin.staff.performance.edit', $performance) }}" class="text-green-600 hover:text-green-900">Edit</a>
+                                            <form method="POST" action="{{ route('admin.staff.performance.destroy', $performance) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this performance evaluation?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
+                                            </form>
                                         </div>
                                     </td>
                                 </tr>

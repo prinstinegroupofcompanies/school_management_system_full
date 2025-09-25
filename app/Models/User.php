@@ -32,6 +32,7 @@ class User extends Authenticatable
         'country',
         'postal_code',
         'profile_photo',
+        'signature',
         'status',
         'email_verified_at',
         'last_login_at',

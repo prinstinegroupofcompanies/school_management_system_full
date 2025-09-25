@@ -61,10 +61,10 @@ if (!function_exists('safeRoute')) {
 
     {{-- Gradesheet and Exams for Student --}}
     @if($userType === 'student')
-    @if(Route::has('student.gradesheet.show'))
-    <a href="{{ route('student.gradesheet.show') }}" 
-       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('student.gradesheet.*') ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
-        <svg class="mr-3 h-5 w-5 {{ request()->routeIs('student.gradesheet.*') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    @if(Route::has('student.grades.grade-sheet'))
+    <a href="{{ route('student.grades.grade-sheet') }}" 
+       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('student.grades.grade-sheet') ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+        <svg class="mr-3 h-5 w-5 {{ request()->routeIs('student.grades.grade-sheet') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-9 4h12M4 6h16" />
         </svg>
         My Gradesheet

@@ -1,213 +1,208 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">Enter Student Grades</h1>
-        <div class="flex space-x-4">
-            <a href="{{ route('teacher.grades.index') }}" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
-                Back to Grades
-            </a>
-            <a href="{{ route('teacher.grades.exam-questions') }}" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
-                Exam Questions
-            </a>
+<div class="min-h-screen bg-gray-50">
+    <div class="bg-white shadow">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between">
+                <h1 class="text-3xl font-bold text-gray-900">Enter Grades</h1>
+                <a href="{{ route('teacher.grades.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                    Back to Grades
+                </a>
+            </div>
         </div>
     </div>
-    
-    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow p-6">
-        <form method="POST" action="{{ route('teacher.grades.store') }}" class="space-y-6">
-            @csrf
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Class</label>
-                    <select name="class_id" id="filter_class_id" class="mt-1 block w-full border-gray-300 rounded-md" onchange="onClassChange(this)" required>
-                        <option value="">Select class</option>
-                        @foreach($classes as $class)
-                            <option value="{{ $class->id }}" {{ (isset($selectedClassId) && (int)$selectedClassId === $class->id) ? 'selected' : '' }}>
-                                {{ $class->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Subject</label>
-                    <select name="subject_id" id="subject_id" class="mt-1 block w-full border-gray-300 rounded-md" required onchange="onSubjectChange(this)">
-                        <option value="">Select subject</option>
-                        @foreach($subjects as $subject)
-                            <option value="{{ $subject->id }}" {{ (isset($selectedSubjectId) && (int)$selectedSubjectId === $subject->id) ? 'selected' : '' }}>
-                                {{ $subject->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Student</label>
-                    <input type="text" id="student_search" placeholder="Search student by name..." class="mt-1 mb-2 block w-full border-gray-300 rounded-md" oninput="filterStudents()" {{ empty($students) ? 'disabled' : '' }}>
-                    <select name="student_id" id="student_id" class="block w-full border-gray-300 rounded-md" size="8" required {{ empty($students) ? 'disabled' : '' }}>
-                        @foreach($students as $student)
-                            <option value="{{ $student->id }}">{{ $student->user->name }} ({{ $student->class->name ?? '' }})</option>
-                        @endforeach
-                    </select>
-                    <button type="button" class="mt-2 px-3 py-1 text-sm bg-gray-100 rounded border" onclick="loadEligibleStudents()">Reload list</button>
-                </div>
-            </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Academic Year</label>
-                    <input type="number" name="academic_year" class="mt-1 block w-full border-gray-300 rounded-md" value="{{ date('Y') }}" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Semester</label>
-                    <select name="semester" class="mt-1 block w-full border-gray-300 rounded-md" required>
-                        <option value="1">Semester 1</option>
-                        <option value="2">Semester 2</option>
-                    </select>
-                </div>
-            </div>
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <form id="gradeForm" action="{{ route('teacher.grades.store') }}" method="POST">
+                    @csrf
+                    
+                    <!-- Class and Subject Selection -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label for="class_id" class="block text-sm font-medium text-gray-700">Class</label>
+                            <select name="class_id" id="class_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                                <option value="">Select a class</option>
+                                @foreach($classes as $class)
+                                    <option value="{{ $class->id }}" {{ $selectedClassId == $class->id ? 'selected' : '' }}>
+                                        {{ $class->name }} - {{ $class->code }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-900 mb-2">Semester 1</h2>
-                    <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-sm text-gray-700">1st Period</label>
-                            <input type="number" name="sem1_p1" min="0" max="100" step="0.01" class="mt-1 w-full border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm text-gray-700">2nd Period</label>
-                            <input type="number" name="sem1_p2" min="0" max="100" step="0.01" class="mt-1 w-full border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm text-gray-700">3rd Period</label>
-                            <input type="number" name="sem1_p3" min="0" max="100" step="0.01" class="mt-1 w-full border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm text-gray-700">Exam</label>
-                            <input type="number" name="sem1_exam" min="0" max="100" step="0.01" class="mt-1 w-full border-gray-300 rounded-md">
+                            <label for="subject_id" class="block text-sm font-medium text-gray-700">Subject</label>
+                            <select name="subject_id" id="subject_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                                <option value="">Select a subject</option>
+                                @foreach($subjects as $subject)
+                                    <option value="{{ $subject->id }}" {{ $selectedSubjectId == $subject->id ? 'selected' : '' }}>
+                                        {{ $subject->name }} - {{ $subject->code }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
-                </div>
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-900 mb-2">Semester 2</h2>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-sm text-gray-700">4th Period</label>
-                            <input type="number" name="sem2_p4" min="0" max="100" step="0.01" class="mt-1 w-full border-gray-300 rounded-md">
+
+                    <!-- Student Selection and Grade Entry -->
+                    <div id="students-section" class="{{ $students->count() > 0 ? '' : 'hidden' }}">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Student Grades</h3>
+                        
+                        <div class="space-y-4">
+                            @foreach($students as $student)
+                                <div class="border rounded-lg p-4 bg-gray-50">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <h4 class="text-sm font-medium text-gray-900">
+                                            {{ $student->user->name }} ({{ $student->admission_number }})
+                                        </h4>
+                                        <input type="checkbox" class="student-select" data-student-id="{{ $student->id }}" checked>
+                                    </div>
+                                    
+                                    <input type="hidden" name="students[{{ $student->id }}][student_id]" value="{{ $student->id }}">
+                                    
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        <!-- Semester 1 -->
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700">Semester 1 - Period 1</label>
+                                            <input type="number" name="students[{{ $student->id }}][sem1_p1]" 
+                                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
+                                                   min="0" max="100" step="0.01">
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700">Semester 1 - Period 2</label>
+                                            <input type="number" name="students[{{ $student->id }}][sem1_p2]" 
+                                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
+                                                   min="0" max="100" step="0.01">
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700">Semester 1 - Period 3</label>
+                                            <input type="number" name="students[{{ $student->id }}][sem1_p3]" 
+                                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
+                                                   min="0" max="100" step="0.01">
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700">Semester 1 - Exam</label>
+                                            <input type="number" name="students[{{ $student->id }}][sem1_exam]" 
+                                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
+                                                   min="0" max="100" step="0.01">
+                                        </div>
+                                        
+                                        <!-- Semester 2 -->
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700">Semester 2 - Period 4</label>
+                                            <input type="number" name="students[{{ $student->id }}][sem2_p4]" 
+                                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
+                                                   min="0" max="100" step="0.01">
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700">Semester 2 - Period 5</label>
+                                            <input type="number" name="students[{{ $student->id }}][sem2_p5]" 
+                                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
+                                                   min="0" max="100" step="0.01">
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700">Semester 2 - Period 6</label>
+                                            <input type="number" name="students[{{ $student->id }}][sem2_p6]" 
+                                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
+                                                   min="0" max="100" step="0.01">
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700">Semester 2 - Exam</label>
+                                            <input type="number" name="students[{{ $student->id }}][sem2_exam]" 
+                                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
+                                                   min="0" max="100" step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
-                        <div>
-                            <label class="block text-sm text-gray-700">5th Period</label>
-                            <input type="number" name="sem2_p5" min="0" max="100" step="0.01" class="mt-1 w-full border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm text-gray-700">6th Period</label>
-                            <input type="number" name="sem2_p6" min="0" max="100" step="0.01" class="mt-1 w-full border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm text-gray-700">Exam</label>
-                            <input type="number" name="sem2_exam" min="0" max="100" step="0.01" class="mt-1 w-full border-gray-300 rounded-md">
+                        
+                        <div class="mt-6 flex justify-end space-x-3">
+                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
+                                Save Grades
+                            </button>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="pt-4">
-                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Save (Pending Approval)</button>
-                <a href="{{ route('teacher.grades.index') }}" class="ml-2 px-4 py-2 bg-gray-600 text-white rounded">Cancel</a>
+                    <div id="no-students" class="{{ $students->count() == 0 ? '' : 'hidden' }} text-center py-8">
+                        <p class="text-gray-500">Please select a class and subject to view students.</p>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
     </div>
 </div>
-<script>
-    function onClassChange(sel){
-        const classId = sel.value;
-        const subjectSelect = document.getElementById('subject_id');
-        const studentSelect = document.getElementById('student_id');
-        
-        // Clear subject and student dropdowns
-        subjectSelect.innerHTML = '<option value="">Select subject</option>';
-        studentSelect.innerHTML = '';
-        
-        if (classId) {
-            // Load subjects for selected class
-            fetch(`{{ route('teacher.grades.subjects') }}?class_id=${classId}`)
-                .then(response => response.json())
-                .then(data => {
-                    data.subjects.forEach(subject => {
-                        const option = document.createElement('option');
-                        option.value = subject.id;
-                        option.textContent = subject.name;
-                        subjectSelect.appendChild(option);
-                    });
-                })
-                .catch(error => console.error('Error loading subjects:', error));
-        }
-        
-        // Update URL parameters
-        const params = new URLSearchParams(window.location.search);
-        if (classId) {
-            params.set('class_id', classId);
-        } else {
-            params.delete('class_id');
-        }
-        window.location.search = params.toString();
-    }
-    function filterStudents() {
-        const input = document.getElementById('student_search');
-        const filter = (input.value || '').toLowerCase();
-        const select = document.getElementById('student_id');
-        if (!select) return;
-        const options = select.options;
-        for (let i = 0; i < options.length; i++) {
-            const txt = options[i].text.toLowerCase();
-            const match = txt.indexOf(filter) > -1;
-            options[i].hidden = !match;
-        }
-        // Ensure a visible option is selected if current selection is hidden
-        if (select.selectedIndex >= 0 && select.options[select.selectedIndex] && select.options[select.selectedIndex].hidden) {
-            for (let i = 0; i < options.length; i++) {
-                if (!options[i].hidden) { select.selectedIndex = i; break; }
-            }
-        }
-    }
 
-    function onSubjectChange(sel) {
-        const classId = document.querySelector('select[name="class_id"]').value;
-        const subjectId = sel.value;
-        const studentSelect = document.getElementById('student_id');
-        
-        // Clear student dropdown
-        studentSelect.innerHTML = '';
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const classSelect = document.getElementById('class_id');
+    const subjectSelect = document.getElementById('subject_id');
+    const studentsSection = document.getElementById('students-section');
+    const noStudentsSection = document.getElementById('no-students');
+
+    // Load students when class and subject are selected
+    function loadStudents() {
+        const classId = classSelect.value;
+        const subjectId = subjectSelect.value;
         
         if (classId && subjectId) {
-            loadEligibleStudents();
+            // Redirect to the same page with selected class and subject
+            const url = new URL(window.location);
+            url.searchParams.set('class_id', classId);
+            url.searchParams.set('subject_id', subjectId);
+            window.location.href = url.toString();
+        } else {
+            studentsSection.classList.add('hidden');
+            noStudentsSection.classList.remove('hidden');
         }
     }
 
-    function loadEligibleStudents() {
-        const classId = document.querySelector('select[name="class_id"]').value;
-        const subjectId = document.getElementById('subject_id').value;
-        if (!classId || !subjectId) return;
+    classSelect.addEventListener('change', loadStudents);
+    subjectSelect.addEventListener('change', loadStudents);
+
+    // Handle student selection checkboxes
+    document.querySelectorAll('.student-select').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const studentId = this.dataset.studentId;
+            const studentContainer = this.closest('.border');
+            const inputs = studentContainer.querySelectorAll('input[type="number"]');
+            
+            inputs.forEach(input => {
+                input.disabled = !this.checked;
+                if (!this.checked) {
+                    input.value = '';
+                }
+            });
+        });
+    });
+
+    // Form submission - only include selected students
+    document.getElementById('gradeForm').addEventListener('submit', function(e) {
+        const selectedStudents = Array.from(document.querySelectorAll('.student-select:checked'))
+            .map(checkbox => checkbox.dataset.studentId);
         
-        fetch(`{{ route('teacher.grades.students') }}?class_id=${classId}&subject_id=${subjectId}`)
-            .then(r => r.json())
-            .then(resp => {
-                const select = document.getElementById('student_id');
-                select.innerHTML = '';
-                (resp.data || []).forEach(s => {
-                    const opt = document.createElement('option');
-                    opt.value = s.id;
-                    opt.textContent = `${s.name} (${s.class})`;
-                    select.appendChild(opt);
-                });
-                
-                // Enable student search and select
-                document.getElementById('student_search').disabled = false;
-                select.disabled = false;
-            })
-            .catch(() => {});
-    }
+        if (selectedStudents.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one student.');
+            return;
+        }
+        
+        // Remove unchecked students from form data
+        document.querySelectorAll('.student-select:not(:checked)').forEach(checkbox => {
+            const studentId = checkbox.dataset.studentId;
+            const studentContainer = checkbox.closest('.border');
+            const inputs = studentContainer.querySelectorAll('input');
+            inputs.forEach(input => input.remove());
+        });
+    });
+});
 </script>
 @endsection
-
-

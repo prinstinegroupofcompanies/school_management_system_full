@@ -301,7 +301,7 @@ class StaffManagementController extends Controller
             'areas_for_improvement' => 'nullable|string',
             'goals' => 'nullable|string',
             'comments' => 'nullable|string',
-            'status' => 'required|in:draft,pending,completed'
+            'status' => 'required|in:draft,submitted,reviewed,approved,disputed'
         ]);
 
         // Calculate overall score
@@ -339,6 +339,84 @@ class StaffManagementController extends Controller
 
         return redirect()->route('admin.staff.performance')
             ->with('success', 'Performance evaluation created successfully.');
+    }
+
+    public function showPerformance(StaffPerformance $performance)
+    {
+        $performance->load(['staff.user', 'evaluator']);
+        return view('admin.staff.show-performance', compact('performance'));
+    }
+
+    public function editPerformance(StaffPerformance $performance)
+    {
+        $staff = Staff::with('user')->where('employment_status', 'active')->get();
+        $evaluators = User::where('user_type', 'admin')->orWhere('user_type', 'teacher')->get();
+        return view('admin.staff.edit-performance', compact('performance', 'staff', 'evaluators'));
+    }
+
+    public function updatePerformance(Request $request, StaffPerformance $performance)
+    {
+        $request->validate([
+            'staff_id' => 'required|exists:staff,id',
+            'evaluator_id' => 'required|exists:users,id',
+            'evaluation_period' => 'required|string',
+            'period_start' => 'required|date',
+            'period_end' => 'required|date',
+            'punctuality' => 'required|integer|min:1|max:10',
+            'work_quality' => 'required|integer|min:1|max:10',
+            'teamwork' => 'required|integer|min:1|max:10',
+            'communication' => 'required|integer|min:1|max:10',
+            'initiative' => 'required|integer|min:1|max:10',
+            'problem_solving' => 'required|integer|min:1|max:10',
+            'performance_rating' => 'required|in:excellent,good,satisfactory,needs_improvement,unsatisfactory',
+            'strengths' => 'nullable|string',
+            'areas_for_improvement' => 'nullable|string',
+            'goals' => 'nullable|string',
+            'comments' => 'nullable|string',
+            'status' => 'required|in:draft,submitted,reviewed,approved,disputed'
+        ]);
+
+        // Calculate overall score
+        $scores = [
+            $request->punctuality,
+            $request->work_quality,
+            $request->teamwork,
+            $request->communication,
+            $request->initiative,
+            $request->problem_solving
+        ];
+        $overallScore = array_sum($scores) / count($scores);
+
+        $performance->update([
+            'staff_id' => $request->staff_id,
+            'evaluator_id' => $request->evaluator_id,
+            'evaluation_period' => $request->evaluation_period,
+            'period_start' => $request->period_start,
+            'period_end' => $request->period_end,
+            'punctuality' => $request->punctuality,
+            'work_quality' => $request->work_quality,
+            'teamwork' => $request->teamwork,
+            'communication' => $request->communication,
+            'initiative' => $request->initiative,
+            'problem_solving' => $request->problem_solving,
+            'overall_score' => round($overallScore, 2),
+            'performance_rating' => $request->performance_rating,
+            'strengths' => $request->strengths,
+            'areas_for_improvement' => $request->areas_for_improvement,
+            'goals' => $request->goals,
+            'comments' => $request->comments,
+            'status' => $request->status
+        ]);
+
+        return redirect()->route('admin.staff.performance')
+            ->with('success', 'Performance evaluation updated successfully.');
+    }
+
+    public function destroyPerformance(StaffPerformance $performance)
+    {
+        $performance->delete();
+        return redirect()->route('admin.staff.performance')
+                        ->with('success', 'Performance evaluation deleted successfully.');
     }
 
     // Staff Scheduling
@@ -617,6 +695,12 @@ class StaffManagementController extends Controller
                         ->with('success', 'Schedule updated successfully.');
     }
 
+    public function showSchedule(StaffSchedule $schedule)
+    {
+        $schedule->load(['staff.user', 'assignedBy']);
+        return view('admin.staff.show-schedule', compact('schedule'));
+    }
+
     public function destroySchedule(StaffSchedule $schedule)
     {
         $schedule->delete();
@@ -660,6 +744,18 @@ class StaffManagementController extends Controller
 
         return redirect()->route('admin.staff.payroll')
                         ->with('success', 'Payroll updated successfully.');
+    }
+
+    public function showPayroll(Payroll $payroll)
+    {
+        $payroll->load(['staff.user', 'processedBy', 'academicPeriod']);
+        return view('admin.staff.show-payroll', compact('payroll'));
+    }
+
+    public function printPayroll(Payroll $payroll)
+    {
+        $payroll->load(['staff.user', 'processedBy', 'academicPeriod']);
+        return view('admin.staff.print-payroll', compact('payroll'));
     }
 
     public function destroyPayroll(Payroll $payroll)

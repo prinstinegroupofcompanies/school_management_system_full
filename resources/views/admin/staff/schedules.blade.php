@@ -185,9 +185,13 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <div class="flex space-x-2">
-                                            <a href="#" class="text-blue-600 hover:text-blue-900">View</a>
-                                            <a href="#" class="text-green-600 hover:text-green-900">Edit</a>
-                                            <a href="#" class="text-red-600 hover:text-red-900">Delete</a>
+                                            <a href="{{ route('admin.staff.schedules.show', $schedule) }}" class="text-blue-600 hover:text-blue-900">View</a>
+                                            <a href="{{ route('admin.staff.schedules.edit', $schedule) }}" class="text-green-600 hover:text-green-900">Edit</a>
+                                            <form method="POST" action="{{ route('admin.staff.schedules.destroy', $schedule) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this schedule?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
+                                            </form>
                                         </div>
                                     </td>
                                 </tr>

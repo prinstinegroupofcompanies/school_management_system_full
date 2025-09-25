@@ -289,16 +289,63 @@ class TeacherController extends Controller
 
     public function destroy(Teacher $teacher)
     {
-        // Detach all classes from the teacher
-        $teacher->classes()->detach();
-        
-        // Delete associated user
-        $teacher->user->delete();
-        
-        // Delete teacher record
-        $teacher->delete();
-
-        return redirect()->route('admin.teachers.index')
-            ->with('success', 'Teacher deleted successfully');
+        try {
+            DB::beginTransaction();
+            
+            // Get the user before deleting the teacher
+            $user = $teacher->user;
+            
+            // Detach all classes from the teacher
+            $teacher->classes()->detach();
+            
+            // Delete all related records that might reference this teacher
+            // Delete subjects assigned to this teacher
+            \App\Models\Subject::where('teacher_id', $teacher->id)->update(['teacher_id' => null]);
+            
+            // Delete grades assigned by this teacher
+            \App\Models\Grade::where('teacher_id', $teacher->id)->delete();
+            
+            // Delete homework assignments by this teacher
+            \App\Models\Homework::where('teacher_id', $teacher->id)->delete();
+            
+            // Delete exam schedules for this teacher
+            \App\Models\ExamSchedule::where('teacher_id', $teacher->id)->delete();
+            
+            // Delete teacher attendance records
+            \App\Models\TeacherAttendance::where('teacher_id', $teacher->id)->delete();
+            
+            // Delete study materials by this teacher
+            \App\Models\StudyMaterial::where('teacher_id', $teacher->id)->delete();
+            
+            // Delete notifications for this user (this prevents foreign key constraint violation)
+            if ($user) {
+                \App\Models\Notification::where('user_id', $user->id)->delete();
+            }
+            
+            // Delete teacher record first
+            $teacher->delete();
+            
+            // Try to delete the user, but handle foreign key constraints gracefully
+            if ($user) {
+                try {
+                    $user->delete();
+                } catch (\Illuminate\Database\QueryException $e) {
+                    // If user deletion fails due to foreign key constraints,
+                    // we'll just log it and continue since the teacher is already deleted
+                    \Log::warning('Could not delete user ' . $user->id . ' due to foreign key constraints: ' . $e->getMessage());
+                }
+            }
+            
+            DB::commit();
+            
+            return redirect()->route('admin.teachers.index')
+                ->with('success', 'Teacher deleted successfully');
+                
+        } catch (\Exception $e) {
+            DB::rollback();
+            
+            return redirect()->route('admin.teachers.index')
+                ->with('error', 'Failed to delete teacher: ' . $e->getMessage());
+        }
     }
 }

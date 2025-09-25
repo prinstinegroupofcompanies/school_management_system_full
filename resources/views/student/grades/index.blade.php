@@ -1,274 +1,462 @@
 @extends('layouts.app')
 
+@php
+use Illuminate\Support\Facades\Storage;
+use App\Helpers\GradeHelper;
+@endphp
+
 @section('content')
 <div class="min-h-screen bg-gray-50">
     <!-- Header -->
-    <div class="bg-white shadow-sm border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-6">
+    <div class="bg-white shadow">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-3xl font-bold text-gray-900">My Grades</h1>
-                    <p class="mt-2 text-gray-600">View your academic performance and progress</p>
+                    <p class="mt-2 text-gray-600">Academic Year {{ $academicYear }} - View your grades by period and subject</p>
                 </div>
                 <div class="flex space-x-3">
-                    <a href="{{ route('student.grades.transcript') }}" 
-                       class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                        <i class="fas fa-file-alt mr-2"></i>
-                        View Transcript
+                    <a href="{{ route('student.grades.grade-sheet') }}" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
+                        <i class="fas fa-certificate mr-2"></i>Official Grade Sheet
                     </a>
-                    <a href="{{ route('student.grades.download-transcript') }}" 
-                       class="inline-flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors">
-                        <i class="fas fa-download mr-2"></i>
-                        Download PDF
+                    <a href="{{ route('student.grades.transcript') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
+                        <i class="fas fa-file-alt mr-2"></i>View Transcript
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Academic Summary -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <div class="flex items-center">
-                    <div class="p-3 bg-blue-100 rounded-full">
-                        <i class="fas fa-chart-line text-blue-600 text-xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Current GPA</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ number_format($academicStats['current_gpa'] ?? 0, 2) }}</p>
-                        <p class="text-sm text-gray-500">{{ $academicStats['gpa_grade'] ?? 'N/A' }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <div class="flex items-center">
-                    <div class="p-3 bg-green-100 rounded-full">
-                        <i class="fas fa-graduation-cap text-green-600 text-xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Total Credits</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ $academicStats['total_credits'] ?? 0 }}</p>
-                        <p class="text-sm text-gray-500">Completed</p>
+    <!-- Statistics Cards -->
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-6 gap-6 mb-6">
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                                <i class="fas fa-book text-white"></i>
+                            </div>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Subjects</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ $stats['total_subjects'] }}</dd>
+                            </dl>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <div class="flex items-center">
-                    <div class="p-3 bg-purple-100 rounded-full">
-                        <i class="fas fa-award text-purple-600 text-xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Class Rank</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ $academicStats['class_rank'] ?? 'N/A' }}</p>
-                        <p class="text-sm text-gray-500">of {{ $academicStats['total_students'] ?? 0 }}</p>
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                                <i class="fas fa-chart-line text-white"></i>
+                            </div>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Overall Average</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ $stats['average_score'] ? number_format($stats['average_score'], 2) : 'N/A' }}</dd>
+                            </dl>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <div class="flex items-center">
-                    <div class="p-3 bg-yellow-100 rounded-full">
-                        <i class="fas fa-trophy text-yellow-600 text-xl"></i>
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-indigo-500 rounded-md flex items-center justify-center">
+                                <i class="fas fa-calendar-alt text-white"></i>
+                            </div>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Semester 1</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ $stats['semester1_average'] ? number_format($stats['semester1_average'], 2) : 'N/A' }}</dd>
+                            </dl>
+                        </div>
                     </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Achievement Level</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ $academicStats['achievement_level'] ?? 'Developing' }}</p>
-                        <p class="text-sm text-gray-500">Performance</p>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                                <i class="fas fa-calendar-check text-white"></i>
+                            </div>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Semester 2</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ $stats['semester2_average'] ? number_format($stats['semester2_average'], 2) : 'N/A' }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                                <i class="fas fa-trophy text-white"></i>
+                            </div>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Highest Score</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ $stats['highest_score'] ? number_format($stats['highest_score'], 2) : 'N/A' }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 {{ $stats['is_eligible_for_promotion'] ? 'bg-green-500' : 'bg-red-500' }} rounded-md flex items-center justify-center">
+                                <i class="fas fa-graduation-cap text-white"></i>
+                            </div>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Promotion Status</dt>
+                                <dd class="text-lg font-medium {{ $stats['is_eligible_for_promotion'] ? 'text-green-600' : 'text-red-600' }}">
+                                    {{ $stats['is_eligible_for_promotion'] ? 'Eligible' : 'Not Eligible' }}
+                                </dd>
+                            </dl>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Filters -->
-        <div class="bg-white rounded-xl shadow-sm mb-6">
-            <div class="p-6">
-                <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Academic Year</label>
-                        <select name="academic_year" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="">All Years</option>
-                            @foreach($academicYears as $year)
-                            <option value="{{ $year }}" {{ request('academic_year') == $year ? 'selected' : '' }}>{{ $year }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Semester</label>
-                        <select name="semester" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="">All Semesters</option>
-                            <option value="fall" {{ request('semester') === 'fall' ? 'selected' : '' }}>Fall</option>
-                            <option value="spring" {{ request('semester') === 'spring' ? 'selected' : '' }}>Spring</option>
-                            <option value="summer" {{ request('semester') === 'summer' ? 'selected' : '' }}>Summer</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Subject</label>
-                        <select name="subject_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="">All Subjects</option>
-                            @foreach($subjects as $subject)
-                            <option value="{{ $subject->id }}" {{ request('subject_id') == $subject->id ? 'selected' : '' }}>{{ $subject->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="flex items-end">
-                        <button type="submit" class="w-full px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors">
-                            <i class="fas fa-filter mr-2"></i>Filter
+        <!-- Period Averages -->
+        @if($stats['period_averages'])
+        <div class="bg-white shadow rounded-lg mb-6">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Period Averages</h3>
+                <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
+                    @for($period = 1; $period <= 6; $period++)
+                        <div class="text-center">
+                            <div class="text-sm font-medium text-gray-500">Period {{ $period }}</div>
+                            <div class="text-lg font-semibold text-gray-900">
+                                {{ $stats['period_averages']['period_' . $period] ? number_format($stats['period_averages']['period_' . $period], 2) : 'N/A' }}
+                            </div>
+                        </div>
+                    @endfor
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <!-- Period-based Grades Display -->
+        @if($grades->count() > 0)
+            <!-- Period Tabs -->
+            <div class="bg-white shadow-lg rounded-lg mb-6">
+                <div class="border-b border-gray-200">
+                    <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+                        <button onclick="showPeriod('semester1')" id="semester1-tab" class="period-tab active py-4 px-1 border-b-2 border-indigo-500 font-medium text-sm text-indigo-600">
+                            <i class="fas fa-calendar-alt mr-2"></i>Semester 1
                         </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Grades by Subject -->
-        <div class="space-y-6">
-            @forelse($gradesBySubject as $subjectName => $subjectGrades)
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h3 class="text-xl font-semibold text-white">{{ $subjectName }}</h3>
-                            <p class="text-blue-100 text-sm">
-                                {{ $subjectGrades->count() }} assessments • 
-                                Average: {{ number_format($subjectGrades->avg('percentage'), 1) }}% • 
-                                Grade: {{ $subjectGrades->first()->letter_grade ?? 'N/A' }}
-                            </p>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-2xl font-bold text-white">{{ number_format($subjectGrades->avg('gpa_points'), 2) }}</div>
-                            <div class="text-blue-100 text-sm">GPA Points</div>
-                        </div>
-                    </div>
+                        <button onclick="showPeriod('semester2')" id="semester2-tab" class="period-tab py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                            <i class="fas fa-calendar-check mr-2"></i>Semester 2
+                        </button>
+                        <button onclick="showPeriod('yearly')" id="yearly-tab" class="period-tab py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                            <i class="fas fa-trophy mr-2"></i>Year Summary
+                        </button>
+                    </nav>
                 </div>
 
-                <div class="p-6">
+                <!-- Semester 1 Grades -->
+                <div id="semester1-content" class="period-content p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Semester 1 Grades</h3>
                     <div class="overflow-x-auto">
-                        <table class="min-w-full">
-                            <thead>
-                                <tr class="border-b border-gray-200">
-                                    <th class="text-left py-3 px-4 font-medium text-gray-900">Assessment</th>
-                                    <th class="text-left py-3 px-4 font-medium text-gray-900">Type</th>
-                                    <th class="text-left py-3 px-4 font-medium text-gray-900">Date</th>
-                                    <th class="text-left py-3 px-4 font-medium text-gray-900">Score</th>
-                                    <th class="text-left py-3 px-4 font-medium text-gray-900">Grade</th>
-                                    <th class="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-                                    <th class="text-left py-3 px-4 font-medium text-gray-900">Action</th>
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teacher</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Period 1</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Period 2</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Period 3</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Exam</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Average</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                @foreach($subjectGrades as $grade)
-                                <tr class="hover:bg-gray-50 transition-colors">
-                                    <td class="py-3 px-4">
-                                        <div class="font-medium text-gray-900">{{ $grade->assessment_title }}</div>
-                                        @if($grade->assessment_description)
-                                        <div class="text-sm text-gray-500">{{ Str::limit($grade->assessment_description, 50) }}</div>
-                                        @endif
-                                    </td>
-                                    <td class="py-3 px-4">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                            @if($grade->assessment_type === 'final') bg-red-100 text-red-800
-                                            @elseif($grade->assessment_type === 'midterm') bg-orange-100 text-orange-800
-                                            @elseif($grade->assessment_type === 'quiz') bg-blue-100 text-blue-800
-                                            @elseif($grade->assessment_type === 'project') bg-purple-100 text-purple-800
-                                            @else bg-gray-100 text-gray-800 @endif">
-                                            {{ ucfirst($grade->assessment_type) }}
-                                        </span>
-                                    </td>
-                                    <td class="py-3 px-4 text-sm text-gray-900">
-                                        {{ $grade->assessment_date ? $grade->assessment_date->format('M d, Y') : 'N/A' }}
-                                    </td>
-                                    <td class="py-3 px-4">
-                                        <div class="flex items-center">
-                                            <div class="font-medium text-gray-900">{{ $grade->raw_score }}/{{ $grade->max_score }}</div>
-                                            <div class="ml-2 text-sm text-gray-500">({{ number_format($grade->percentage, 1) }}%)</div>
-                                        </div>
-                                        <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
-                                            <div class="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full" 
-                                                 style="width: {{ min(100, $grade->percentage) }}%"></div>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-4">
-                                        <div class="flex flex-col">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                                @if($grade->letter_grade === 'A' || $grade->letter_grade === 'A+') bg-green-100 text-green-800
-                                                @elseif($grade->letter_grade === 'B' || $grade->letter_grade === 'B+') bg-blue-100 text-blue-800
-                                                @elseif($grade->letter_grade === 'C' || $grade->letter_grade === 'C+') bg-yellow-100 text-yellow-800
-                                                @else bg-red-100 text-red-800 @endif">
-                                                {{ $grade->letter_grade ?? 'N/A' }}
-                                            </span>
-                                            <span class="text-xs text-gray-500 mt-1">{{ number_format($grade->gpa_points, 2) }} GPA</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-4">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                            @if($grade->status === 'published') bg-green-100 text-green-800
-                                            @elseif($grade->status === 'pending_approval') bg-yellow-100 text-yellow-800
-                                            @else bg-gray-100 text-gray-800 @endif">
-                                            {{ ucfirst(str_replace('_', ' ', $grade->status)) }}
-                                        </span>
-                                    </td>
-                                    <td class="py-3 px-4">
-                                        <a href="{{ route('student.grades.show', $grade) }}" 
-                                           class="text-blue-600 hover:text-blue-900 font-medium">
-                                            <i class="fas fa-eye mr-1"></i>View Details
-                                        </a>
-                                    </td>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach($grades as $grade)
+                                    <tr class="grade-row" data-grade-id="{{ $grade->id }}">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            {{ $grade->subject->name }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {{ $grade->teacher->user->name }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
+                                            @if($grade->sem1_p1)
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ GradeHelper::getGradeColorClass($grade->sem1_p1) }}">
+                                                    {{ number_format($grade->sem1_p1, 1) }}
+                                                </span>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
+                                            @if($grade->sem1_p2)
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ GradeHelper::getGradeColorClass($grade->sem1_p2) }}">
+                                                    {{ number_format($grade->sem1_p2, 1) }}
+                                                </span>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
+                                            @if($grade->sem1_p3)
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ GradeHelper::getGradeColorClass($grade->sem1_p3) }}">
+                                                    {{ number_format($grade->sem1_p3, 1) }}
+                                                </span>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
+                                            @if($grade->sem1_exam)
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ GradeHelper::getGradeColorClass($grade->sem1_exam) }}">
+                                                    {{ number_format($grade->sem1_exam, 1) }}
+                                                </span>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-900">
+                                            @if($grade->sem1_avg)
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ GradeHelper::getGradeColorClass($grade->sem1_avg) }}">
+                                                    {{ number_format($grade->sem1_avg, 1) }}
+                                                </span>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-900">
+                                            @if($grade->sem1_avg)
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ GradeHelper::getGradeColorClass($grade->sem1_avg) }}">
+                                                    {{ GradeHelper::getLetterGrade($grade->sem1_avg) }}
+                                                </span>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Semester 2 Grades (Hidden by default) -->
+                <div id="semester2-content" class="period-content p-6 hidden">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Semester 2 Grades</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teacher</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Period 4</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Period 5</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Period 6</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Exam</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Average</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
                                 </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach($grades as $grade)
+                                    <tr class="grade-row" data-grade-id="{{ $grade->id }}">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            {{ $grade->subject->name }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {{ $grade->teacher->user->name }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
+                                            @if($grade->sem2_p4)
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ GradeHelper::getGradeColorClass($grade->sem2_p4) }}">
+                                                    {{ number_format($grade->sem2_p4, 1) }}
+                                                </span>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
+                                            @if($grade->sem2_p5)
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ GradeHelper::getGradeColorClass($grade->sem2_p5) }}">
+                                                    {{ number_format($grade->sem2_p5, 1) }}
+                                                </span>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
+                                            @if($grade->sem2_p6)
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ GradeHelper::getGradeColorClass($grade->sem2_p6) }}">
+                                                    {{ number_format($grade->sem2_p6, 1) }}
+                                                </span>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
+                                            @if($grade->sem2_exam)
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ GradeHelper::getGradeColorClass($grade->sem2_exam) }}">
+                                                    {{ number_format($grade->sem2_exam, 1) }}
+                                                </span>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-900">
+                                            @if($grade->sem2_avg)
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ GradeHelper::getGradeColorClass($grade->sem2_avg) }}">
+                                                    {{ number_format($grade->sem2_avg, 1) }}
+                                                </span>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-900">
+                                            @if($grade->sem2_avg)
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ GradeHelper::getGradeColorClass($grade->sem2_avg) }}">
+                                                    {{ GradeHelper::getLetterGrade($grade->sem2_avg) }}
+                                                </span>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Year Summary Grades (Hidden by default) -->
+                <div id="yearly-content" class="period-content p-6 hidden">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Year Summary Grades</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teacher</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Semester 1 Avg</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Semester 2 Avg</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Year Average</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Final Grade</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach($grades as $grade)
+                                    <tr class="grade-row" data-grade-id="{{ $grade->id }}">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            {{ $grade->subject->name }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {{ $grade->teacher->user->name }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
+                                            @if($grade->sem1_avg)
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ GradeHelper::getGradeColorClass($grade->sem1_avg) }}">
+                                                    {{ number_format($grade->sem1_avg, 1) }}
+                                                </span>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
+                                            @if($grade->sem2_avg)
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ GradeHelper::getGradeColorClass($grade->sem2_avg) }}">
+                                                    {{ number_format($grade->sem2_avg, 1) }}
+                                                </span>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-900">
+                                            @if($grade->year_avg)
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ GradeHelper::getGradeColorClass($grade->year_avg) }}">
+                                                    {{ number_format($grade->year_avg, 1) }}
+                                                </span>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-900">
+                                            @if($grade->year_avg)
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ GradeHelper::getGradeColorClass($grade->year_avg) }}">
+                                                    {{ GradeHelper::getLetterGrade($grade->year_avg) }}
+                                                </span>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </td>
+                                    </tr>
                                 @endforeach
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-            @empty
-            <div class="bg-white rounded-xl shadow-sm p-12 text-center">
-                <div class="text-gray-400">
-                    <i class="fas fa-chart-bar text-6xl mb-4"></i>
-                    <h3 class="text-lg font-medium text-gray-900 mb-2">No Grades Available</h3>
-                    <p class="text-gray-500">Your grades will appear here once your teachers publish them.</p>
-                </div>
+        @else
+            <div class="bg-white shadow-lg rounded-lg p-6 text-center text-gray-500">
+                <i class="fas fa-graduation-cap text-4xl mb-4"></i>
+                <p class="text-lg">No approved grades found for this academic year.</p>
+                <p class="text-sm mt-2">Grades will appear here once your teachers submit them and they are approved by the administration.</p>
             </div>
-            @endforelse
-        </div>
-
-        <!-- Grade Legend -->
-        <div class="mt-8 bg-white rounded-xl shadow-sm p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Grading Scale</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                <div class="text-center">
-                    <div class="w-12 h-12 bg-green-100 text-green-800 rounded-full flex items-center justify-center font-bold mx-auto mb-2">A+</div>
-                    <div class="text-sm font-medium">97-100%</div>
-                    <div class="text-xs text-gray-500">4.0 GPA</div>
-                </div>
-                <div class="text-center">
-                    <div class="w-12 h-12 bg-green-100 text-green-800 rounded-full flex items-center justify-center font-bold mx-auto mb-2">A</div>
-                    <div class="text-sm font-medium">93-96%</div>
-                    <div class="text-xs text-gray-500">3.7 GPA</div>
-                </div>
-                <div class="text-center">
-                    <div class="w-12 h-12 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-bold mx-auto mb-2">B+</div>
-                    <div class="text-sm font-medium">87-92%</div>
-                    <div class="text-xs text-gray-500">3.3 GPA</div>
-                </div>
-                <div class="text-center">
-                    <div class="w-12 h-12 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-bold mx-auto mb-2">B</div>
-                    <div class="text-sm font-medium">83-86%</div>
-                    <div class="text-xs text-gray-500">3.0 GPA</div>
-                </div>
-                <div class="text-center">
-                    <div class="w-12 h-12 bg-yellow-100 text-yellow-800 rounded-full flex items-center justify-center font-bold mx-auto mb-2">C+</div>
-                    <div class="text-sm font-medium">77-82%</div>
-                    <div class="text-xs text-gray-500">2.3 GPA</div>
-                </div>
-                <div class="text-center">
-                    <div class="w-12 h-12 bg-yellow-100 text-yellow-800 rounded-full flex items-center justify-center font-bold mx-auto mb-2">C</div>
-                    <div class="text-sm font-medium">70-76%</div>
-                    <div class="text-xs text-gray-500">2.0 GPA</div>
-                </div>
-            </div>
-        </div>
+        @endif
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const periodTabs = document.querySelectorAll('.period-tab');
+    const periodContents = document.querySelectorAll('.period-content');
+
+    function showPeriod(periodId) {
+        // Hide all content
+        periodContents.forEach(content => {
+            content.classList.add('hidden');
+        });
+        
+        // Remove active state from all tabs
+        periodTabs.forEach(tab => {
+            tab.classList.remove('active', 'border-indigo-500', 'text-indigo-600');
+            tab.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+        });
+
+        // Show selected content
+        document.getElementById(periodId + '-content').classList.remove('hidden');
+        
+        // Activate selected tab
+        const activeTab = document.getElementById(periodId + '-tab');
+        activeTab.classList.add('active', 'border-indigo-500', 'text-indigo-600');
+        activeTab.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+    }
+
+    // Show the first period by default
+    showPeriod('semester1');
+});
+</script>
 @endsection

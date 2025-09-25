@@ -246,13 +246,13 @@
                                         ${{ number_format($payroll->basic_salary, 2) }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        ${{ number_format($payroll->allowances, 2) }}
+                                        ${{ number_format(($payroll->housing_allowance ?? 0) + ($payroll->transport_allowance ?? 0) + ($payroll->meal_allowance ?? 0) + ($payroll->medical_allowance ?? 0) + ($payroll->bonus ?? 0) + ($payroll->other_allowances ?? 0), 2) }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        ${{ number_format($payroll->deductions, 2) }}
+                                        ${{ number_format($payroll->total_deductions ?? 0, 2) }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        ${{ number_format($payroll->net_pay, 2) }}
+                                        ${{ number_format($payroll->net_salary, 2) }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
@@ -267,9 +267,14 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <div class="flex space-x-2">
-                                            <a href="#" class="text-blue-600 hover:text-blue-900">View</a>
-                                            <a href="#" class="text-green-600 hover:text-green-900">Edit</a>
-                                            <a href="#" class="text-purple-600 hover:text-purple-900">Print</a>
+                                            <a href="{{ route('admin.staff.payroll.show', $payroll) }}" class="text-blue-600 hover:text-blue-900">View</a>
+                                            <a href="{{ route('admin.staff.payroll.edit', $payroll) }}" class="text-green-600 hover:text-green-900">Edit</a>
+                                            <a href="{{ route('admin.staff.payroll.print', $payroll) }}" class="text-purple-600 hover:text-purple-900" target="_blank">Print</a>
+                                            <form method="POST" action="{{ route('admin.staff.payroll.destroy', $payroll) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this payroll record?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
+                                            </form>
                                         </div>
                                     </td>
                                 </tr>

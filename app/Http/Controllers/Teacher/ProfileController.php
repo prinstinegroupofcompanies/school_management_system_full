@@ -15,10 +15,28 @@ class ProfileController extends Controller
     public function show()
     {
         $user = auth()->user();
+        
+        // Check if user is authenticated
+        if (!$user) {
+            abort(401, 'User not authenticated.');
+        }
+        
+        // Check user type
+        if ($user->user_type !== 'teacher') {
+            abort(403, 'Access denied. Teacher privileges required.');
+        }
+        
         $teacher = $user->teacher;
         
         if (!$teacher) {
-            abort(403, 'Teacher profile not found.');
+            // Try to find the teacher record directly
+            $teacherRecord = Teacher::where('user_id', $user->id)->first();
+            
+            if ($teacherRecord) {
+                $teacher = $teacherRecord;
+            } else {
+                abort(403, 'Teacher profile not found. Please contact administrator to set up your teacher profile.');
+            }
         }
         
         $teacher->load(['user', 'department', 'designation']);
