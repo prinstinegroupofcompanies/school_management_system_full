@@ -55,3 +55,14 @@ Route::get('/debug', function () {
         return response()->json(['error' => $e->getMessage()], 500);
     }
 });
+
+// Simple test endpoint
+Route::get('/test', function () {
+    return response()->json([
+        'status' => 'ok',
+        'message' => 'Application is running',
+        'timestamp' => now()->toISOString(),
+        'php_version' => PHP_VERSION,
+        'laravel_version' => app()->version(),
+    ]);
+});
