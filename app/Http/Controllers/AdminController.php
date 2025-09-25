@@ -61,59 +61,99 @@ class AdminController extends Controller
         ];
 
         // Real-time fee collection data
-        $collectedTodayFeePayments = FeePayment::whereDate('payment_date', today())
-            ->where('status', 'paid')
-            ->sum('amount_paid');
-        $collectedTodayPaymentRecords = PaymentRecord::whereDate('created_at', today())
-            ->where('status', 'approved')
-            ->sum('amount');
-        $collectedToday = $collectedTodayFeePayments + $collectedTodayPaymentRecords;
+        try {
+            $collectedTodayFeePayments = FeePayment::whereDate('payment_date', today())
+                ->where('status', 'paid')
+                ->sum('amount_paid');
+            $collectedTodayPaymentRecords = PaymentRecord::whereDate('created_at', today())
+                ->where('status', 'approved')
+                ->sum('amount');
+            $collectedToday = $collectedTodayFeePayments + $collectedTodayPaymentRecords;
+        } catch (\Exception $e) {
+            $collectedToday = 0;
+        }
         
         // Comprehensive financial statistics for admin dashboard
         $totalExpenses = 0; // TODO: Implement expense tracking
         $netProfit = $totalFeePayments - $totalExpenses;
         
-        $feeStats = [
-            'collected_today' => $collectedToday,
-            'pending' => $this->getPendingPayments(),
-            'pending_approvals' => PaymentRecord::where('status', 'pending')->count(),
-            'total_revenue' => $totalFeePayments,
-            'total_expenses' => $totalExpenses,
-            'net_profit' => $netProfit,
-            'monthly_revenue' => $collectedTodayFeePayments + $collectedTodayPaymentRecords,
-        ];
+        try {
+            $feeStats = [
+                'collected_today' => $collectedToday,
+                'pending' => $this->getPendingPayments(),
+                'pending_approvals' => PaymentRecord::where('status', 'pending')->count(),
+                'total_revenue' => $totalFeePayments,
+                'total_expenses' => $totalExpenses,
+                'net_profit' => $netProfit,
+                'monthly_revenue' => $collectedToday,
+            ];
+        } catch (\Exception $e) {
+            $feeStats = [
+                'collected_today' => 0,
+                'pending' => 0,
+                'pending_approvals' => 0,
+                'total_revenue' => 0,
+                'total_expenses' => 0,
+                'net_profit' => 0,
+                'monthly_revenue' => 0,
+            ];
+        }
 
         // Real-time attendance data for students
-        $presentToday = StudentAttendance::whereDate('attendance_date', today())
-            ->where('status', 'present')->count();
-        $absentToday = StudentAttendance::whereDate('attendance_date', today())
-            ->where('status', 'absent')->count();
-        $lateToday = StudentAttendance::whereDate('attendance_date', today())
-            ->where('status', 'late')->count();
-        $excusedToday = StudentAttendance::whereDate('attendance_date', today())
-            ->where('status', 'excused')->count();
+        try {
+            $presentToday = StudentAttendance::whereDate('attendance_date', today())
+                ->where('status', 'present')->count();
+            $absentToday = StudentAttendance::whereDate('attendance_date', today())
+                ->where('status', 'absent')->count();
+        } catch (\Exception $e) {
+            $presentToday = 0;
+            $absentToday = 0;
+        }
+        try {
+            $lateToday = StudentAttendance::whereDate('attendance_date', today())
+                ->where('status', 'late')->count();
+            $excusedToday = StudentAttendance::whereDate('attendance_date', today())
+                ->where('status', 'excused')->count();
+        } catch (\Exception $e) {
+            $lateToday = 0;
+            $excusedToday = 0;
+        }
         
         // Recent student attendance records
-        $recentStudentAttendance = StudentAttendance::with(['student.user', 'student.classRoom'])
-            ->whereDate('attendance_date', today())
-            ->latest()
-            ->limit(10)
-            ->get();
+        try {
+            $recentStudentAttendance = StudentAttendance::with(['student.user', 'student.classRoom'])
+                ->whereDate('attendance_date', today())
+                ->latest()
+                ->limit(10)
+                ->get();
+        } catch (\Exception $e) {
+            $recentStudentAttendance = collect();
+        }
         
         // Teacher attendance data
-        $teachersPresentToday = TeacherAttendance::whereDate('date', today())
-            ->where('status', 'present')->count();
-        $teachersAbsentToday = TeacherAttendance::whereDate('date', today())
-            ->where('status', 'absent')->count();
-        $teachersLateToday = TeacherAttendance::whereDate('date', today())
-            ->where('status', 'late')->count();
+        try {
+            $teachersPresentToday = TeacherAttendance::whereDate('date', today())
+                ->where('status', 'present')->count();
+            $teachersAbsentToday = TeacherAttendance::whereDate('date', today())
+                ->where('status', 'absent')->count();
+            $teachersLateToday = TeacherAttendance::whereDate('date', today())
+                ->where('status', 'late')->count();
+        } catch (\Exception $e) {
+            $teachersPresentToday = 0;
+            $teachersAbsentToday = 0;
+            $teachersLateToday = 0;
+        }
         
         // Recent teacher attendance records
-        $recentTeacherAttendance = TeacherAttendance::with(['teacher.user'])
-            ->whereDate('date', today())
-            ->latest()
-            ->limit(5)
-            ->get();
+        try {
+            $recentTeacherAttendance = TeacherAttendance::with(['teacher.user'])
+                ->whereDate('date', today())
+                ->latest()
+                ->limit(5)
+                ->get();
+        } catch (\Exception $e) {
+            $recentTeacherAttendance = collect();
+        }
         
         $attendanceStats = [
             'students' => [
@@ -140,11 +180,15 @@ class AdminController extends Controller
         $recentActivities = $this->getRecentActivities();
         
         // Real-time upcoming exams
-        $upcoming_exams = ExamSchedule::with(['examType', 'subject'])
-            ->where('exam_date', '>=', now())
-            ->orderBy('exam_date')
-            ->limit(5)
-            ->get();
+        try {
+            $upcoming_exams = ExamSchedule::with(['examType', 'subject'])
+                ->where('exam_date', '>=', now())
+                ->orderBy('exam_date')
+                ->limit(5)
+                ->get();
+        } catch (\Exception $e) {
+            $upcoming_exams = collect();
+        }
 
         return view('dashboard.admin', compact(
             'stats', 'feeStats', 'attendanceStats', 'recentActivities', 'upcoming_exams',
