@@ -92,7 +92,7 @@
                         <div class="ml-5 w-0 flex-1">
                             <dl>
                                 <dt class="text-sm font-medium text-gray-500 truncate">Total Grades</dt>
-                                <dd class="text-lg font-medium text-gray-900">{{ $grades->total() }}</dd>
+                                <dd class="text-lg font-medium text-gray-900">{{ method_exists($grades, 'total') ? $grades->total() : $grades->count() }}</dd>
                             </dl>
                         </div>
                     </div>
@@ -293,16 +293,18 @@
                             <div>
                                 <p class="text-sm text-gray-700">
                                     Showing
-                                    <span class="font-medium">{{ $grades->firstItem() }}</span>
+                                    <span class="font-medium">{{ method_exists($grades, 'firstItem') ? $grades->firstItem() : 1 }}</span>
                                     to
-                                    <span class="font-medium">{{ $grades->lastItem() }}</span>
+                                    <span class="font-medium">{{ method_exists($grades, 'lastItem') ? $grades->lastItem() : $grades->count() }}</span>
                                     of
-                                    <span class="font-medium">{{ $grades->total() }}</span>
+                                    <span class="font-medium">{{ method_exists($grades, 'total') ? $grades->total() : $grades->count() }}</span>
                                     results
                                 </p>
                             </div>
                             <div>
-                                {{ $grades->links() }}
+                                @if(method_exists($grades, 'links'))
+                                    {{ $grades->links() }}
+                                @endif
                             </div>
                         </div>
                     </div>

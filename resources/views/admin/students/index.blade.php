@@ -78,7 +78,7 @@
             <div class="px-4 py-5 sm:p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">Students List</h3>
-                    <span class="text-sm text-gray-500">Total: {{ $students->total() }} students</span>
+                    <span class="text-sm text-gray-500">Total: {{ method_exists($students, 'total') ? $students->total() : $students->count() }} students</span>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -128,7 +128,7 @@
                     </table>
                 </div>
 
-                @if($students->hasPages())
+                @if(method_exists($students, 'hasPages') && $students->hasPages())
                     <div class="mt-4">
                         {{ $students->links() }}
                     </div>

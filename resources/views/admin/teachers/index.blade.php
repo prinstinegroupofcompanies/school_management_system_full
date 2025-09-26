@@ -64,7 +64,7 @@
             <div class="px-4 py-5 sm:p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">Teachers List</h3>
-                    <span class="text-sm text-gray-500">Total: {{ $teachers->total() }} teachers</span>
+                    <span class="text-sm text-gray-500">Total: {{ method_exists($teachers, 'total') ? $teachers->total() : $teachers->count() }} teachers</span>
                 </div>
                 
                 @if($teachers->count() > 0)
