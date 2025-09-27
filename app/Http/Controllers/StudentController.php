@@ -678,11 +678,25 @@ class StudentController extends Controller
             'percentage_paid' => 63.6,
         ];
 
+        // Create safe attendance stats
+        $attendanceStats = [
+            'total_days' => 0,
+            'present_days' => 0,
+            'absent_days' => 0,
+            'late_days' => 0,
+            'excused_days' => 0,
+            'attendance_rate' => 0,
+            'this_month_total' => 0,
+            'this_month_present' => 0,
+            'today_status' => 'not_recorded',
+        ];
+
         return view('dashboard.student', compact(
             'stats', 
             'user',
             'feeStatus',
-            'session'
+            'session',
+            'attendanceStats'
         ) + [
             'homework' => collect([
                 (object) ['title' => 'Mathematics Assignment 1', 'due_date' => now()->addDays(3)],
@@ -726,6 +740,9 @@ class StudentController extends Controller
                 'current_occupancy' => 0,
             ],
             'myRoom' => null,
+            'recentAttendance' => collect(),
+            'todayAttendance' => null,
+            'thisMonthAttendance' => collect(),
         ]);
     }
 
