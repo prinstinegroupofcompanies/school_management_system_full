@@ -19,11 +19,16 @@ class StudyMaterialController extends Controller
      */
     public function index(Request $request)
     {
-        $student = $request->user()->student;
+        try {
+            $student = $request->user()->student;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
         
         if (!$student) {
             return redirect()->route('student.dashboard')
-                           ->withErrors(['error' => 'Student profile not found.']);
+                ->with('error', 'Student record not found. Please contact administrator.');
         }
 
         // Get study materials for student's subjects (via class subjects)
@@ -40,10 +45,16 @@ class StudyMaterialController extends Controller
      */
     public function show(StudyMaterial $material)
     {
-        $student = auth()->user()->student;
+        try {
+            $student = auth()->user()->student;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
         
         if (!$student) {
-            abort(403, 'Student record not found');
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student record not found. Please contact administrator.');
         }
 
         // Check if student has access to this material (via subject assignment)
@@ -62,10 +73,16 @@ class StudyMaterialController extends Controller
      */
     public function download(StudyMaterial $material)
     {
-        $student = auth()->user()->student;
+        try {
+            $student = auth()->user()->student;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
         
         if (!$student) {
-            abort(403, 'Student record not found');
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student record not found. Please contact administrator.');
         }
 
         // Check if student has access to this material

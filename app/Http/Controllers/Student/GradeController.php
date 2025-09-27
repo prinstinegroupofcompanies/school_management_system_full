@@ -25,7 +25,22 @@ class GradeController extends Controller
 
     public function gradeSheet($year = null)
     {
-        return view('student.grades.grade-sheet', compact('year'));
+        try {
+            $user = auth()->user();
+            $student = $user->student;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
+        
+        if (!$student) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student record not found. Please contact administrator.');
+        }
+
+        $academicYear = $year ?? date('Y');
+        
+        return view('student.grades.grade-sheet', compact('year', 'academicYear', 'student'));
     }
 
     public function show($id)

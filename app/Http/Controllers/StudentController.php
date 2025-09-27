@@ -664,19 +664,35 @@ class StudentController extends Controller
             'semester' => (int) (date('n') <= 6 ? 1 : 2),
         ];
 
-        $stats = [
-            'total_subjects' => 8, // Demo data
-            'attendance_rate' => 87.5,
-            'upcoming_exams' => 3,
-            'recent_grades' => 5,
-        ];
+        // Try to get real-time data with fallbacks
+        $stats = $this->safeQuery(function() {
+            return [
+                'total_subjects' => \App\Models\Subject::count(),
+                'attendance_rate' => 0,
+                'upcoming_exams' => \App\Models\ExamSchedule::where('exam_date', '>=', now())->count(),
+                'recent_grades' => 0,
+            ];
+        }, [
+            'total_subjects' => 0,
+            'attendance_rate' => 0,
+            'upcoming_exams' => 0,
+            'recent_grades' => 0,
+        ]);
 
-        $feeStatus = [
-            'total_fees' => 55000,
-            'total_paid' => 35000,
-            'pending' => 20000,
-            'percentage_paid' => 63.6,
-        ];
+        $feeStatus = $this->safeQuery(function() {
+            $totalFees = \App\Models\FeePayment::where('status', 'paid')->sum('amount_paid');
+            return [
+                'total_fees' => $totalFees,
+                'total_paid' => $totalFees,
+                'pending' => 0,
+                'percentage_paid' => 100,
+            ];
+        }, [
+            'total_fees' => 0,
+            'total_paid' => 0,
+            'pending' => 0,
+            'percentage_paid' => 0,
+        ]);
 
         // Create safe attendance stats
         $attendanceStats = [
@@ -691,75 +707,136 @@ class StudentController extends Controller
             'today_status' => 'not_recorded',
         ];
 
+        // Get real-time data with fallbacks
+        $homework = $this->safeQuery(function() {
+            return \App\Models\Homework::where('due_date', '>=', today())
+                ->orderBy('due_date')
+                ->take(5)
+                ->get(['id', 'title', 'due_date']);
+        }, collect());
+
+        $subjects = $this->safeQuery(function() {
+            return \App\Models\Subject::take(4)->get(['id', 'name', 'code', 'description']);
+        }, collect([
+            (object) ['id' => 1, 'name' => 'Mathematics', 'code' => 'MATH101', 'description' => 'Advanced Mathematics'],
+            (object) ['id' => 2, 'name' => 'English', 'code' => 'ENG101', 'description' => 'English Language and Literature'],
+            (object) ['id' => 3, 'name' => 'Science', 'code' => 'SCI101', 'description' => 'General Science'],
+            (object) ['id' => 4, 'name' => 'History', 'code' => 'HIST101', 'description' => 'World History'],
+        ]));
+
+        $upcomingExams = $this->safeQuery(function() {
+            return \App\Models\ExamSchedule::with(['examType', 'subject'])
+                ->where('exam_date', '>=', now())
+                ->orderBy('exam_date')
+                ->take(3)
+                ->get();
+        }, collect([
+            (object) [
+                'id' => 1,
+                'title' => 'Mid-term Mathematics',
+                'exam_date' => now()->addDays(5)->format('Y-m-d'),
+                'start_time' => '09:00',
+                'examType' => (object) ['name' => 'Mid-term'],
+                'subject' => (object) ['name' => 'Mathematics']
+            ],
+            (object) [
+                'id' => 2,
+                'title' => 'English Literature',
+                'exam_date' => now()->addDays(8)->format('Y-m-d'),
+                'start_time' => '10:30',
+                'examType' => (object) ['name' => 'Final'],
+                'subject' => (object) ['name' => 'English']
+            ],
+            (object) [
+                'id' => 3,
+                'title' => 'Science Practical',
+                'exam_date' => now()->addDays(12)->format('Y-m-d'),
+                'start_time' => '14:00',
+                'examType' => (object) ['name' => 'Practical'],
+                'subject' => (object) ['name' => 'Science']
+            ],
+        ]));
+
+        $recentActivities = $this->safeQuery(function() {
+            $activities = collect();
+            
+            // Recent fee payments
+            $payments = \App\Models\FeePayment::latest('payment_date')
+                ->take(3)
+                ->get(['amount_paid', 'payment_date'])
+                ->map(function($p) {
+                    return [
+                        'description' => 'Fee payment of $' . number_format($p->amount_paid, 2),
+                        'created_at' => $p->payment_date ? \Carbon\Carbon::parse($p->payment_date) : now(),
+                    ];
+                });
+            
+            return $activities->merge($payments)->sortByDesc('created_at')->take(5);
+        }, collect([
+            ['description' => 'System initialized', 'created_at' => now()],
+        ]));
+
+        // Real-time library stats
+        $libraryStats = $this->safeQuery(function() {
+            return [
+                'total_books' => \App\Models\Book::count(),
+                'available_books' => \App\Models\Book::where('status', 'available')->count(),
+                'borrowed_books' => \App\Models\BookIssue::where('status', 'borrowed')->count(),
+                'my_borrowed' => 0, // Will be 0 since no student record
+            ];
+        }, [
+            'total_books' => 0,
+            'available_books' => 0,
+            'borrowed_books' => 0,
+            'my_borrowed' => 0,
+        ]);
+
+        // Real-time transport stats
+        $transportStats = $this->safeQuery(function() {
+            return [
+                'total_routes' => \App\Models\TransportRoute::count(),
+                'active_routes' => \App\Models\TransportRoute::where('status', 'active')->count(),
+                'total_vehicles' => \App\Models\Transport::where('status', 'active')->count(),
+                'total_students' => \App\Models\Student::whereNotNull('transport_route_id')->count(),
+            ];
+        }, [
+            'total_routes' => 0,
+            'active_routes' => 0,
+            'total_vehicles' => 0,
+            'total_students' => 0,
+        ]);
+
+        // Real-time hostel stats
+        $hostelStats = $this->safeQuery(function() {
+            return [
+                'total_hostels' => \App\Models\Hostel::where('status', 'active')->count(),
+                'total_rooms' => \App\Models\HostelRoom::where('is_active', true)->count(),
+                'total_capacity' => \App\Models\HostelRoom::where('is_active', true)->sum('capacity'),
+                'current_occupancy' => \App\Models\HostelRoom::where('is_active', true)->sum('current_occupancy'),
+            ];
+        }, [
+            'total_hostels' => 0,
+            'total_rooms' => 0,
+            'total_capacity' => 0,
+            'current_occupancy' => 0,
+        ]);
+
         return view('dashboard.student', compact(
             'stats', 
             'user',
             'feeStatus',
             'session',
-            'attendanceStats'
+            'attendanceStats',
+            'homework',
+            'subjects',
+            'upcomingExams',
+            'recentActivities',
+            'libraryStats',
+            'transportStats',
+            'hostelStats'
         ) + [
-            'homework' => collect([
-                (object) ['title' => 'Mathematics Assignment 1', 'due_date' => now()->addDays(3)],
-                (object) ['title' => 'English Essay', 'due_date' => now()->addDays(5)],
-                (object) ['title' => 'Science Lab Report', 'due_date' => now()->addWeek()],
-            ]),
-            'attendance' => (object) ['status' => 'present', 'date' => today()],
-            'subjects' => collect([
-                (object) ['id' => 1, 'name' => 'Mathematics', 'code' => 'MATH101', 'description' => 'Advanced Mathematics'],
-                (object) ['id' => 2, 'name' => 'English', 'code' => 'ENG101', 'description' => 'English Language and Literature'],
-                (object) ['id' => 3, 'name' => 'Science', 'code' => 'SCI101', 'description' => 'General Science'],
-                (object) ['id' => 4, 'name' => 'History', 'code' => 'HIST101', 'description' => 'World History'],
-            ]),
-            'upcomingExams' => collect([
-                (object) [
-                    'id' => 1,
-                    'title' => 'Mid-term Mathematics',
-                    'exam_date' => now()->addDays(5)->format('Y-m-d'),
-                    'start_time' => '09:00',
-                    'examType' => (object) ['name' => 'Mid-term'],
-                    'subject' => (object) ['name' => 'Mathematics']
-                ],
-                (object) [
-                    'id' => 2,
-                    'title' => 'English Literature',
-                    'exam_date' => now()->addDays(8)->format('Y-m-d'),
-                    'start_time' => '10:30',
-                    'examType' => (object) ['name' => 'Final'],
-                    'subject' => (object) ['name' => 'English']
-                ],
-                (object) [
-                    'id' => 3,
-                    'title' => 'Science Practical',
-                    'exam_date' => now()->addDays(12)->format('Y-m-d'),
-                    'start_time' => '14:00',
-                    'examType' => (object) ['name' => 'Practical'],
-                    'subject' => (object) ['name' => 'Science']
-                ],
-            ]),
-            'recentActivities' => collect([
-                ['description' => 'Attendance marked: Present', 'created_at' => now()->subHours(2)],
-                ['description' => 'Assignment submitted: Math Homework', 'created_at' => now()->subDays(1)],
-                ['description' => 'Grade received: English Essay - A', 'created_at' => now()->subDays(2)],
-            ]),
-            'libraryStats' => [
-                'total_books' => 0,
-                'available_books' => 0,
-                'borrowed_books' => 0,
-                'my_borrowed' => 0,
-            ],
-            'transportStats' => [
-                'total_routes' => 0,
-                'active_routes' => 0,
-                'total_vehicles' => 0,
-                'total_students' => 0,
-            ],
+            'attendance' => (object) ['status' => 'not_recorded', 'date' => today()],
             'myRoute' => null,
-            'hostelStats' => [
-                'total_hostels' => 0,
-                'total_rooms' => 0,
-                'total_capacity' => 0,
-                'current_occupancy' => 0,
-            ],
             'myRoom' => null,
             'recentAttendance' => collect(),
             'todayAttendance' => null,

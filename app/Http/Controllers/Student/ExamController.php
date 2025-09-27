@@ -14,12 +14,51 @@ class ExamController extends Controller
 
     public function marks()
     {
-        return view('student.exams.marks');
+        try {
+            $user = auth()->user();
+            $student = $user->student;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
+        
+        if (!$student) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student record not found. Please contact administrator.');
+        }
+
+        // Get exam attempts for the student
+        $examAttempts = \App\Models\ExamAttempt::with(['examSchedule.subject', 'examSchedule.class'])
+            ->where('student_id', $student->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('student.exams.marks', compact('examAttempts'));
     }
 
     public function upcoming()
     {
-        return view('student.exams.upcoming');
+        try {
+            $user = auth()->user();
+            $student = $user->student;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
+        
+        if (!$student) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student record not found. Please contact administrator.');
+        }
+
+        // Get upcoming exams for student's class
+        $upcomingExams = \App\Models\ExamSchedule::with(['examType', 'subject'])
+            ->where('class_id', $student->class_id)
+            ->where('exam_date', '>=', now())
+            ->orderBy('exam_date')
+            ->get();
+
+        return view('student.exams.upcoming', compact('upcomingExams'));
     }
 
     public function show($id)

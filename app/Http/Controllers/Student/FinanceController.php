@@ -23,8 +23,18 @@ class FinanceController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $student = $user->student ?? null;
-        abort_if(!$student, 403);
+        
+        try {
+            $student = $user->student ?? null;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
+        
+        if (!$student) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student record not found. Please contact administrator.');
+        }
 
         // Ensure student has fees assigned for their current class
         StudentFeeService::assignClassFeesToStudent($student);
@@ -80,7 +90,15 @@ class FinanceController extends Controller
     public function createPayment(StudentFee $fee)
     {
         $user = Auth::user();
-        abort_if($fee->student_id !== ($user->student->id ?? 0), 403);
+        
+        try {
+            $studentId = $user->student->id ?? 0;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
+        
+        abort_if($fee->student_id !== $studentId, 403);
 
         $bankDetails = [
             'bank_name' => SystemSetting::get('bank_name', ''),
@@ -97,7 +115,15 @@ class FinanceController extends Controller
     public function storePayment(Request $request, StudentFee $fee)
     {
         $user = Auth::user();
-        abort_if($fee->student_id !== ($user->student->id ?? 0), 403);
+        
+        try {
+            $studentId = $user->student->id ?? 0;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
+        
+        abort_if($fee->student_id !== $studentId, 403);
 
         $data = $request->validate([
             'amount' => 'required|numeric|min:0.01',
@@ -111,7 +137,7 @@ class FinanceController extends Controller
         $path = $request->file('receipt')->store('receipts', 'public');
 
         $payment = PaymentRecord::create([
-            'student_id' => $user->student->id,
+            'student_id' => $studentId,
             'fee_id' => $fee->id,
             'amount' => $data['amount'],
             'payment_method' => $data['payment_method'],
@@ -152,7 +178,11 @@ class FinanceController extends Controller
         }
 
         // Update student fee balances in real-time
-        StudentFeeService::updateStudentFeeBalances($user->student);
+        try {
+            StudentFeeService::updateStudentFeeBalances($user->student);
+        } catch (\Exception $e) {
+            // Continue even if balance update fails
+        }
 
         return redirect()->route('student.finance.index')->with('success', 'Payment submitted for approval. Your balance will be updated once payment is verified.');
     }
@@ -160,7 +190,15 @@ class FinanceController extends Controller
     public function downloadInvoice(StudentFee $fee)
     {
         $user = Auth::user();
-        abort_if($fee->student_id !== ($user->student->id ?? 0), 403);
+        
+        try {
+            $studentId = $user->student->id ?? 0;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
+        
+        abort_if($fee->student_id !== $studentId, 403);
 
         // Generate PDF invoice
         $pdf = Pdf::loadView('student.finance.invoice', compact('fee'));

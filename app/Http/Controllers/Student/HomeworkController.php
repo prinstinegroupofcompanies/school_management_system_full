@@ -21,11 +21,16 @@ class HomeworkController extends Controller
      */
     public function index(Request $request)
     {
-        $student = $request->user()->student;
+        try {
+            $student = $request->user()->student;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
         
         if (!$student) {
             return redirect()->route('student.dashboard')
-                           ->withErrors(['error' => 'Student profile not found.']);
+                ->with('error', 'Student record not found. Please contact administrator.');
         }
 
         // Get assignments for student's class
@@ -52,12 +57,22 @@ class HomeworkController extends Controller
      */
     public function show(HomeworkAssignment $assignment)
     {
-        $student = auth()->user()->student;
+        try {
+            $student = auth()->user()->student;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
+        
+        if (!$student) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student record not found. Please contact administrator.');
+        }
         
         // Verify student can access this assignment
         if ($assignment->class_id !== $student->class_id || !$assignment->is_published) {
             return redirect()->route('student.homework.index')
-                           ->withErrors(['error' => 'Assignment not found.']);
+                ->with('error', 'Assignment not found.');
         }
 
         $assignment->load(['subject', 'teacher.user']);
@@ -77,12 +92,22 @@ class HomeworkController extends Controller
      */
     public function create(HomeworkAssignment $assignment)
     {
-        $student = auth()->user()->student;
+        try {
+            $student = auth()->user()->student;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
+        
+        if (!$student) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student record not found. Please contact administrator.');
+        }
         
         // Verify student can submit
         if ($assignment->class_id !== $student->class_id || !$assignment->is_published) {
             return redirect()->route('student.homework.index')
-                           ->withErrors(['error' => 'Assignment not accessible.']);
+                ->with('error', 'Assignment not accessible.');
         }
 
         $assignment->load(['subject', 'teacher.user']);
@@ -96,7 +121,17 @@ class HomeworkController extends Controller
      */
     public function store(Request $request, HomeworkAssignment $assignment)
     {
-        $student = $request->user()->student;
+        try {
+            $student = $request->user()->student;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
+        
+        if (!$student) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student record not found. Please contact administrator.');
+        }
         
         $validated = $request->validate([
             'submission_text' => 'nullable|string',

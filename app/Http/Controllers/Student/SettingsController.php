@@ -13,10 +13,18 @@ class SettingsController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $student = $user->student;
+        
+        try {
+            $student = $user->student;
+        } catch (\Exception $e) {
+            // Handle case where students table doesn't exist
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
         
         if (!$student) {
-            abort(403, 'Student record not found');
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student record not found. Please contact administrator.');
         }
 
         return view('student.settings.index', compact('user', 'student'));
@@ -25,10 +33,17 @@ class SettingsController extends Controller
     public function profile()
     {
         $user = auth()->user();
-        $student = $user->student;
+        
+        try {
+            $student = $user->student;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
         
         if (!$student) {
-            abort(403, 'Student record not found');
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student record not found. Please contact administrator.');
         }
 
         return view('student.profile', compact('user', 'student'));
@@ -37,10 +52,17 @@ class SettingsController extends Controller
     public function updateProfile(Request $request)
     {
         $user = auth()->user();
-        $student = $user->student;
+        
+        try {
+            $student = $user->student;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
         
         if (!$student) {
-            abort(403, 'Student record not found');
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student record not found. Please contact administrator.');
         }
 
         $request->validate([
@@ -94,10 +116,17 @@ class SettingsController extends Controller
     public function notifications()
     {
         $user = auth()->user();
-        $student = $user->student;
+        
+        try {
+            $student = $user->student;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
         
         if (!$student) {
-            abort(403, 'Student record not found');
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student record not found. Please contact administrator.');
         }
 
         // Mock notification preferences
@@ -117,10 +146,17 @@ class SettingsController extends Controller
     public function updateNotifications(Request $request)
     {
         $user = auth()->user();
-        $student = $user->student;
+        
+        try {
+            $student = $user->student;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
         
         if (!$student) {
-            abort(403, 'Student record not found');
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student record not found. Please contact administrator.');
         }
 
         $request->validate([
@@ -143,10 +179,17 @@ class SettingsController extends Controller
     public function privacy()
     {
         $user = auth()->user();
-        $student = $user->student;
+        
+        try {
+            $student = $user->student;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
         
         if (!$student) {
-            abort(403, 'Student record not found');
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student record not found. Please contact administrator.');
         }
 
         // Mock privacy settings
@@ -164,10 +207,17 @@ class SettingsController extends Controller
     public function updatePrivacy(Request $request)
     {
         $user = auth()->user();
-        $student = $user->student;
+        
+        try {
+            $student = $user->student;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
         
         if (!$student) {
-            abort(403, 'Student record not found');
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student record not found. Please contact administrator.');
         }
 
         $request->validate([
@@ -188,10 +238,17 @@ class SettingsController extends Controller
     public function updatePassword(Request $request)
     {
         $user = auth()->user();
-        $student = $user->student;
+        
+        try {
+            $student = $user->student;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student profile not available. Please contact administrator.');
+        }
         
         if (!$student) {
-            abort(403, 'Student record not found');
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Student record not found. Please contact administrator.');
         }
 
         $request->validate([
