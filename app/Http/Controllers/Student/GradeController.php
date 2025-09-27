@@ -9,22 +9,6 @@ class GradeController extends Controller
 {
     public function index()
     {
-        return view('student.grades.index');
-    }
-
-    public function transcript()
-    {
-        return view('student.grades.transcript');
-    }
-
-    public function downloadTranscript()
-    {
-        // Placeholder for transcript download
-        return response()->download(storage_path('app/transcript.pdf'));
-    }
-
-    public function index()
-    {
         try {
             $user = auth()->user();
             $student = $user->student;
@@ -59,6 +43,17 @@ class GradeController extends Controller
         }
 
         return view('student.grades.index', compact('periods'));
+    }
+
+    public function transcript()
+    {
+        return view('student.grades.transcript');
+    }
+
+    public function downloadTranscript()
+    {
+        // Placeholder for transcript download
+        return response()->download(storage_path('app/transcript.pdf'));
     }
 
     public function gradeSheet($year, $semester)
