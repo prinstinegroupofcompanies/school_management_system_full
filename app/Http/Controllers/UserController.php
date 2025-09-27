@@ -61,6 +61,17 @@ class UserController extends Controller
         }
     }
 
+    public function myProfile()
+    {
+        try {
+            $user = auth()->user();
+            return view('users.profile', compact('user'));
+        } catch (\Exception $e) {
+            \Log::error('UserController myProfile error: ' . $e->getMessage());
+            return redirect()->route('dashboard')->with('error', 'Unable to load profile.');
+        }
+    }
+
     public function updateProfile(Request $request)
     {
         try {
