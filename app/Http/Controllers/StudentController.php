@@ -732,11 +732,6 @@ class StudentController extends Controller
         return view('student.finance');
     }
 
-    public function exams()
-    {
-        return view('student.exams');
-    }
-
     public function library()
     {
         return view('student.library');
@@ -750,11 +745,6 @@ class StudentController extends Controller
     public function hostel()
     {
         return view('student.hostel');
-    }
-
-    public function attendance()
-    {
-        return view('student.attendance');
     }
 
     public function settings()
