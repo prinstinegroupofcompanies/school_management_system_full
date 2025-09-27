@@ -22,25 +22,36 @@ class LibraryController extends Controller
                 ->with('error', 'Student record not found. Please contact administrator.');
         }
 
-        // Get real-time library statistics
-        $libraryStats = [
-            'total_books' => \App\Models\Book::count(),
-            'available_books' => \App\Models\Book::where('status', 'available')->count(),
-            'borrowed_books' => \App\Models\BookIssue::where('status', 'borrowed')->count(),
-            'my_borrowed' => \App\Models\BookIssue::where('student_id', $student->id)->where('status', 'borrowed')->count(),
-        ];
+        // Get real-time library statistics with error handling
+        try {
+            $libraryStats = [
+                'total_books' => \App\Models\Book::count(),
+                'available_books' => \App\Models\Book::where('status', 'available')->count(),
+                'borrowed_books' => \App\Models\BookIssue::where('status', 'borrowed')->count(),
+                'my_borrowed' => \App\Models\BookIssue::where('student_id', $student->id)->where('status', 'borrowed')->count(),
+            ];
 
-        // Get student's borrowed books
-        $myBooks = \App\Models\BookIssue::with(['book'])
-            ->where('student_id', $student->id)
-            ->where('status', 'borrowed')
-            ->get();
+            // Get student's borrowed books
+            $myBooks = \App\Models\BookIssue::with(['book'])
+                ->where('student_id', $student->id)
+                ->where('status', 'borrowed')
+                ->get();
 
-        // Get recent books
-        $recentBooks = \App\Models\Book::where('status', 'available')
-            ->orderBy('created_at', 'desc')
-            ->take(6)
-            ->get();
+            // Get recent books
+            $recentBooks = \App\Models\Book::where('status', 'available')
+                ->orderBy('created_at', 'desc')
+                ->take(6)
+                ->get();
+        } catch (\Exception $e) {
+            $libraryStats = [
+                'total_books' => 0,
+                'available_books' => 0,
+                'borrowed_books' => 0,
+                'my_borrowed' => 0,
+            ];
+            $myBooks = collect();
+            $recentBooks = collect();
+        }
 
         return view('student.library.index', compact('libraryStats', 'myBooks', 'recentBooks'));
     }

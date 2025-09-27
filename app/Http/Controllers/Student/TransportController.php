@@ -22,24 +22,35 @@ class TransportController extends Controller
                 ->with('error', 'Student record not found. Please contact administrator.');
         }
 
-        // Get real-time transport statistics
-        $transportStats = [
-            'total_routes' => \App\Models\TransportRoute::count(),
-            'active_routes' => \App\Models\TransportRoute::where('status', 'active')->count(),
-            'total_vehicles' => \App\Models\Transport::where('status', 'active')->count(),
-            'total_students' => \App\Models\Student::whereNotNull('transport_route_id')->count(),
-        ];
+        // Get real-time transport statistics with error handling
+        try {
+            $transportStats = [
+                'total_routes' => \App\Models\TransportRoute::count(),
+                'active_routes' => \App\Models\TransportRoute::where('status', 'active')->count(),
+                'total_vehicles' => \App\Models\Transport::where('status', 'active')->count(),
+                'total_students' => \App\Models\Student::whereNotNull('transport_route_id')->count(),
+            ];
 
-        // Get student's transport route
-        $myRoute = null;
-        if ($student->transport_route_id) {
-            $myRoute = \App\Models\TransportRoute::with('transport')->find($student->transport_route_id);
+            // Get student's transport route
+            $myRoute = null;
+            if ($student->transport_route_id) {
+                $myRoute = \App\Models\TransportRoute::with('transport')->find($student->transport_route_id);
+            }
+
+            // Get all available routes
+            $availableRoutes = \App\Models\TransportRoute::with('transport')
+                ->where('status', 'active')
+                ->get();
+        } catch (\Exception $e) {
+            $transportStats = [
+                'total_routes' => 0,
+                'active_routes' => 0,
+                'total_vehicles' => 0,
+                'total_students' => 0,
+            ];
+            $myRoute = null;
+            $availableRoutes = collect();
         }
-
-        // Get all available routes
-        $availableRoutes = \App\Models\TransportRoute::with('transport')
-            ->where('status', 'active')
-            ->get();
 
         return view('student.transport.index', compact('transportStats', 'myRoute', 'availableRoutes'));
     }

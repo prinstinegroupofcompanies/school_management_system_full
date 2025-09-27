@@ -22,26 +22,37 @@ class HostelController extends Controller
                 ->with('error', 'Student record not found. Please contact administrator.');
         }
 
-        // Get real-time hostel statistics
-        $hostelStats = [
-            'total_hostels' => \App\Models\Hostel::where('status', 'active')->count(),
-            'total_rooms' => \App\Models\HostelRoom::where('is_active', true)->count(),
-            'total_capacity' => \App\Models\HostelRoom::where('is_active', true)->sum('capacity'),
-            'current_occupancy' => \App\Models\HostelRoom::where('is_active', true)->sum('current_occupancy'),
-        ];
+        // Get real-time hostel statistics with error handling
+        try {
+            $hostelStats = [
+                'total_hostels' => \App\Models\Hostel::where('status', 'active')->count(),
+                'total_rooms' => \App\Models\HostelRoom::where('is_active', true)->count(),
+                'total_capacity' => \App\Models\HostelRoom::where('is_active', true)->sum('capacity'),
+                'current_occupancy' => \App\Models\HostelRoom::where('is_active', true)->sum('current_occupancy'),
+            ];
 
-        // Get student's hostel room
-        $myRoom = null;
-        if ($student->hostel_room_id) {
-            $myRoom = \App\Models\HostelRoom::with('hostel')->find($student->hostel_room_id);
+            // Get student's hostel room
+            $myRoom = null;
+            if ($student->hostel_room_id) {
+                $myRoom = \App\Models\HostelRoom::with('hostel')->find($student->hostel_room_id);
+            }
+
+            // Get available hostels
+            $availableHostels = \App\Models\Hostel::where('status', 'active')
+                ->with(['rooms' => function($query) {
+                    $query->where('is_active', true)->where('current_occupancy', '<', \DB::raw('capacity'));
+                }])
+                ->get();
+        } catch (\Exception $e) {
+            $hostelStats = [
+                'total_hostels' => 0,
+                'total_rooms' => 0,
+                'total_capacity' => 0,
+                'current_occupancy' => 0,
+            ];
+            $myRoom = null;
+            $availableHostels = collect();
         }
-
-        // Get available hostels
-        $availableHostels = \App\Models\Hostel::where('status', 'active')
-            ->with(['rooms' => function($query) {
-                $query->where('is_active', true)->where('current_occupancy', '<', \DB::raw('capacity'));
-            }])
-            ->get();
 
         return view('student.hostel.index', compact('hostelStats', 'myRoom', 'availableHostels'));
     }

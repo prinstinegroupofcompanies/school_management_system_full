@@ -40,7 +40,18 @@ class GradeController extends Controller
 
         $academicYear = $year ?? date('Y');
         
-        return view('student.grades.grade-sheet', compact('year', 'academicYear', 'student'));
+        // Fetch grades for the student
+        try {
+            $grades = \App\Models\Grade::where('student_id', $student->id)
+                ->where('academic_year', $academicYear)
+                ->with(['subject', 'class'])
+                ->orderBy('subject_id')
+                ->get();
+        } catch (\Exception $e) {
+            $grades = collect();
+        }
+        
+        return view('student.grades.grade-sheet', compact('year', 'academicYear', 'student', 'grades'));
     }
 
     public function show($id)
