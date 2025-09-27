@@ -12,14 +12,17 @@ use Illuminate\Support\Facades\Storage;
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-3xl font-bold text-gray-900">Official Grade Sheet</h1>
-                    <p class="mt-2 text-gray-600">Academic Year {{ $academicYear ?? date('Y') }} - {{ $student->user->name }}</p>
+                    <p class="mt-2 text-gray-600">Period {{ $semester }} - {{ $year }} - {{ $student->user->name }}</p>
                 </div>
                 <div class="flex space-x-3">
                     <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                         <i class="fas fa-print mr-2"></i>Print Grade Sheet
                     </button>
                     <a href="{{ route('student.grades.index') }}" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
-                        <i class="fas fa-arrow-left mr-2"></i>Back to Grades
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Periods
+                    </a>
+                    <a href="{{ route('student.grades.download', ['year' => $year, 'semester' => $semester]) }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                        <i class="fas fa-download mr-2"></i>Download PDF
                     </a>
                 </div>
             </div>
@@ -43,11 +46,11 @@ use Illuminate\Support\Facades\Storage;
                     <div class="space-y-4">
                         <div class="flex">
                             <span class="font-semibold w-24">Period:</span>
-                            <span>{{ $academicYear ?? date('Y') }}</span>
+                            <span>{{ $semester }}</span>
                         </div>
                         <div class="flex">
-                            <span class="font-semibold w-24">Semester:</span>
-                            <span>1 & 2</span>
+                            <span class="font-semibold w-24">Year:</span>
+                            <span>{{ $year }}</span>
                         </div>
                         <div class="flex">
                             <span class="font-semibold w-24">Student Name:</span>

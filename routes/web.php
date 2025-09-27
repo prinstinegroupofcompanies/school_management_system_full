@@ -473,7 +473,8 @@ Route::middleware(['auth', 'student'])->group(function () {
         Route::get('/', [\App\Http\Controllers\Student\GradeController::class, 'index'])->name('index');
         Route::get('/transcript', [\App\Http\Controllers\Student\GradeController::class, 'transcript'])->name('transcript');
         Route::get('/transcript/download', [\App\Http\Controllers\Student\GradeController::class, 'downloadTranscript'])->name('download-transcript');
-        Route::get('/grade-sheet/{year?}', [\App\Http\Controllers\Student\GradeController::class, 'gradeSheet'])->name('grade-sheet');
+        Route::get('/grade-sheet/{year}/{semester}', [\App\Http\Controllers\Student\GradeController::class, 'gradeSheet'])->name('grade-sheet');
+        Route::get('/download/{year}/{semester}', [\App\Http\Controllers\Student\GradeController::class, 'downloadGradeSheet'])->name('download');
         Route::get('/{grade}', [\App\Http\Controllers\Student\GradeController::class, 'show'])->name('show');
     });
     
