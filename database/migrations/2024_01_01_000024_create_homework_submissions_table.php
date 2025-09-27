@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('homework_submissions', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger->constrained();
-            $table->unsignedBigInteger->constrained();
+            $table->unsignedBigInteger('homework_id')->constrained();
+            $table->unsignedBigInteger('student_id')->constrained();
             $table->text('submission_text')->nullable();
             $table->text('attachments')->nullable(); // JSON array of file paths
             $table->timestamp('submitted_at');
@@ -29,7 +29,7 @@ return new class extends Migration
             $table->text('student_comments')->nullable();
             $table->enum('status', ['submitted', 'graded', 'returned', 'resubmitted'])->default('submitted');
             $table->boolean('is_approved')->default(false);
-            $table->unsignedBigInteger->nullable();
+            $table->unsignedBigInteger('graded_by')->nullable();
             $table->timestamp('graded_at')->nullable();
             $table->timestamps();
             

@@ -10,6 +10,8 @@ class HomeworkSubmission extends Model
 {
     use HasFactory;
 
+    protected $table = 'homework_submissions';
+
     protected $fillable = [
         'homework_id', 'student_id', 'submission_text', 'attachments',
         'submitted_at', 'is_late', 'late_minutes', 'late_penalty',
@@ -27,7 +29,7 @@ class HomeworkSubmission extends Model
 
     public function homework(): BelongsTo
     {
-        return $this->belongsTo(Homework::class);
+        return $this->belongsTo(HomeworkAssignment::class, 'homework_id');
     }
 
     public function student(): BelongsTo
