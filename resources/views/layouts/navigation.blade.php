@@ -73,7 +73,7 @@ if (!function_exists('safeRoute')) {
 
 <nav class="flex-1 px-6 py-6 space-y-3">
     <!-- Premium Dashboard -->
-    <a href="{{ $userType === 'student' ? safeRoute('student.dashboard', [], route('dashboard')) : safeRoute('dashboard') }}" 
+    <a href="{{ $userType === 'student' ? safeRoute('student.dashboard') : safeRoute('dashboard') }}" 
        class="nav-item-premium group flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-premium {{ (request()->routeIs('dashboard') || request()->routeIs('student.dashboard')) ? 'bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 shadow-lg' : 'text-gray-700 hover:bg-white/50 hover:text-gray-900' }}">
         <svg class="mr-3 h-5 w-5 {{ (request()->routeIs('dashboard') || request()->routeIs('student.dashboard')) ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
@@ -115,7 +115,6 @@ if (!function_exists('safeRoute')) {
 
     {{-- Gradesheet and Exams for Student --}}
     @if($userType === 'student')
-    @if(Route::has('student.grades.grade-sheet'))
     <a href="{{ safeRoute('student.grades.grade-sheet') }}" 
        class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('student.grades.grade-sheet') ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
         <svg class="mr-3 h-5 w-5 {{ request()->routeIs('student.grades.grade-sheet') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -123,7 +122,6 @@ if (!function_exists('safeRoute')) {
         </svg>
         My Gradesheet
     </a>
-    @endif
     <div x-data="{ open: {{ request()->routeIs('student.finance.*') ? 'true' : 'false' }} }">
         <button @click="open = !open" 
                 class="nav-item-premium group w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-premium {{ request()->routeIs('student.finance.*') ? 'bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 shadow-lg' : 'text-gray-700 hover:bg-white/50 hover:text-gray-900' }}">
@@ -410,22 +408,18 @@ if (!function_exists('safeRoute')) {
                 </svg>
                 All Grades
             </a>
-            @if(Route::has('parent.grades.progress'))
             <a href="{{ safeRoute('parent.grades.progress') }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('parent.grades.progress') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
                 <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
                 Academic Progress
             </a>
-            @endif
-            @if(Route::has('parent.grades.download'))
             <a href="{{ safeRoute('parent.grades.download') }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('parent.grades.download') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
                 <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 Download Reports
             </a>
-            @endif
         </div>
     </div>
     @endif

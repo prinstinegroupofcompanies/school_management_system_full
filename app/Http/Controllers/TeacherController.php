@@ -504,4 +504,19 @@ class TeacherController extends Controller
 
         return view('dashboard.teacher', $data);
     }
+
+    public function grades()
+    {
+        return view('teacher.grades');
+    }
+
+    public function createGrade()
+    {
+        return view('teacher.grades.create');
+    }
+
+    public function bulkCreateGrade()
+    {
+        return view('teacher.grades.bulk-create');
+    }
 }

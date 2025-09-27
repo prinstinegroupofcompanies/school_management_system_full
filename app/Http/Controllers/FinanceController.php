@@ -220,4 +220,9 @@ class FinanceController extends Controller
             'stats', 'scholarshipStats'
         ));
     }
+
+    public function payments()
+    {
+        return view('finance.payments');
+    }
 }

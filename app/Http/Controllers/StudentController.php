@@ -721,4 +721,44 @@ class StudentController extends Controller
             'myRoom' => null,
         ]);
     }
+
+    public function grades()
+    {
+        return view('student.grades');
+    }
+
+    public function finance()
+    {
+        return view('student.finance');
+    }
+
+    public function exams()
+    {
+        return view('student.exams');
+    }
+
+    public function library()
+    {
+        return view('student.library');
+    }
+
+    public function transport()
+    {
+        return view('student.transport');
+    }
+
+    public function hostel()
+    {
+        return view('student.hostel');
+    }
+
+    public function attendance()
+    {
+        return view('student.attendance');
+    }
+
+    public function settings()
+    {
+        return view('student.settings');
+    }
 }
