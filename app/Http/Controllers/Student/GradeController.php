@@ -47,11 +47,29 @@ class GradeController extends Controller
                 ->with(['subject', 'class'])
                 ->orderBy('subject_id')
                 ->get();
+            
+            // Calculate statistics
+            $stats = [
+                'total_subjects' => $grades->count(),
+                'average_score' => $grades->count() > 0 ? $grades->avg('year_avg') : 0,
+                'highest_score' => $grades->count() > 0 ? $grades->max('year_avg') : 0,
+                'lowest_score' => $grades->count() > 0 ? $grades->min('year_avg') : 0,
+                'passed_subjects' => $grades->where('year_avg', '>=', 50)->count(),
+                'failed_subjects' => $grades->where('year_avg', '<', 50)->count(),
+            ];
         } catch (\Exception $e) {
             $grades = collect();
+            $stats = [
+                'total_subjects' => 0,
+                'average_score' => 0,
+                'highest_score' => 0,
+                'lowest_score' => 0,
+                'passed_subjects' => 0,
+                'failed_subjects' => 0,
+            ];
         }
         
-        return view('student.grades.grade-sheet', compact('year', 'academicYear', 'student', 'grades'));
+        return view('student.grades.grade-sheet', compact('year', 'academicYear', 'student', 'grades', 'stats'));
     }
 
     public function show($id)
