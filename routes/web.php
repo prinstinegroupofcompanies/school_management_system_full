@@ -126,6 +126,49 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/payroll', [\App\Http\Controllers\Admin\StaffManagementController::class, 'payroll'])->name('payroll');
     });
 
+    // Student Routes
+    Route::prefix('student')->name('student.')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\StudentController::class, 'dashboard'])->name('dashboard');
+        Route::get('/grades', [\App\Http\Controllers\StudentController::class, 'grades'])->name('grades.grade-sheet');
+        Route::get('/finance', [\App\Http\Controllers\StudentController::class, 'finance'])->name('finance.index');
+        Route::get('/exams', [\App\Http\Controllers\StudentController::class, 'exams'])->name('exams.upcoming');
+        Route::get('/library', [\App\Http\Controllers\StudentController::class, 'library'])->name('library.index');
+        Route::get('/transport', [\App\Http\Controllers\StudentController::class, 'transport'])->name('transport.index');
+        Route::get('/hostel', [\App\Http\Controllers\StudentController::class, 'hostel'])->name('hostel.index');
+        Route::get('/attendance', [\App\Http\Controllers\StudentController::class, 'attendance'])->name('attendance.index');
+        Route::get('/settings', [\App\Http\Controllers\StudentController::class, 'settings'])->name('settings.index');
+    });
+
+    // Teacher Routes
+    Route::prefix('teacher')->name('teacher.')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\TeacherController::class, 'dashboard'])->name('dashboard');
+        Route::get('/grades', [\App\Http\Controllers\TeacherController::class, 'grades'])->name('grades.index');
+        Route::get('/grades/create', [\App\Http\Controllers\TeacherController::class, 'createGrade'])->name('grades.create');
+        Route::get('/grades/bulk-create', [\App\Http\Controllers\TeacherController::class, 'bulkCreateGrade'])->name('grades.bulk-create');
+    });
+
+    // Finance Routes
+    Route::prefix('finance')->name('finance.')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\FinanceController::class, 'dashboard'])->name('dashboard');
+        Route::get('/payments', [\App\Http\Controllers\FinanceController::class, 'payments'])->name('payments.index');
+    });
+
+    // Parent Routes
+    Route::prefix('parent')->name('parent.')->group(function () {
+        Route::get('/grades', [\App\Http\Controllers\ParentController::class, 'grades'])->name('grades.index');
+        Route::get('/grades/progress', [\App\Http\Controllers\ParentController::class, 'progress'])->name('grades.progress');
+        Route::get('/grades/download', [\App\Http\Controllers\ParentController::class, 'download'])->name('grades.download');
+    });
+
+    // General Routes
+    Route::get('/library', [\App\Http\Controllers\LibraryController::class, 'index'])->name('library.index');
+    Route::get('/transport', [\App\Http\Controllers\TransportController::class, 'index'])->name('transport.index');
+    Route::get('/hostel', [\App\Http\Controllers\HostelController::class, 'index'])->name('hostel.index');
+    Route::get('/attendance', [\App\Http\Controllers\AttendanceController::class, 'index'])->name('attendance.index');
+    Route::get('/exams/upcoming', [\App\Http\Controllers\ExamController::class, 'upcoming'])->name('exams.upcoming');
+    Route::get('/users', [\App\Http\Controllers\UserController::class, 'index'])->name('users.index');
+    Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
+
     // Exam Types Management
     Route::prefix('admin/exams/types')->name('admin.exams.types.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\ExamTypeController::class, 'index'])->name('index');
