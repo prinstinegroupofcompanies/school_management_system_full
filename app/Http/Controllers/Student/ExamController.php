@@ -3,228 +3,61 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
-use App\Models\ExamPaper;
-use App\Models\ExamQuestion;
-use App\Models\StudentExamAttempt;
-use App\Models\Student;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class ExamController extends Controller
 {
-    public function __construct()
+    public function index()
     {
-        $this->middleware('student');
+        return view('student.exams.index');
     }
 
-    /**
-     * Display available exams for student
-     */
-    public function index(Request $request)
+    public function marks()
     {
-        $student = $request->user()->student;
-        
-        if (!$student) {
-            return redirect()->route('student.dashboard')
-                           ->withErrors(['error' => 'Student profile not found.']);
-        }
-
-        // Get exams for student's class
-        $query = ExamPaper::where('class_id', $student->class_id)
-                         ->where('is_published', true)
-                         ->where('is_active', true)
-                         ->with(['subject', 'teacher.user']);
-
-        $exams = $query->orderBy('start_time', 'asc')->paginate(15);
-        
-        // Also get upcoming exams for the view
-        $upcomingExams = ExamPaper::where('class_id', $student->class_id)
-                                 ->where('is_published', true)
-                                 ->where('is_active', true)
-                                 ->where('start_time', '>', now())
-                                 ->with(['subject', 'teacher.user'])
-                                 ->orderBy('start_time', 'asc')
-                                 ->limit(5)
-                                 ->get();
-
-        // Also get completed exams for the view
-        $completedExams = StudentExamAttempt::where('student_id', $student->id)
-            ->where('status', 'completed')
-            ->with(['examPaper.subject', 'examPaper.classRoom'])
-            ->orderBy('completed_at', 'desc')
-            ->limit(10)
-            ->get();
-
-        return view('student.exams.index', compact('exams', 'upcomingExams', 'completedExams'));
+        return view('student.exams.marks');
     }
 
-    /**
-     * Show exam details
-     */
-    public function show(ExamPaper $exam)
+    public function upcoming()
     {
-        $student = auth()->user()->student;
-        
-        // Verify student can access this exam
-        if ($exam->class_id !== $student->class_id) {
-            return redirect()->route('student.exams.index')
-                           ->withErrors(['error' => 'You are not authorized to access this exam.']);
-        }
-
-        $exam->load(['subject', 'teacher.user', 'questions']);
-        
-        // Get student's attempt if exists
-        $attempt = StudentExamAttempt::where('exam_paper_id', $exam->id)
-                                   ->where('student_id', $student->id)
-                                   ->first();
-
-        return view('student.exams.show', compact('exam', 'attempt'));
+        return view('student.exams.upcoming');
     }
 
-    /**
-     * Start exam attempt
-     */
-    public function start(ExamPaper $exam)
+    public function show($id)
     {
-        $student = auth()->user()->student;
-        
-        // Verify student can attempt this exam
-        if ($exam->class_id !== $student->class_id || !$exam->is_published) {
-            return redirect()->route('student.exams.show', $exam)
-                           ->withErrors(['error' => 'You cannot attempt this exam.']);
-        }
-
-        // Check if exam is within time window
-        $now = now();
-        if ($now->lt($exam->start_time) || $now->gt($exam->end_time)) {
-            return redirect()->route('student.exams.show', $exam)
-                           ->withErrors(['error' => 'Exam is not currently available.']);
-        }
-
-        // Create new attempt
-        $autoSubmitTime = Carbon::parse($exam->end_time);
-        if ($exam->duration_minutes) {
-            $attemptEndTime = now()->addMinutes($exam->duration_minutes);
-            if ($attemptEndTime->lt($autoSubmitTime)) {
-                $autoSubmitTime = $attemptEndTime;
-            }
-        }
-
-        $attempt = StudentExamAttempt::create([
-            'exam_paper_id' => $exam->id,
-            'student_id' => $student->id,
-            'attempt_number' => 1,
-            'started_at' => now(),
-            'auto_submit_at' => $autoSubmitTime,
-            'status' => 'in_progress',
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
-
-        return redirect()->route('student.exams.take', ['exam' => $exam, 'attempt' => $attempt]);
+        return view('student.exams.show', compact('id'));
     }
 
-    /**
-     * Take exam (display questions)
-     */
-    public function take(ExamPaper $exam, StudentExamAttempt $attempt)
+    public function start($id)
     {
-        $student = auth()->user()->student;
-        
-        // Verify this is student's attempt
-        if ($attempt->student_id !== $student->id) {
-            return redirect()->route('student.exams.index')
-                           ->withErrors(['error' => 'Invalid exam attempt.']);
-        }
-
-        // Check if exam time has expired
-        if (now()->gt($attempt->auto_submit_at)) {
-            $this->autoSubmitExam($attempt);
-            return redirect()->route('student.exams.result', ['exam' => $exam, 'attempt' => $attempt]);
-        }
-
-        // Get questions
-        $questions = $exam->questions()->orderBy('question_number')->get();
-        $timeRemaining = now()->diffInSeconds($attempt->auto_submit_at, false);
-        $timeRemaining = max(0, $timeRemaining);
-
-        return view('student.exams.take', compact('exam', 'attempt', 'questions', 'timeRemaining'));
+        // Placeholder for exam start
+        return redirect()->route('student.exams.take', ['attempt' => 1]);
     }
 
-    /**
-     * Submit exam
-     */
-    public function submit(ExamPaper $exam, StudentExamAttempt $attempt)
+    public function take($attempt)
     {
-        $student = auth()->user()->student;
-        
-        if ($attempt->student_id !== $student->id) {
-            return redirect()->route('student.exams.index')
-                           ->withErrors(['error' => 'Invalid exam attempt.']);
-        }
-
-        $attempt->update([
-            'submitted_at' => now(),
-            'status' => 'submitted',
-            'time_spent_minutes' => now()->diffInMinutes($attempt->started_at),
-        ]);
-
-        return redirect()->route('student.exams.result', ['exam' => $exam, 'attempt' => $attempt])
-                       ->with('success', 'Exam submitted successfully!');
+        return view('student.exams.take', compact('attempt'));
     }
 
-    private function autoSubmitExam(StudentExamAttempt $attempt)
+    public function submit($attempt)
     {
-        $attempt->update([
-            'submitted_at' => now(),
-            'status' => 'auto_submitted',
-            'time_spent_minutes' => now()->diffInMinutes($attempt->started_at),
-        ]);
+        // Placeholder for exam submission
+        return redirect()->route('student.exams.result', ['attempt' => $attempt]);
     }
-    
-    /**
-     * Display student's exam marks/results
-     */
-    public function marks(Request $request)
+
+    public function result($attempt)
     {
-        $student = $request->user()->student;
-        
-        if (!$student) {
-            return redirect()->route('student.dashboard')
-                           ->withErrors(['error' => 'Student profile not found.']);
-        }
-
-        // Get all completed exam attempts with results
-        $examResults = StudentExamAttempt::where('student_id', $student->id)
-            ->where('status', 'completed')
-            ->with(['examPaper.subject', 'examPaper.classRoom'])
-            ->orderBy('completed_at', 'desc')
-            ->paginate(15);
-
-        return view('student.exams.marks', compact('examResults'))->with('examAttempts', $examResults);
+        return view('student.exams.result', compact('attempt'));
     }
-    
-    /**
-     * Display upcoming exams for student
-     */
-    public function upcoming(Request $request)
+
+    public function saveAnswer(Request $request)
     {
-        $student = $request->user()->student;
-        
-        if (!$student) {
-            return redirect()->route('student.dashboard')
-                           ->withErrors(['error' => 'Student profile not found.']);
-        }
+        // Placeholder for saving answers
+        return response()->json(['success' => true]);
+    }
 
-        // Get upcoming exams for the student's class
-        $upcomingExams = \App\Models\ExamSchedule::where('class_id', $student->class_id)
-            ->where('status', 'published')
-            ->where('start_date', '>', now())
-            ->with(['subject', 'examType'])
-            ->orderBy('start_date', 'asc')
-            ->paginate(15);
-
-        return view('student.exams.upcoming', compact('upcomingExams'));
+    public function getAnswers($attempt)
+    {
+        // Placeholder for getting answers
+        return response()->json(['answers' => []]);
     }
 }

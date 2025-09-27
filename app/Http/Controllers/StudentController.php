@@ -21,7 +21,14 @@ class StudentController extends Controller
     public function dashboard()
     {
         $user = auth()->user();
-        $student = $user->student;
+        
+        try {
+            $student = $user->student;
+        } catch (\Exception $e) {
+            // Handle case where students table doesn't exist
+            \Log::warning('Students table not found, creating safe dashboard: ' . $e->getMessage());
+            return $this->createSafeDashboard($user);
+        }
         
         if (!$student) {
             // Create a basic dashboard with safe defaults if student record is missing

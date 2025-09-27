@@ -22,7 +22,14 @@ class TeacherController extends Controller
     public function dashboard()
     {
         $user = auth()->user();
-        $teacher = $user->teacher;
+        
+        try {
+            $teacher = $user->teacher;
+        } catch (\Exception $e) {
+            // Handle case where teachers table doesn't exist
+            \Log::warning('Teachers table not found, creating safe dashboard: ' . $e->getMessage());
+            return $this->createSafeDashboard($user);
+        }
         
         if (!$teacher) {
             // Create a basic dashboard with safe defaults if teacher record is missing
