@@ -460,6 +460,24 @@ Route::middleware(['auth', 'teacher'])->group(function () {
         Route::put('/{material}', [\App\Http\Controllers\Teacher\StudyMaterialController::class, 'update'])->name('update');
         Route::delete('/{material}', [\App\Http\Controllers\Teacher\StudyMaterialController::class, 'destroy'])->name('destroy');
     });
+    
+    // Teacher Settings
+    Route::prefix('teacher/settings')->name('teacher.settings.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Teacher\SettingsController::class, 'index'])->name('index');
+        Route::post('/password', [\App\Http\Controllers\Teacher\SettingsController::class, 'updatePassword'])->name('password');
+        Route::post('/notifications', [\App\Http\Controllers\Teacher\SettingsController::class, 'updateNotifications'])->name('notifications');
+        Route::post('/privacy', [\App\Http\Controllers\Teacher\SettingsController::class, 'updatePrivacy'])->name('privacy');
+        Route::post('/delete-account', [\App\Http\Controllers\Teacher\SettingsController::class, 'deleteAccount'])->name('delete-account');
+    });
+    
+    // Teacher Attendance
+    Route::prefix('teacher/attendance')->name('teacher.attendance.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Teacher\AttendanceController::class, 'index'])->name('index');
+        Route::get('/take/{classId}', [\App\Http\Controllers\Teacher\AttendanceController::class, 'takeAttendance'])->name('take');
+        Route::post('/store', [\App\Http\Controllers\Teacher\AttendanceController::class, 'storeAttendance'])->name('store');
+        Route::get('/history/{classId}', [\App\Http\Controllers\Teacher\AttendanceController::class, 'viewHistory'])->name('history');
+        Route::get('/student/{studentId}', [\App\Http\Controllers\Teacher\AttendanceController::class, 'studentSummary'])->name('student-summary');
+    });
 });
 
 // =============================================================================
