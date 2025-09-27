@@ -21,7 +21,8 @@ class ClassFeeStructureController extends Controller
      */
     public function index(Request $request)
     {
-        $query = ClassFeeStructure::with(['classRoom'])
+        try {
+            $query = ClassFeeStructure::with(['classRoom'])
                                  ->orderBy('academic_year', 'desc')
                                  ->orderBy('created_at', 'desc');
 
@@ -49,6 +50,13 @@ class ClassFeeStructureController extends Controller
         $academicYears = ClassFeeStructure::distinct()->pluck('academic_year')->sort()->values();
 
         return view('admin.fee-structures.index', compact('feeStructures', 'classes', 'academicYears'));
+        } catch (\Exception $e) {
+            \Log::error('ClassFeeStructureController index error: ' . $e->getMessage());
+            $feeStructures = collect()->paginate(15);
+            $classes = collect();
+            $academicYears = collect();
+            return view('admin.fee-structures.index', compact('feeStructures', 'classes', 'academicYears'));
+        }
     }
 
     /**

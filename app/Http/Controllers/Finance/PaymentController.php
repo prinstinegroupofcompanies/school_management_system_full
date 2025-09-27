@@ -24,9 +24,10 @@ class PaymentController extends Controller
      */
     public function index(Request $request)
     {
-        // REAL-TIME PAYMENT DATA using StudentFee system
-        $query = StudentFee::with(['student.user', 'student.classRoom', 'feeStructure'])
-                          ->where('balance', '>', 0);
+        try {
+            // REAL-TIME PAYMENT DATA using StudentFee system
+            $query = StudentFee::with(['student.user', 'student.classRoom', 'feeStructure'])
+                              ->where('balance', '>', 0);
 
         // Apply filters
         if ($request->filled('class_id')) {
@@ -108,6 +109,22 @@ class PaymentController extends Controller
         $students = $studentFees;
 
         return view('finance.payments.index', compact('studentFees', 'students', 'classes', 'stats', 'payments'));
+        } catch (\Exception $e) {
+            \Log::error('PaymentController index error: ' . $e->getMessage());
+            $studentFees = collect()->paginate(15);
+            $students = collect();
+            $classes = collect();
+            $stats = [
+                'total_outstanding' => 0,
+                'total_students_with_balance' => 0,
+                'today_collections' => 0,
+                'pending_approval' => 0,
+                'approved_payments' => 0,
+                'total_revenue' => 0,
+            ];
+            $payments = collect()->paginate(15);
+            return view('finance.payments.index', compact('studentFees', 'students', 'classes', 'stats', 'payments'));
+        }
     }
 
     /**

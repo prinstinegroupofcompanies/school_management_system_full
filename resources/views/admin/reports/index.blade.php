@@ -159,19 +159,19 @@
         <h2 class="text-xl font-semibold text-gray-900 mb-4">Quick Overview</h2>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div class="text-center">
-                <div class="text-3xl font-bold text-blue-600">{{ \App\Models\Student::count() }}</div>
+                <div class="text-3xl font-bold text-blue-600">{{ $stats['total_students'] ?? 0 }}</div>
                 <div class="text-sm text-gray-600">Total Students</div>
             </div>
             <div class="text-center">
-                <div class="text-3xl font-bold text-green-600">{{ \App\Models\Teacher::count() }}</div>
+                <div class="text-3xl font-bold text-green-600">{{ $stats['total_teachers'] ?? 0 }}</div>
                 <div class="text-sm text-gray-600">Total Teachers</div>
             </div>
             <div class="text-center">
-                <div class="text-3xl font-bold text-purple-600">L$ {{ number_format(\App\Models\FeePayment::where('status', 'paid')->sum('amount_paid'), 2) }}</div>
+                <div class="text-3xl font-bold text-purple-600">L$ {{ number_format($stats['total_revenue'] ?? 0, 2) }}</div>
                 <div class="text-sm text-gray-600">Total Revenue</div>
             </div>
             <div class="text-center">
-                <div class="text-3xl font-bold text-yellow-600">{{ \App\Models\StudentAttendance::where('status', 'present')->count() }}</div>
+                <div class="text-3xl font-bold text-yellow-600">{{ $stats['attendance_records'] ?? 0 }}</div>
                 <div class="text-sm text-gray-600">Attendance Records</div>
             </div>
         </div>

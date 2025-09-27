@@ -22,7 +22,8 @@ class TeacherController extends Controller
 
     public function index(Request $request)
     {
-        $query = Teacher::with(['user', 'subjects', 'classes']);
+        try {
+            $query = Teacher::with(['user', 'subjects', 'classes']);
 
         // Search functionality
         if ($request->filled('search')) {
@@ -57,6 +58,13 @@ class TeacherController extends Controller
         $classes = ClassRoom::all();
 
         return view('admin.teachers.index', compact('teachers', 'subjects', 'classes'));
+        } catch (\Exception $e) {
+            \Log::error('TeacherController index error: ' . $e->getMessage());
+            $teachers = collect()->paginate(15);
+            $subjects = collect();
+            $classes = collect();
+            return view('admin.teachers.index', compact('teachers', 'subjects', 'classes'));
+        }
     }
 
     public function create()

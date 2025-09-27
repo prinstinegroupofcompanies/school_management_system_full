@@ -26,7 +26,24 @@ class ReportController extends Controller
 
     public function index()
     {
-        return view('admin.reports.index');
+        try {
+            $stats = [
+                'total_students' => Student::count(),
+                'total_teachers' => Teacher::count(),
+                'total_revenue' => FeePayment::where('status', 'paid')->sum('amount_paid'),
+                'attendance_records' => StudentAttendance::where('status', 'present')->count(),
+            ];
+            return view('admin.reports.index', compact('stats'));
+        } catch (\Exception $e) {
+            \Log::error('ReportController index error: ' . $e->getMessage());
+            $stats = [
+                'total_students' => 0,
+                'total_teachers' => 0,
+                'total_revenue' => 0,
+                'attendance_records' => 0,
+            ];
+            return view('admin.reports.index', compact('stats'));
+        }
     }
 
     public function academic(Request $request)
@@ -111,16 +128,17 @@ class ReportController extends Controller
 
     public function financial(Request $request)
     {
-        $dateRange = $this->getDateRange($request);
-        
-        // Financial Statistics
-        $financialStats = [
-            'total_revenue' => FeePayment::where('status', 'paid')->sum('amount_paid'),
-            'total_expenses' => Payroll::whereBetween('pay_date', $dateRange)->sum('net_salary'),
-            'net_profit' => FeePayment::where('status', 'paid')->sum('amount_paid') - Payroll::whereBetween('pay_date', $dateRange)->sum('net_salary'),
-            'pending_payments' => FeePayment::where('status', 'pending')->sum('amount_due'),
-            'pending_count' => FeePayment::where('status', 'pending')->count(),
-        ];
+        try {
+            $dateRange = $this->getDateRange($request);
+            
+            // Financial Statistics
+            $financialStats = [
+                'total_revenue' => FeePayment::where('status', 'paid')->sum('amount_paid'),
+                'total_expenses' => Payroll::whereBetween('pay_date', $dateRange)->sum('net_salary'),
+                'net_profit' => FeePayment::where('status', 'paid')->sum('amount_paid') - Payroll::whereBetween('pay_date', $dateRange)->sum('net_salary'),
+                'pending_payments' => FeePayment::where('status', 'pending')->sum('amount_due'),
+                'pending_count' => FeePayment::where('status', 'pending')->count(),
+            ];
 
         // Revenue Trends (last 6 months)
         $revenueTrends = collect();
@@ -168,6 +186,25 @@ class ReportController extends Controller
             'expenseBreakdown',
             'paymentStatus'
         ));
+        } catch (\Exception $e) {
+            \Log::error('ReportController financial error: ' . $e->getMessage());
+            $financialStats = [
+                'total_revenue' => 0,
+                'total_expenses' => 0,
+                'net_profit' => 0,
+                'pending_payments' => 0,
+                'pending_count' => 0,
+            ];
+            $revenueTrends = collect();
+            $expenseBreakdown = collect();
+            $paymentStatus = collect();
+            return view('admin.reports.financial', compact(
+                'financialStats',
+                'revenueTrends',
+                'expenseBreakdown',
+                'paymentStatus'
+            ));
+        }
     }
 
     public function attendance(Request $request)

@@ -12,8 +12,14 @@ class FinanceOfficerController extends Controller
 {
     public function index()
     {
-        $officers = FinanceOfficer::with('user')->paginate(15);
-        return view('admin.finance_officers.index', compact('officers'));
+        try {
+            $officers = FinanceOfficer::with('user')->paginate(15);
+            return view('admin.finance_officers.index', compact('officers'));
+        } catch (\Exception $e) {
+            \Log::error('FinanceOfficerController index error: ' . $e->getMessage());
+            $officers = collect()->paginate(15);
+            return view('admin.finance_officers.index', compact('officers'));
+        }
     }
 
     public function create()

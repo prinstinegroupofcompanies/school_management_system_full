@@ -16,7 +16,8 @@ class ClassController extends Controller
 
     public function index(Request $request)
     {
-        $query = ClassRoom::with(['teachers.user', 'classTeachers.user', 'students']);
+        try {
+            $query = ClassRoom::with(['teachers.user', 'classTeachers.user', 'students']);
 
         // Search functionality
         if ($request->filled('search')) {
@@ -41,6 +42,12 @@ class ClassController extends Controller
         $teachers = Teacher::with('user')->get();
 
         return view('admin.classes.index', compact('classes', 'teachers'));
+        } catch (\Exception $e) {
+            \Log::error('ClassController index error: ' . $e->getMessage());
+            $classes = collect()->paginate(15);
+            $teachers = collect();
+            return view('admin.classes.index', compact('classes', 'teachers'));
+        }
     }
 
     public function show(ClassRoom $class)

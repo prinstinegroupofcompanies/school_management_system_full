@@ -24,7 +24,8 @@ class GradeApprovalController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Grade::with(['student.user', 'subject', 'class', 'teacher.user'])
+        try {
+            $query = Grade::with(['student.user', 'subject', 'class', 'teacher.user'])
                      ->where('status', 'pending');
 
         // Apply filters
@@ -56,6 +57,20 @@ class GradeApprovalController extends Controller
         ];
 
         return view('admin.grades.approval', compact('grades', 'classes', 'subjects', 'teachers', 'stats'));
+        } catch (\Exception $e) {
+            \Log::error('GradeApprovalController index error: ' . $e->getMessage());
+            $grades = collect()->paginate(20);
+            $classes = collect();
+            $subjects = collect();
+            $teachers = collect();
+            $stats = [
+                'pending_grades' => 0,
+                'approved_grades' => 0,
+                'rejected_grades' => 0,
+                'total_grades' => 0,
+            ];
+            return view('admin.grades.approval', compact('grades', 'classes', 'subjects', 'teachers', 'stats'));
+        }
     }
 
     /**

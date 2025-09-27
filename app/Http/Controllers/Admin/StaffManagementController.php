@@ -25,7 +25,8 @@ class StaffManagementController extends Controller
     // Staff Management Dashboard
     public function index(Request $request)
     {
-        $query = Staff::with(['user', 'department', 'designation']);
+        try {
+            $query = Staff::with(['user', 'department', 'designation']);
 
         // Search functionality
         if ($request->filled('search')) {
@@ -60,6 +61,20 @@ class StaffManagementController extends Controller
         ];
 
         return view('admin.staff.index', compact('staff', 'departments', 'stats'));
+        } catch (\Exception $e) {
+            \Log::error('StaffManagementController index error: ' . $e->getMessage());
+            $staff = collect()->paginate(15);
+            $departments = collect();
+            $stats = [
+                'total_staff' => 0,
+                'active_staff' => 0,
+                'departments' => 0,
+                'pending_performance' => 0,
+                'upcoming_schedules' => 0,
+                'pending_payroll' => 0
+            ];
+            return view('admin.staff.index', compact('staff', 'departments', 'stats'));
+        }
     }
 
     // Create new staff member

@@ -44,8 +44,8 @@ class StudentController extends Controller
             return view('admin.students.index', compact('students', 'classes'));
         } catch (\Exception $e) {
             \Log::error('StudentController index error: ' . $e->getMessage());
-            $classes = ClassRoom::all();
-            $students = Student::with(['user', 'classRoom'])->paginate(15);
+            $classes = collect();
+            $students = collect()->paginate(15);
             return view('admin.students.index', compact('students', 'classes'));
         }
     }

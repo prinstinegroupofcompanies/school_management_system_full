@@ -18,11 +18,19 @@ class AttendanceController extends Controller
 {
     public function index()
     {
-        $classes = ClassRoom::all();
-        $subjects = Subject::all();
-        $today = now()->format('Y-m-d');
-        
-        return view('attendance.index', compact('classes', 'subjects', 'today'));
+        try {
+            $classes = ClassRoom::all();
+            $subjects = Subject::all();
+            $today = now()->format('Y-m-d');
+            
+            return view('attendance.index', compact('classes', 'subjects', 'today'));
+        } catch (\Exception $e) {
+            \Log::error('AttendanceController index error: ' . $e->getMessage());
+            $classes = collect();
+            $subjects = collect();
+            $today = now()->format('Y-m-d');
+            return view('attendance.index', compact('classes', 'subjects', 'today'));
+        }
     }
 
     public function studentAttendance(Request $request)

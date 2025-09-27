@@ -17,7 +17,8 @@ class SubjectController extends Controller
 
     public function index(Request $request)
     {
-        $query = Subject::with(['teacher', 'classes'])->whereNotNull('id');
+        try {
+            $query = Subject::with(['teacher', 'classes'])->whereNotNull('id');
 
         // Search functionality
         if ($request->filled('search')) {
@@ -45,6 +46,12 @@ class SubjectController extends Controller
         $teachers = Teacher::all();
 
         return view('admin.subjects.index', compact('subjects', 'teachers'));
+        } catch (\Exception $e) {
+            \Log::error('SubjectController index error: ' . $e->getMessage());
+            $subjects = collect()->paginate(15);
+            $teachers = collect();
+            return view('admin.subjects.index', compact('subjects', 'teachers'));
+        }
     }
 
     public function create()

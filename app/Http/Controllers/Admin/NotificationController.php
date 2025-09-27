@@ -23,7 +23,8 @@ class NotificationController extends Controller
 
     public function index(Request $request)
     {
-        $query = Notification::with('user');
+        try {
+            $query = Notification::with('user');
 
         // Search functionality
         if ($request->filled('search')) {
@@ -57,6 +58,17 @@ class NotificationController extends Controller
         $stats = $this->notificationService->getNotificationStats();
 
         return view('admin.notifications.index', compact('notifications', 'stats'));
+        } catch (\Exception $e) {
+            \Log::error('NotificationController index error: ' . $e->getMessage());
+            $notifications = collect()->paginate(15);
+            $stats = [
+                'total' => 0,
+                'pending' => 0,
+                'delivered' => 0,
+                'failed' => 0
+            ];
+            return view('admin.notifications.index', compact('notifications', 'stats'));
+        }
     }
 
     public function create()

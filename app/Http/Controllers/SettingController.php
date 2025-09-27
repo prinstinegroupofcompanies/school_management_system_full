@@ -12,10 +12,17 @@ class SettingController extends Controller
 {
     public function index()
     {
-        $settings = Setting::all()->pluck('value', 'key');
-        $school = School::first();
-        
-        return view('settings.index', compact('settings', 'school'));
+        try {
+            $settings = Setting::all()->pluck('value', 'key');
+            $school = School::first();
+            
+            return view('settings.index', compact('settings', 'school'));
+        } catch (\Exception $e) {
+            \Log::error('SettingController index error: ' . $e->getMessage());
+            $settings = collect();
+            $school = null;
+            return view('settings.index', compact('settings', 'school'));
+        }
     }
 
     public function general()
