@@ -68,8 +68,16 @@ class GradeController extends Controller
                 'failed_subjects' => 0,
             ];
         }
+
+        // Get admin signature
+        try {
+            $adminUser = \App\Models\User::where('user_type', 'admin')->first();
+            $adminSignature = $adminUser ? $adminUser->signature : null;
+        } catch (\Exception $e) {
+            $adminSignature = null;
+        }
         
-        return view('student.grades.grade-sheet', compact('year', 'academicYear', 'student', 'grades', 'stats'));
+        return view('student.grades.grade-sheet', compact('year', 'academicYear', 'student', 'grades', 'stats', 'adminSignature'));
     }
 
     public function show($id)
