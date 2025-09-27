@@ -3,222 +3,178 @@
 @section('title', 'Grade Details')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box">
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('student.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('student.grades.index') }}">My Grades</a></li>
-                        <li class="breadcrumb-item active">Grade Details</li>
-                    </ol>
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white shadow">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Grade Details</h1>
+                    <p class="mt-2 text-gray-600">Detailed view of your grade information</p>
                 </div>
-                <h4 class="page-title">Grade Details</h4>
+                <div class="flex items-center space-x-4">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                        Student
+                    </span>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="card-title mb-0">
-                            <i class="mdi mdi-school me-2"></i>
-                            Grade Information
-                        </h5>
-                        <a href="{{ route('student.grades.index') }}" class="btn btn-outline-secondary">
-                            <i class="mdi mdi-arrow-left me-1"></i>
-                            Back to Grades
-                        </a>
-                    </div>
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="bg-white shadow rounded-lg mb-8">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        Grade Information
+                    </h3>
+                    <a href="{{ route('student.grades.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-md transition-colors duration-200">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Back to Grades
+                    </a>
+                </div>
 
                     @php
                         $grade = \App\Models\Grade::with(['subject', 'class', 'teacher.user'])->find($id);
                     @endphp
 
-                    @if($grade)
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="card border-0 bg-light">
-                                    <div class="card-body">
-                                        <h6 class="card-title text-primary">Subject Information</h6>
-                                        <div class="mb-3">
-                                            <strong>Subject:</strong> {{ $grade->subject->name ?? 'N/A' }}
-                                        </div>
-                                        <div class="mb-3">
-                                            <strong>Class:</strong> {{ $grade->class->name ?? 'N/A' }}
-                                        </div>
-                                        <div class="mb-3">
-                                            <strong>Teacher:</strong> {{ $grade->teacher->user->name ?? 'N/A' }}
-                                        </div>
-                                        <div class="mb-3">
-                                            <strong>Academic Year:</strong> {{ $grade->academic_year }}
-                                        </div>
-                                        <div class="mb-3">
-                                            <strong>Semester:</strong> {{ $grade->semester }}
-                                        </div>
-                                    </div>
+                @if($grade)
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <!-- Subject Information -->
+                        <div class="bg-gray-50 rounded-lg p-6">
+                            <h4 class="text-lg font-medium text-blue-600 mb-4">Subject Information</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-500">Subject:</span>
+                                    <span class="text-sm text-gray-900">{{ $grade->subject->name ?? 'N/A' }}</span>
                                 </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="card border-0 bg-light">
-                                    <div class="card-body">
-                                        <h6 class="card-title text-success">Grade Details</h6>
-                                        <div class="mb-3">
-                                            <strong>Year Average:</strong> 
-                                            <span class="badge bg-{{ $grade->year_avg >= 80 ? 'success' : ($grade->year_avg >= 60 ? 'warning' : 'danger') }}">
-                                                {{ number_format($grade->year_avg, 2) }}%
-                                            </span>
-                                        </div>
-                                        <div class="mb-3">
-                                            <strong>Grade Letter:</strong> 
-                                            <span class="badge bg-{{ $grade->year_avg >= 80 ? 'success' : ($grade->year_avg >= 60 ? 'warning' : 'danger') }}">
-                                                @if($grade->year_avg >= 90) A
-                                                @elseif($grade->year_avg >= 80) B
-                                                @elseif($grade->year_avg >= 70) C
-                                                @elseif($grade->year_avg >= 60) D
-                                                @else F
-                                                @endif
-                                            </span>
-                                        </div>
-                                        <div class="mb-3">
-                                            <strong>Status:</strong> 
-                                            <span class="badge bg-{{ $grade->status === 'approved' ? 'success' : ($grade->status === 'pending' ? 'warning' : 'danger') }}">
-                                                {{ ucfirst($grade->status) }}
-                                            </span>
-                                        </div>
-                                        <div class="mb-3">
-                                            <strong>Created:</strong> {{ $grade->created_at->format('M d, Y') }}
-                                        </div>
-                                        <div class="mb-3">
-                                            <strong>Updated:</strong> {{ $grade->updated_at->format('M d, Y') }}
-                                        </div>
-                                    </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-500">Class:</span>
+                                    <span class="text-sm text-gray-900">{{ $grade->class->name ?? 'N/A' }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-500">Teacher:</span>
+                                    <span class="text-sm text-gray-900">{{ $grade->teacher->user->name ?? 'N/A' }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-500">Academic Year:</span>
+                                    <span class="text-sm text-gray-900">{{ $grade->academic_year }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-500">Semester:</span>
+                                    <span class="text-sm text-gray-900">{{ $grade->semester }}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Grade Breakdown -->
-                        <div class="row mt-4">
-                            <div class="col-12">
-                                <div class="card border-0 bg-light">
-                                    <div class="card-body">
-                                        <h6 class="card-title text-info">Grade Breakdown</h6>
-                                        <div class="row">
-                                            <div class="col-md-3">
-                                                <div class="text-center">
-                                                    <div class="text-2xl font-bold text-primary">{{ $grade->first_test ?? 'N/A' }}</div>
-                                                    <div class="text-sm text-muted">First Test</div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="text-center">
-                                                    <div class="text-2xl font-bold text-primary">{{ $grade->second_test ?? 'N/A' }}</div>
-                                                    <div class="text-sm text-muted">Second Test</div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="text-center">
-                                                    <div class="text-2xl font-bold text-primary">{{ $grade->third_test ?? 'N/A' }}</div>
-                                                    <div class="text-sm text-muted">Third Test</div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="text-center">
-                                                    <div class="text-2xl font-bold text-success">{{ $grade->year_avg ?? 'N/A' }}</div>
-                                                    <div class="text-sm text-muted">Year Average</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                        <!-- Grade Details -->
+                        <div class="bg-gray-50 rounded-lg p-6">
+                            <h4 class="text-lg font-medium text-green-600 mb-4">Grade Details</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-500">Year Average:</span>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $grade->year_avg >= 80 ? 'bg-green-100 text-green-800' : ($grade->year_avg >= 60 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                                        {{ number_format($grade->year_avg, 2) }}%
+                                    </span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-500">Grade Letter:</span>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $grade->year_avg >= 80 ? 'bg-green-100 text-green-800' : ($grade->year_avg >= 60 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                                        @if($grade->year_avg >= 90) A
+                                        @elseif($grade->year_avg >= 80) B
+                                        @elseif($grade->year_avg >= 70) C
+                                        @elseif($grade->year_avg >= 60) D
+                                        @else F
+                                        @endif
+                                    </span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-500">Status:</span>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $grade->status === 'approved' ? 'bg-green-100 text-green-800' : ($grade->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                                        {{ ucfirst($grade->status) }}
+                                    </span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-500">Created:</span>
+                                    <span class="text-sm text-gray-900">{{ $grade->created_at->format('M d, Y') }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-500">Updated:</span>
+                                    <span class="text-sm text-gray-900">{{ $grade->updated_at->format('M d, Y') }}</span>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Performance Analysis -->
-                        <div class="row mt-4">
-                            <div class="col-12">
-                                <div class="card border-0 bg-light">
-                                    <div class="card-body">
-                                        <h6 class="card-title text-warning">Performance Analysis</h6>
-                                        <div class="row">
-                                            <div class="col-md-4">
-                                                <div class="text-center">
-                                                    <div class="text-2xl font-bold {{ $grade->year_avg >= 80 ? 'text-success' : ($grade->year_avg >= 60 ? 'text-warning' : 'text-danger') }}">
-                                                        {{ $grade->year_avg >= 80 ? 'Excellent' : ($grade->year_avg >= 60 ? 'Good' : 'Needs Improvement') }}
-                                                    </div>
-                                                    <div class="text-sm text-muted">Performance Level</div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="text-center">
-                                                    <div class="text-2xl font-bold {{ $grade->year_avg >= 50 ? 'text-success' : 'text-danger' }}">
-                                                        {{ $grade->year_avg >= 50 ? 'Passed' : 'Failed' }}
-                                                    </div>
-                                                    <div class="text-sm text-muted">Result</div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="text-center">
-                                                    <div class="text-2xl font-bold text-info">
-                                                        {{ $grade->year_avg >= 90 ? 'A+' : ($grade->year_avg >= 80 ? 'A' : ($grade->year_avg >= 70 ? 'B' : ($grade->year_avg >= 60 ? 'C' : 'F'))) }}
-                                                    </div>
-                                                    <div class="text-sm text-muted">Grade Point</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                    <!-- Grade Breakdown -->
+                    <div class="bg-gray-50 rounded-lg p-6 mb-8">
+                        <h4 class="text-lg font-medium text-indigo-600 mb-4">Grade Breakdown</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-blue-600 mb-2">{{ $grade->first_test ?? 'N/A' }}</div>
+                                <div class="text-sm text-gray-500">First Test</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-blue-600 mb-2">{{ $grade->second_test ?? 'N/A' }}</div>
+                                <div class="text-sm text-gray-500">Second Test</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-blue-600 mb-2">{{ $grade->third_test ?? 'N/A' }}</div>
+                                <div class="text-sm text-gray-500">Third Test</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-green-600 mb-2">{{ $grade->year_avg ?? 'N/A' }}</div>
+                                <div class="text-sm text-gray-500">Year Average</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Performance Analysis -->
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h4 class="text-lg font-medium text-yellow-600 mb-4">Performance Analysis</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold {{ $grade->year_avg >= 80 ? 'text-green-600' : ($grade->year_avg >= 60 ? 'text-yellow-600' : 'text-red-600') }} mb-2">
+                                    {{ $grade->year_avg >= 80 ? 'Excellent' : ($grade->year_avg >= 60 ? 'Good' : 'Needs Improvement') }}
                                 </div>
+                                <div class="text-sm text-gray-500">Performance Level</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold {{ $grade->year_avg >= 50 ? 'text-green-600' : 'text-red-600' }} mb-2">
+                                    {{ $grade->year_avg >= 50 ? 'Passed' : 'Failed' }}
+                                </div>
+                                <div class="text-sm text-gray-500">Result</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-indigo-600 mb-2">
+                                    {{ $grade->year_avg >= 90 ? 'A+' : ($grade->year_avg >= 80 ? 'A' : ($grade->year_avg >= 70 ? 'B' : ($grade->year_avg >= 60 ? 'C' : 'F'))) }}
+                                </div>
+                                <div class="text-sm text-gray-500">Grade Point</div>
                             </div>
                         </div>
-                    @else
-                        <div class="text-center py-5">
-                            <div class="mb-4">
-                                <i class="mdi mdi-alert-circle text-muted" style="font-size: 4rem;"></i>
-                            </div>
-                            <h5 class="text-muted">Grade Not Found</h5>
-                            <p class="text-muted">The requested grade record could not be found.</p>
-                            <a href="{{ route('student.grades.index') }}" class="btn btn-primary">
-                                <i class="mdi mdi-arrow-left me-1"></i>
-                                Back to Grades
-                            </a>
+                    </div>
+                @else
+                    <div class="text-center py-12">
+                        <div class="mb-4">
+                            <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
                         </div>
-                    @endif
-                </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Grade Not Found</h3>
+                        <p class="text-gray-500 mb-6">The requested grade record could not be found.</p>
+                        <a href="{{ route('student.grades.index') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors duration-200">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                            </svg>
+                            Back to Grades
+                        </a>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
 </div>
-
-<style>
-.card {
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-
-.card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
-}
-
-.badge {
-    font-size: 0.875rem;
-    padding: 0.5rem 0.75rem;
-}
-
-.text-2xl {
-    font-size: 1.5rem;
-    font-weight: 700;
-}
-
-.text-sm {
-    font-size: 0.875rem;
-}
-
-.text-muted {
-    color: #6c757d !important;
-}
-</style>
 @endsection
