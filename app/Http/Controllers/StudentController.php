@@ -705,15 +705,36 @@ class StudentController extends Controller
             ]),
             'attendance' => (object) ['status' => 'present', 'date' => today()],
             'subjects' => collect([
-                (object) ['name' => 'Mathematics', 'code' => 'MATH101'],
-                (object) ['name' => 'English', 'code' => 'ENG101'],
-                (object) ['name' => 'Science', 'code' => 'SCI101'],
-                (object) ['name' => 'History', 'code' => 'HIST101'],
+                (object) ['id' => 1, 'name' => 'Mathematics', 'code' => 'MATH101', 'description' => 'Advanced Mathematics'],
+                (object) ['id' => 2, 'name' => 'English', 'code' => 'ENG101', 'description' => 'English Language and Literature'],
+                (object) ['id' => 3, 'name' => 'Science', 'code' => 'SCI101', 'description' => 'General Science'],
+                (object) ['id' => 4, 'name' => 'History', 'code' => 'HIST101', 'description' => 'World History'],
             ]),
             'upcomingExams' => collect([
-                (object) ['title' => 'Mid-term Mathematics', 'start_date' => now()->addDays(5)],
-                (object) ['title' => 'English Literature', 'start_date' => now()->addDays(8)],
-                (object) ['title' => 'Science Practical', 'start_date' => now()->addDays(12)],
+                (object) [
+                    'id' => 1,
+                    'title' => 'Mid-term Mathematics',
+                    'exam_date' => now()->addDays(5)->format('Y-m-d'),
+                    'start_time' => '09:00',
+                    'examType' => (object) ['name' => 'Mid-term'],
+                    'subject' => (object) ['name' => 'Mathematics']
+                ],
+                (object) [
+                    'id' => 2,
+                    'title' => 'English Literature',
+                    'exam_date' => now()->addDays(8)->format('Y-m-d'),
+                    'start_time' => '10:30',
+                    'examType' => (object) ['name' => 'Final'],
+                    'subject' => (object) ['name' => 'English']
+                ],
+                (object) [
+                    'id' => 3,
+                    'title' => 'Science Practical',
+                    'exam_date' => now()->addDays(12)->format('Y-m-d'),
+                    'start_time' => '14:00',
+                    'examType' => (object) ['name' => 'Practical'],
+                    'subject' => (object) ['name' => 'Science']
+                ],
             ]),
             'recentActivities' => collect([
                 ['description' => 'Attendance marked: Present', 'created_at' => now()->subHours(2)],
