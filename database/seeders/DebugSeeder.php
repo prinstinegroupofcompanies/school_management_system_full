@@ -93,11 +93,31 @@ class DebugSeeder extends Seeder
         );
         $this->command->info('Subject created: ' . $subject->name);
 
+        // Create department first
+        $department = \App\Models\Department::firstOrCreate(
+            ['name' => 'Mathematics'],
+            [
+                'description' => 'Mathematics Department',
+                'is_active' => true,
+            ]
+        );
+
+        // Create designation first
+        $designation = \App\Models\Designation::firstOrCreate(
+            ['name' => 'Senior Teacher'],
+            [
+                'code' => 'ST',
+                'description' => 'Senior Teacher Position',
+            ]
+        );
+
         // Create teacher record
         $teacher = Teacher::firstOrCreate(
-            ['user_id' => $teacherUser->id],
+            ['employee_id' => 'TCH001'],
             [
-                'employee_id' => 'TCH001',
+                'user_id' => $teacherUser->id,
+                'department_id' => $department->id,
+                'designation_id' => $designation->id,
                 'qualification' => 'BSc Mathematics',
                 'joining_date' => now()->subYears(2),
                 'salary' => 50000,
@@ -126,11 +146,29 @@ class DebugSeeder extends Seeder
         );
         $this->command->info('Student record created: ' . $student->student_id);
 
+        // Create fee structure first
+        $feeStructure = \App\Models\FeeStructure::firstOrCreate(
+            ['name' => 'Basic Fee'],
+            [
+                'class_id' => $class->id,
+                'academic_year' => date('Y'),
+                'total_amount' => 1000,
+                'final_amount' => 1000,
+                'due_date' => now()->addMonth(),
+            ]
+        );
+
         // Create sample fee payment
         $feePayment = FeePayment::firstOrCreate(
             ['student_id' => $student->id, 'payment_date' => today()],
             [
+                'fee_structure_id' => $feeStructure->id,
+                'payment_no' => 'PAY' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT),
+                'amount_due' => 1000,
+                'amount_total' => 1000,
                 'amount_paid' => 1000,
+                'balance_amount' => 0,
+                'due_date' => now()->addMonth(),
                 'status' => 'paid',
                 'payment_method' => 'cash',
             ]

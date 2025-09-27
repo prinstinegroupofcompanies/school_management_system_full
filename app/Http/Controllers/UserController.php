@@ -49,4 +49,37 @@ class UserController extends Controller
         // Placeholder for password reset
         return redirect()->route('users.index')->with('success', 'All passwords reset successfully');
     }
+
+    public function profile()
+    {
+        try {
+            $user = auth()->user();
+            return view('users.profile', compact('user'));
+        } catch (\Exception $e) {
+            \Log::error('UserController profile error: ' . $e->getMessage());
+            return redirect()->route('dashboard')->with('error', 'Unable to load profile.');
+        }
+    }
+
+    public function updateProfile(Request $request)
+    {
+        try {
+            $user = auth()->user();
+            
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            ]);
+
+            $user->update([
+                'name' => $request->name,
+                'email' => $request->email,
+            ]);
+
+            return redirect()->route('users.profile')->with('success', 'Profile updated successfully!');
+        } catch (\Exception $e) {
+            \Log::error('UserController updateProfile error: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Failed to update profile. Please try again.');
+        }
+    }
 }

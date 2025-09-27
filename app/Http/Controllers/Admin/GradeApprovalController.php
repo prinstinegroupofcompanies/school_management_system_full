@@ -237,8 +237,32 @@ class GradeApprovalController extends Controller
             $year = $request->get('year', 2025);
             $semester = $request->get('semester', null);
             
-            // Base query for grades in the specified year
-            $baseQuery = Grade::where('academic_year', $year);
+            // Check if grades table exists and has data
+            try {
+                $baseQuery = Grade::where('academic_year', $year);
+            } catch (\Exception $e) {
+                // Return empty data if table doesn't exist
+                return response()->json([
+                    'stats' => [
+                        'total_grades' => 0,
+                        'pending_grades' => 0,
+                        'approved_grades' => 0,
+                        'rejected_grades' => 0,
+                        'average_year_grade' => 0,
+                        'approval_rate' => 0,
+                    ],
+                    'statusDistribution' => [
+                        'pending' => 0,
+                        'approved' => 0,
+                        'rejected' => 0,
+                    ],
+                    'gradeRanges' => [],
+                    'topStudents' => [],
+                    'teacherStats' => [],
+                    'monthlyTrends' => [],
+                    'timestamp' => now()->toISOString()
+                ]);
+            }
         
         if ($semester) {
             $baseQuery->where('semester', $semester);

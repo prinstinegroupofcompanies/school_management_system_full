@@ -842,9 +842,8 @@ Route::middleware(['auth'])->group(function () {
     })->name('notifications.mark-read');
     
     // User Profile Routes (for all user types)
-    Route::get('/users/{user}/profile', [UserController::class, 'profile'])->name('users.profile');
-    Route::get('/users/{user}/profile/edit', [UserController::class, 'editProfile'])->name('users.profile.edit');
-    Route::put('/users/{user}/profile', [UserController::class, 'updateProfile'])->name('users.profile.update');
+    Route::get('/profile', [UserController::class, 'profile'])->name('users.profile');
+    Route::put('/profile', [UserController::class, 'updateProfile'])->name('users.update-profile');
     Route::get('/users/{user}/change-password', [UserController::class, 'changePasswordForm'])->name('users.change-password');
     Route::post('/users/{user}/change-password', [UserController::class, 'changePassword'])->name('users.change-password.update');
     Route::get('/me/profile', [UserController::class, 'myProfile'])->name('me.profile');
