@@ -148,7 +148,7 @@
                                             <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-outline-secondary">
                                                 <i class="mdi mdi-pencil"></i>
                                             </a>
-                                            @if($user->user_type !== 'admin' || User::where('user_type', 'admin')->count() > 1)
+                                            @if($user->user_type !== 'admin' || \App\Models\User::where('user_type', 'admin')->count() > 1)
                                             <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this user?')">
                                                 @csrf
                                                 @method('DELETE')

@@ -571,7 +571,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                             </svg>
                         </a>
-                        <a href="{{ route('admin.reports.index') }}" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <a href="{{ route('admin.reports.dashboard') }}" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                             <div class="flex items-center">
                                 <svg class="w-5 h-5 text-indigo-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
@@ -676,6 +676,99 @@
                         </li>
                         @endforeach
                     </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Systems Management -->
+        <div class="bg-white shadow rounded-lg mb-8">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-6">🚀 Advanced Systems Management</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Lesson Plans -->
+                    <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                        <div class="flex items-center mb-3">
+                            <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center mr-3">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </div>
+                            <h4 class="text-sm font-medium text-blue-900">Lesson Plans</h4>
+                        </div>
+                        <p class="text-xs text-blue-700 mb-3">Manage lesson plan submissions and approvals</p>
+                        <a href="{{ route('admin.lesson-plans.dashboard') }}" class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md font-medium">Manage</a>
+                    </div>
+
+                    <!-- Health & Safety -->
+                    <div class="bg-gradient-to-r from-red-50 to-red-100 p-4 rounded-lg border border-red-200">
+                        <div class="flex items-center mb-3">
+                            <div class="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center mr-3">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                </svg>
+                            </div>
+                            <h4 class="text-sm font-medium text-red-900">Health & Safety</h4>
+                        </div>
+                        <p class="text-xs text-red-700 mb-3">Monitor incidents and safety checks</p>
+                        <a href="{{ route('admin.health-safety.dashboard') }}" class="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md font-medium">Manage</a>
+                    </div>
+
+                    <!-- Visitor Management -->
+                    <div class="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                        <div class="flex items-center mb-3">
+                            <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center mr-3">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                </svg>
+                            </div>
+                            <h4 class="text-sm font-medium text-green-900">Visitor Management</h4>
+                        </div>
+                        <p class="text-xs text-green-700 mb-3">Track visitor check-ins and registrations</p>
+                        <a href="{{ route('admin.visitor-management.dashboard') }}" class="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md font-medium">Manage</a>
+                    </div>
+
+                    <!-- E-Signatures -->
+                    <div class="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+                        <div class="flex items-center mb-3">
+                            <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center mr-3">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                                </svg>
+                            </div>
+                            <h4 class="text-sm font-medium text-purple-900">E-Signatures</h4>
+                        </div>
+                        <p class="text-xs text-purple-700 mb-3">Digital signature management</p>
+                        <a href="{{ route('admin.e-signatures.dashboard') }}" class="text-xs bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-md font-medium">Manage</a>
+                    </div>
+
+                    <!-- Comprehensive Reports -->
+                    <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 p-4 rounded-lg border border-yellow-200">
+                        <div class="flex items-center mb-3">
+                            <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center mr-3">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                            </div>
+                            <h4 class="text-sm font-medium text-yellow-900">Comprehensive Reports</h4>
+                        </div>
+                        <p class="text-xs text-yellow-700 mb-3">Advanced reporting and analytics</p>
+                        <a href="{{ route('admin.reports.dashboard') }}" class="text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded-md font-medium">Manage</a>
+                    </div>
+
+                    <!-- Inventory Management -->
+                    <div class="bg-gradient-to-r from-indigo-50 to-indigo-100 p-4 rounded-lg border border-indigo-200">
+                        <div class="flex items-center mb-3">
+                            <div class="w-8 h-8 bg-indigo-500 rounded-md flex items-center justify-center mr-3">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                </svg>
+                            </div>
+                            <h4 class="text-sm font-medium text-indigo-900">Inventory Management</h4>
+                        </div>
+                        <p class="text-xs text-indigo-700 mb-3">Track school assets and supplies</p>
+                        <a href="{{ route('admin.inventory.dashboard') }}" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded-md font-medium">Manage</a>
+                    </div>
                 </div>
             </div>
         </div>

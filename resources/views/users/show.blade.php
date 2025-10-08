@@ -1,119 +1,189 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-4xl mx-auto">
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-8">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">User Details</h1>
-                <p class="text-gray-600 mt-2">View user information and profile</p>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('users.index') }}">Users</a></li>
+                        <li class="breadcrumb-item active">User Details</li>
+                    </ol>
+                </div>
+                <h4 class="page-title">User Details</h4>
             </div>
-            <a href="{{ route('users.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">
-                <i class="fas fa-arrow-left mr-2"></i>Back to Users
-            </a>
         </div>
+    </div>
 
-        <!-- User Details -->
-        <div class="bg-white rounded-lg shadow-lg p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Basic Information -->
-                <div class="space-y-4">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
-                    
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">User Information</h5>
                     <div>
-                        <span class="text-sm font-medium text-gray-500">Full Name:</span>
-                        <p class="text-gray-900">{{ $user->name }}</p>
-                    </div>
-                    
-                    <div>
-                        <span class="text-sm font-medium text-gray-500">Email Address:</span>
-                        <p class="text-gray-900">{{ $user->email }}</p>
-                    </div>
-                    
-                    <div>
-                        <span class="text-sm font-medium text-gray-500">User Type:</span>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                            @if($user->user_type === 'admin') bg-purple-100 text-purple-800
-                            @elseif($user->user_type === 'teacher') bg-blue-100 text-blue-800
-                            @elseif($user->user_type === 'student') bg-green-100 text-green-800
-                            @elseif($user->user_type === 'finance') bg-yellow-100 text-yellow-800
-                            @else bg-gray-100 text-gray-800 @endif">
-                            {{ ucfirst($user->user_type) }}
-                        </span>
-                    </div>
-                    
-                    <div>
-                        <span class="text-sm font-medium text-gray-500">Status:</span>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                            @if($user->status === 'active') bg-green-100 text-green-800
-                            @elseif($user->status === 'inactive') bg-red-100 text-red-800
-                            @else bg-gray-100 text-gray-800 @endif">
-                            {{ ucfirst($user->status) }}
-                        </span>
+                        <a href="{{ route('users.edit', $user) }}" class="btn btn-warning me-2">
+                            <i class="mdi mdi-pencil"></i> Edit User
+                        </a>
+                        <a href="{{ route('users.index') }}" class="btn btn-secondary">
+                            <i class="mdi mdi-arrow-left"></i> Back to Users
+                        </a>
                     </div>
                 </div>
+                <div class="card-body">
 
-                <!-- Contact Information -->
-                <div class="space-y-4">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
-                    
-                    <div>
-                        <span class="text-sm font-medium text-gray-500">Phone:</span>
-                        <p class="text-gray-900">{{ $user->phone ?? 'Not provided' }}</p>
-                    </div>
-                    
-                    <div>
-                        <span class="text-sm font-medium text-gray-500">Address:</span>
-                        <p class="text-gray-900">{{ $user->address ?? 'Not provided' }}</p>
-                    </div>
-                    
-                    <div>
-                        <span class="text-sm font-medium text-gray-500">City:</span>
-                        <p class="text-gray-900">{{ $user->city ?? 'Not provided' }}</p>
-                    </div>
-                    
-                    <div>
-                        <span class="text-sm font-medium text-gray-500">Country:</span>
-                        <p class="text-gray-900">{{ $user->country ?? 'Not provided' }}</p>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <!-- User Photo -->
+                            <div class="text-center mb-4">
+                                @if($user->photo)
+                                    <img src="{{ asset('storage/' . $user->photo) }}" 
+                                         alt="{{ $user->name }}" class="rounded-circle mb-3" 
+                                         style="width: 150px; height: 150px;">
+                                @else
+                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" 
+                                         style="width: 150px; height: 150px;">
+                                        <i class="mdi mdi-account mdi-48px text-muted"></i>
+                                    </div>
+                                @endif
+                                <h4 class="mb-1">{{ $user->name }}</h4>
+                                <p class="text-muted">{{ $user->email }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <div class="row">
+                                <!-- Basic Information -->
+                                <div class="col-md-6">
+                                    <h5 class="mb-3">Basic Information</h5>
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <td><strong>Full Name:</strong></td>
+                                            <td>{{ $user->name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Email:</strong></td>
+                                            <td>{{ $user->email }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Phone:</strong></td>
+                                            <td>{{ $user->phone ?? 'Not provided' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Role:</strong></td>
+                                            <td>
+                                                @if($user->role == 'admin')
+                                                    <span class="badge bg-danger">Admin</span>
+                                                @elseif($user->role == 'teacher')
+                                                    <span class="badge bg-warning">Teacher</span>
+                                                @elseif($user->role == 'student')
+                                                    <span class="badge bg-info">Student</span>
+                                                @elseif($user->role == 'finance')
+                                                    <span class="badge bg-success">Finance</span>
+                                                @else
+                                                    <span class="badge bg-secondary">{{ ucfirst($user->role) }}</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Status:</strong></td>
+                                            <td>
+                                                @if($user->status == 'active')
+                                                    <span class="badge bg-success">Active</span>
+                                                @elseif($user->status == 'inactive')
+                                                    <span class="badge bg-secondary">Inactive</span>
+                                                @elseif($user->status == 'suspended')
+                                                    <span class="badge bg-danger">Suspended</span>
+                                                @else
+                                                    <span class="badge bg-secondary">{{ ucfirst($user->status) }}</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                                <!-- Additional Information -->
+                                <div class="col-md-6">
+                                    <h5 class="mb-3">Additional Information</h5>
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <td><strong>Date of Birth:</strong></td>
+                                            <td>{{ $user->date_of_birth ? \Carbon\Carbon::parse($user->date_of_birth)->format('M d, Y') : 'Not provided' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Gender:</strong></td>
+                                            <td>{{ $user->gender ? ucfirst($user->gender) : 'Not provided' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Address:</strong></td>
+                                            <td>{{ $user->address ?? 'Not provided' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Created:</strong></td>
+                                            <td>{{ $user->created_at->format('M d, Y H:i') }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Last Login:</strong></td>
+                                            <td>{{ $user->last_login_at ? \Carbon\Carbon::parse($user->last_login_at)->format('M d, Y H:i') : 'Never' }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Role-specific Information -->
+                            @if($user->student)
+                            <div class="mt-4">
+                                <h5 class="mb-3">Student Information</h5>
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Student ID:</strong></td>
+                                        <td>{{ $user->student->student_id ?? 'Not assigned' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Class:</strong></td>
+                                        <td>{{ $user->student->classRoom->name ?? 'Not assigned' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Status:</strong></td>
+                                        <td>
+                                            @if($user->student->status == 'active')
+                                                <span class="badge bg-success">Active</span>
+                                            @else
+                                                <span class="badge bg-secondary">{{ ucfirst($user->student->status) }}</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            @elseif($user->teacher)
+                            <div class="mt-4">
+                                <h5 class="mb-3">Teacher Information</h5>
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Employee ID:</strong></td>
+                                        <td>{{ $user->teacher->employee_id ?? 'Not assigned' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Department:</strong></td>
+                                        <td>{{ $user->teacher->department ?? 'Not assigned' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Status:</strong></td>
+                                        <td>
+                                            @if($user->teacher->status == 'active')
+                                                <span class="badge bg-success">Active</span>
+                                            @else
+                                                <span class="badge bg-secondary">{{ ucfirst($user->teacher->status) }}</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            @endif
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Account Information -->
-            <div class="mt-8 pt-6 border-t border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <span class="text-sm font-medium text-gray-500">Created At:</span>
-                        <p class="text-gray-900">{{ $user->created_at->format('M d, Y \a\t g:i A') }}</p>
-                    </div>
-                    
-                    <div>
-                        <span class="text-sm font-medium text-gray-500">Last Updated:</span>
-                        <p class="text-gray-900">{{ $user->updated_at->format('M d, Y \a\t g:i A') }}</p>
-                    </div>
-                    
-                    @if($user->last_login_at)
-                    <div>
-                        <span class="text-sm font-medium text-gray-500">Last Login:</span>
-                        <p class="text-gray-900">{{ $user->last_login_at->format('M d, Y \a\t g:i A') }}</p>
-                    </div>
-                    @endif
-                    
-                    <div>
-                        <span class="text-sm font-medium text-gray-500">Email Verified:</span>
-                        <p class="text-gray-900">{{ $user->email_verified_at ? 'Yes' : 'No' }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Actions -->
-            <div class="mt-8 pt-6 border-t border-gray-200 flex items-center justify-end space-x-4">
-                <a href="{{ route('users.edit', $user) }}" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                    <i class="fas fa-edit mr-2"></i>Edit User
-                </a>
             </div>
         </div>
     </div>

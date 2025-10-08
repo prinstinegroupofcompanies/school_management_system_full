@@ -54,10 +54,15 @@ if (!function_exists('safeRoute')) {
             'admin.notifications.index' => '/admin/notifications',
             'admin.notifications.create' => '/admin/notifications/create',
             'admin.notifications.templates' => '/admin/notifications/templates',
-            'admin.reports.index' => '/admin/reports',
-            'admin.reports.academic' => '/admin/reports/academic',
-            'admin.reports.financial' => '/admin/reports/financial',
-            'admin.reports.attendance' => '/admin/reports/attendance',
+            'admin.reports.dashboard' => '/admin/reports',
+            'admin.reports.templates' => '/admin/reports/templates',
+            'admin.reports.schedules' => '/admin/reports/schedules',
+            'admin.reports.executions' => '/admin/reports/executions',
+            'admin.lesson-plans.dashboard' => '/admin/lesson-plans/dashboard',
+            'admin.health-safety.dashboard' => '/admin/health-safety/dashboard',
+            'admin.visitor-management.dashboard' => '/admin/visitor-management/dashboard',
+            'admin.e-signatures.dashboard' => '/admin/e-signatures/dashboard',
+            'admin.inventory.dashboard' => '/admin/inventory/dashboard',
             'admin.finance_officers.index' => '/admin/finance-officers',
             'admin.fees.reports' => '/admin/fees/reports',
             'admin.fee-structures.index' => '/admin/fee-structures',
@@ -119,7 +124,7 @@ if (!function_exists('safeRoute')) {
 
     {{-- Gradesheet and Exams for Student --}}
     @if($userType === 'student')
-    <a href="{{ safeRoute('student.grades.grade-sheet') }}" 
+    <a href="{{ safeRoute('student.grades.grade-sheet', ['year' => date('Y'), 'semester' => 1]) }}" 
        class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('student.grades.grade-sheet') ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
         <svg class="mr-3 h-5 w-5 {{ request()->routeIs('student.grades.grade-sheet') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-9 4h12M4 6h16" />
@@ -309,11 +314,11 @@ if (!function_exists('safeRoute')) {
     </div>
 
     <!-- Finance Management -->
-    <div x-data="{ open: {{ request()->routeIs('admin.finance_officers.*') || request()->routeIs('admin.fees.reports') ? 'true' : 'false' }} }">
+    <div x-data="{ open: {{ request()->routeIs('admin.finance_officers.*') || request()->routeIs('admin.fees.reports') || request()->routeIs('payments.*') ? 'true' : 'false' }} }">
         <button @click="open = !open"
-                class="group w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-all {{ (request()->routeIs('admin.finance_officers.*') || request()->routeIs('admin.fees.reports')) ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                class="group w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-all {{ (request()->routeIs('admin.finance_officers.*') || request()->routeIs('admin.fees.reports') || request()->routeIs('payments.*')) ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
             <div class="flex items-center">
-                <svg class="mr-3 h-5 w-5 {{ (request()->routeIs('admin.finance_officers.*') || request()->routeIs('admin.fees.reports')) ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg class="mr-3 h-5 w-5 {{ (request()->routeIs('admin.finance_officers.*') || request()->routeIs('admin.fees.reports') || request()->routeIs('payments.*')) ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
                 Finance
@@ -323,6 +328,12 @@ if (!function_exists('safeRoute')) {
             </svg>
         </button>
         <div x-show="open" x-transition class="ml-4 space-y-1">
+            <a href="{{ safeRoute('payments.index') }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('payments.*') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Payment Management
+            </a>
             <a href="{{ safeRoute('admin.finance_officers.index') }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.finance_officers.*') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
                 <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -335,6 +346,161 @@ if (!function_exists('safeRoute')) {
                 </svg>
                 Finance Reports
             </a>
+        </div>
+    </div>
+
+    <!-- Advanced Systems -->
+    <div class="border-t border-gray-200 pt-4 mt-4">
+        <h3 class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Advanced Systems</h3>
+        
+        <!-- Lesson Plans -->
+        <div x-data="{ open: {{ request()->routeIs('admin.lesson-plans.*') ? 'true' : 'false' }} }">
+            <button @click="open = !open"
+                    class="group w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.lesson-plans.*') ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                <div class="flex items-center">
+                    <svg class="mr-3 h-5 w-5 {{ request()->routeIs('admin.lesson-plans.*') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Lesson Plans
+                </div>
+                <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+            <div x-show="open" x-transition class="ml-4 space-y-1">
+                <a href="{{ safeRoute('admin.lesson-plans.dashboard') }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.lesson-plans.dashboard') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                    <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="{{ safeRoute('admin.lesson-plans.index') }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.lesson-plans.index') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                    <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    All Plans
+                </a>
+            </div>
+        </div>
+
+        <!-- Health & Safety -->
+        <div x-data="{ open: {{ request()->routeIs('admin.health-safety.*') ? 'true' : 'false' }} }">
+            <button @click="open = !open"
+                    class="group w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.health-safety.*') ? 'bg-red-100 text-red-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                <div class="flex items-center">
+                    <svg class="mr-3 h-5 w-5 {{ request()->routeIs('admin.health-safety.*') ? 'text-red-500' : 'text-gray-400 group-hover:text-gray-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    Health & Safety
+                </div>
+                <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+            <div x-show="open" x-transition class="ml-4 space-y-1">
+                <a href="{{ safeRoute('admin.health-safety.dashboard') }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.health-safety.dashboard') ? 'bg-red-50 text-red-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                    <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="{{ safeRoute('admin.health-safety.incidents') }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.health-safety.incidents.*') ? 'bg-red-50 text-red-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                    <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    Incidents
+                </a>
+            </div>
+        </div>
+
+        <!-- Visitor Management -->
+        <div x-data="{ open: {{ request()->routeIs('admin.visitor-management.*') ? 'true' : 'false' }} }">
+            <button @click="open = !open"
+                    class="group w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.visitor-management.*') ? 'bg-green-100 text-green-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                <div class="flex items-center">
+                    <svg class="mr-3 h-5 w-5 {{ request()->routeIs('admin.visitor-management.*') ? 'text-green-500' : 'text-gray-400 group-hover:text-gray-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                    </svg>
+                    Visitor Management
+                </div>
+                <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+            <div x-show="open" x-transition class="ml-4 space-y-1">
+                <a href="{{ safeRoute('admin.visitor-management.dashboard') }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.visitor-management.dashboard') ? 'bg-green-50 text-green-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                    <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="{{ safeRoute('admin.visitor-management.logs') }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.visitor-management.logs.*') ? 'bg-green-50 text-green-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                    <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                    </svg>
+                    Visit Logs
+                </a>
+            </div>
+        </div>
+
+        <!-- E-Signatures -->
+        <div x-data="{ open: {{ request()->routeIs('admin.e-signatures.*') ? 'true' : 'false' }} }">
+            <button @click="open = !open"
+                    class="group w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.e-signatures.*') ? 'bg-purple-100 text-purple-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                <div class="flex items-center">
+                    <svg class="mr-3 h-5 w-5 {{ request()->routeIs('admin.e-signatures.*') ? 'text-purple-500' : 'text-gray-400 group-hover:text-gray-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                    E-Signatures
+                </div>
+                <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+            <div x-show="open" x-transition class="ml-4 space-y-1">
+                <a href="{{ safeRoute('admin.e-signatures.dashboard') }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.e-signatures.dashboard') ? 'bg-purple-50 text-purple-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                    <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="{{ safeRoute('admin.e-signatures.signatures') }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.e-signatures.signatures.*') ? 'bg-purple-50 text-purple-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                    <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                    Signatures
+                </a>
+            </div>
+        </div>
+
+        <!-- Inventory Management -->
+        <div x-data="{ open: {{ request()->routeIs('admin.inventory.*') ? 'true' : 'false' }} }">
+            <button @click="open = !open"
+                    class="group w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.inventory.*') ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                <div class="flex items-center">
+                    <svg class="mr-3 h-5 w-5 {{ request()->routeIs('admin.inventory.*') ? 'text-indigo-500' : 'text-gray-400 group-hover:text-gray-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                    </svg>
+                    Inventory Management
+                </div>
+                <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+            <div x-show="open" x-transition class="ml-4 space-y-1">
+                <a href="{{ safeRoute('admin.inventory.dashboard') }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.inventory.dashboard') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                    <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="{{ safeRoute('admin.inventory.items') }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.inventory.items.*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                    <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                    </svg>
+                    Items
+                </a>
+            </div>
         </div>
     </div>
     @endif

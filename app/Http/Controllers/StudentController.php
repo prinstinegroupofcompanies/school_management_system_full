@@ -152,41 +152,54 @@ class StudentController extends Controller
 
         $recentActivities = $recentAttendances->merge($recentPayments)->sortByDesc('created_at')->take(5);
 
-        // Get library statistics
-        $libraryStats = [
-            'total_books' => \App\Models\Book::count(),
-            'available_books' => \App\Models\Book::where('status', 'available')->count(),
-            'borrowed_books' => \App\Models\BookIssue::where('status', 'borrowed')->count(),
-            'my_borrowed' => \App\Models\BookIssue::where('student_id', $student->id)->where('status', 'borrowed')->count(),
-        ];
+        // Get library statistics with real-time data
+        $libraryStats = $this->safeQuery(function() use ($student) {
+            return [
+                'total_books' => \App\Models\Book::count(),
+                'available_books' => \App\Models\Book::where('status', 'available')->count(),
+                'borrowed_books' => \App\Models\BookIssue::where('status', 'borrowed')->count(),
+                'my_borrowed' => \App\Models\BookIssue::where('student_id', $student->id)->where('status', 'borrowed')->count(),
+            ];
+        }) ?? ['total_books' => 0, 'available_books' => 0, 'borrowed_books' => 0, 'my_borrowed' => 0];
 
-        // Get transport statistics
-        $transportStats = [
-            'total_routes' => \App\Models\TransportRoute::count(),
-            'active_routes' => \App\Models\TransportRoute::where('status', 'active')->count(),
-            'total_vehicles' => \App\Models\Transport::where('status', 'active')->count(),
-            'total_students' => \App\Models\Student::whereNotNull('transport_route_id')->count(),
-        ];
+        // Get transport statistics with real-time data
+        $transportStats = $this->safeQuery(function() {
+            return [
+                'total_routes' => \App\Models\TransportRoute::count(),
+                'active_routes' => \App\Models\TransportRoute::where('status', 'active')->count(),
+                'total_vehicles' => \App\Models\Transport::where('status', 'active')->count(),
+                'total_students' => \App\Models\Student::where('is_transport', true)->count(),
+            ];
+        }) ?? ['total_routes' => 0, 'active_routes' => 0, 'total_vehicles' => 0, 'total_students' => 0];
 
-        // Get student's transport route
-        $myRoute = null;
-        if ($student->transport_route_id) {
-            $myRoute = \App\Models\TransportRoute::with('transport')->find($student->transport_route_id);
-        }
+        // Get student's transport assignment
+        $myRoute = $this->safeQuery(function() use ($student) {
+            if ($student->transport_route_id) {
+                return \App\Models\TransportRoute::with(['transport'])
+                    ->where('id', $student->transport_route_id)
+                    ->where('status', 'active')
+                    ->first();
+            }
+            return null;
+        });
 
-        // Get hostel statistics
-        $hostelStats = [
-            'total_hostels' => \App\Models\Hostel::where('status', 'active')->count(),
-            'total_rooms' => \App\Models\HostelRoom::where('is_active', true)->count(),
-            'total_capacity' => \App\Models\HostelRoom::where('is_active', true)->sum('capacity'),
-            'current_occupancy' => \App\Models\HostelRoom::where('is_active', true)->sum('current_occupancy'),
-        ];
+        // Get hostel statistics with real-time data
+        $hostelStats = $this->safeQuery(function() {
+            return [
+                'total_rooms' => \App\Models\HostelRoom::count(),
+            ];
+        }) ?? ['total_rooms' => 0];
 
-        // Get student's hostel room
-        $myRoom = null;
-        if ($student->hostel_room_id) {
-            $myRoom = \App\Models\HostelRoom::with('hostel')->find($student->hostel_room_id);
-        }
+        // Get student's hostel room assignment
+        $myRoom = $this->safeQuery(function() use ($student) {
+            if ($student->hostel_room_id) {
+                return \App\Models\HostelRoom::with(['hostel'])
+                    ->where('id', $student->hostel_room_id)
+                    ->where('status', 'occupied')
+                    ->first();
+            }
+            return null;
+        });
 
         // Calculate real statistics
         $stats = [

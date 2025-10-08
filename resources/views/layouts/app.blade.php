@@ -524,7 +524,7 @@
                             <!-- User dropdown -->
                             <div x-show="open" @click.away="open = false" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
                                 <div class="py-1">
-                                    <a href="{{ $userType === 'student' ? route('student.profile') : ($userType !== 'admin' ? route('me.profile') : (auth()->user() ? route('users.profile', auth()->user()) : '#')) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+                                    <a href="{{ $userType === 'student' ? route('student.profile') : ($userType !== 'admin' ? route('me.profile') : (auth()->user() ? route('admin.users.show', auth()->user()) : '#')) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
                                     <a href="{{ $userType === 'student' ? route('student.change-password') : (auth()->user() ? route('users.change-password', auth()->user()) : '#') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Change Password</a>
                                     <div class="border-t border-gray-100"></div>
                                     <form method="POST" action="{{ route('logout') }}">

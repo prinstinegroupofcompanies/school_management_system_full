@@ -12,17 +12,72 @@ class SettingController extends Controller
 {
     public function index()
     {
+        // Initialize default settings
+        $generalSettings = [
+            'school_name' => 'School Management System',
+            'school_address' => '',
+            'school_phone' => '',
+            'school_email' => '',
+            'academic_year' => now()->year,
+            'semester' => 1,
+            'timezone' => 'UTC',
+            'currency' => 'LRD',
+        ];
+
+        $attendanceSettings = [
+            'attendance_marking_time' => '09:00',
+            'late_marking_time' => '09:30',
+            'attendance_grace_period' => 15,
+            'auto_mark_absent' => false,
+        ];
+
+        $notificationSettings = [
+            'email_notifications' => true,
+            'sms_notifications' => false,
+            'push_notifications' => true,
+        ];
+
         try {
             $settings = Setting::all()->pluck('value', 'key');
             $school = School::first();
             
-            return view('settings.index', compact('settings', 'school'));
+            // Update general settings with database values
+            $generalSettings = [
+                'school_name' => $settings->get('school_name', $generalSettings['school_name']),
+                'school_address' => $settings->get('school_address', $generalSettings['school_address']),
+                'school_phone' => $settings->get('school_phone', $generalSettings['school_phone']),
+                'school_email' => $settings->get('school_email', $generalSettings['school_email']),
+                'academic_year' => $settings->get('academic_year', $generalSettings['academic_year']),
+                'semester' => $settings->get('semester', $generalSettings['semester']),
+                'timezone' => $settings->get('timezone', $generalSettings['timezone']),
+                'currency' => $settings->get('currency', $generalSettings['currency']),
+            ];
+
+            // Update attendance settings with database values
+            $attendanceSettings = [
+                'attendance_marking_time' => $settings->get('attendance_marking_time', $attendanceSettings['attendance_marking_time']),
+                'late_marking_time' => $settings->get('late_marking_time', $attendanceSettings['late_marking_time']),
+                'attendance_grace_period' => $settings->get('attendance_grace_period', $attendanceSettings['attendance_grace_period']),
+                'auto_mark_absent' => $settings->get('auto_mark_absent', $attendanceSettings['auto_mark_absent']),
+            ];
+
+            // Update notification settings with database values
+            $notificationSettings = [
+                'email_notifications' => $settings->get('email_notifications', $notificationSettings['email_notifications']),
+                'sms_notifications' => $settings->get('sms_notifications', $notificationSettings['sms_notifications']),
+                'push_notifications' => $settings->get('push_notifications', $notificationSettings['push_notifications']),
+            ];
+
         } catch (\Exception $e) {
             \Log::error('SettingController index error: ' . $e->getMessage());
-            $settings = collect();
-            $school = null;
-            return view('settings.index', compact('settings', 'school'));
+            // Use default settings if database issues
         }
+
+        return view('settings.index', compact(
+            'generalSettings',
+            'attendanceSettings',
+            'notificationSettings'
+        ));
     }
 
     public function general()
@@ -186,6 +241,123 @@ class SettingController extends Controller
         } catch (\Exception $e) {
             return redirect()->route('settings.cache')
                 ->with('error', 'Failed to clear cache: ' . $e->getMessage());
+        }
+    }
+
+    public function attendance()
+    {
+        try {
+            $settings = Setting::whereIn('key', [
+                'attendance_marking_time',
+                'late_marking_time',
+                'attendance_grace_period',
+                'auto_mark_absent'
+            ])->pluck('value', 'key');
+            
+            $attendanceSettings = [
+                'attendance_marking_time' => $settings->get('attendance_marking_time', '09:00'),
+                'late_marking_time' => $settings->get('late_marking_time', '09:30'),
+                'attendance_grace_period' => $settings->get('attendance_grace_period', 15),
+                'auto_mark_absent' => $settings->get('auto_mark_absent', false),
+            ];
+
+            return view('settings.attendance', compact('attendanceSettings'));
+        } catch (\Exception $e) {
+            \Log::error('SettingController attendance error: ' . $e->getMessage());
+            
+            $attendanceSettings = [
+                'attendance_marking_time' => '09:00',
+                'late_marking_time' => '09:30',
+                'attendance_grace_period' => 15,
+                'auto_mark_absent' => false,
+            ];
+
+            return view('settings.attendance', compact('attendanceSettings'));
+        }
+    }
+
+    public function updateAttendance(Request $request)
+    {
+        try {
+            $request->validate([
+                'attendance_marking_time' => 'required|date_format:H:i',
+                'late_marking_time' => 'required|date_format:H:i',
+                'attendance_grace_period' => 'required|integer|min:0|max:60',
+                'auto_mark_absent' => 'boolean',
+            ]);
+
+            $settings = [
+                'attendance_marking_time' => $request->attendance_marking_time,
+                'late_marking_time' => $request->late_marking_time,
+                'attendance_grace_period' => $request->attendance_grace_period,
+                'auto_mark_absent' => $request->boolean('auto_mark_absent'),
+            ];
+
+            foreach ($settings as $key => $value) {
+                $this->updateSetting($key, $value);
+            }
+
+            return redirect()->route('settings.index')->with('success', 'Attendance settings updated successfully.');
+        } catch (\Exception $e) {
+            \Log::error('SettingController updateAttendance error: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Failed to update attendance settings. Please try again.');
+        }
+    }
+
+    public function notifications()
+    {
+        try {
+            $settings = Setting::whereIn('key', [
+                'email_notifications',
+                'sms_notifications',
+                'push_notifications'
+            ])->pluck('value', 'key');
+            
+            $notificationSettings = [
+                'email_notifications' => $settings->get('email_notifications', true),
+                'sms_notifications' => $settings->get('sms_notifications', false),
+                'push_notifications' => $settings->get('push_notifications', true),
+            ];
+
+            return view('settings.notifications', compact('notificationSettings'));
+        } catch (\Exception $e) {
+            \Log::error('SettingController notifications error: ' . $e->getMessage());
+            
+            $notificationSettings = [
+                'email_notifications' => true,
+                'sms_notifications' => false,
+                'push_notifications' => true,
+            ];
+
+            return view('settings.notifications', compact('notificationSettings'));
+        }
+    }
+
+    public function updateNotifications(Request $request)
+    {
+        try {
+            $request->validate([
+                'email_notifications' => 'boolean',
+                'sms_notifications' => 'boolean',
+                'push_notifications' => 'boolean',
+            ]);
+
+            $settings = [
+                'email_notifications' => $request->boolean('email_notifications'),
+                'sms_notifications' => $request->boolean('sms_notifications'),
+                'push_notifications' => $request->boolean('push_notifications'),
+            ];
+
+            foreach ($settings as $key => $value) {
+                $this->updateSetting($key, $value);
+            }
+
+            return redirect()->route('settings.index')->with('success', 'Notification settings updated successfully.');
+        } catch (\Exception $e) {
+            \Log::error('SettingController updateNotifications error: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Failed to update notification settings. Please try again.');
         }
     }
 

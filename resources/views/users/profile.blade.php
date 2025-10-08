@@ -9,96 +9,197 @@
             <div class="page-title-box">
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Profile</li>
+                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('users.index') }}">Users</a></li>
+                        <li class="breadcrumb-item active">{{ $user->name }}</li>
                     </ol>
                 </div>
-                <h4 class="page-title">My Profile</h4>
+                <h4 class="page-title">User Profile: {{ $user->name }}</h4>
             </div>
         </div>
     </div>
 
     <div class="row">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-body">
-                    <form method="POST" action="{{ route('users.update-profile') }}">
-                        @csrf
-                        @method('PUT')
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control @error('name') is-invalid @enderror" 
-                                           id="name" name="name" value="{{ old('name', $user->name) }}" required>
-                                    @error('name')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
-                                    <input type="email" class="form-control @error('email') is-invalid @enderror" 
-                                           id="email" name="email" value="{{ old('email', $user->email) }}" required>
-                                    @error('email')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">User Type</label>
-                                    <input type="text" class="form-control" value="{{ ucfirst($user->user_type) }}" readonly>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Status</label>
-                                    <input type="text" class="form-control" 
-                                           value="{{ $user->is_active ? 'Active' : 'Inactive' }}" readonly>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="mb-3">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="mdi mdi-content-save me-1"></i> Update Profile
-                                    </button>
-                                    <a href="{{ route('dashboard') }}" class="btn btn-secondary">
-                                        <i class="mdi mdi-arrow-left me-1"></i> Back to Dashboard
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
         <div class="col-md-4">
             <div class="card">
                 <div class="card-body text-center">
-                    <div class="avatar-lg mx-auto mb-3">
-                        <div class="avatar-title bg-primary text-primary rounded-circle font-weight-medium" style="font-size: 2rem;">
-                            {{ strtoupper(substr($user->name, 0, 2)) }}
+                    @if($user->photo)
+                        <img src="{{ asset('storage/' . $user->photo) }}" 
+                             alt="{{ $user->name }}" class="rounded-circle mb-3" 
+                             style="width: 120px; height: 120px;">
+                    @else
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" 
+                             style="width: 120px; height: 120px;">
+                            <i class="mdi mdi-account mdi-48px text-muted"></i>
                         </div>
-                    </div>
-                    <h5>{{ $user->name }}</h5>
-                    <p class="text-muted">{{ $user->email }}</p>
-                    <p class="text-muted">
-                        <span class="badge bg-{{ $user->user_type == 'admin' ? 'danger' : ($user->user_type == 'teacher' ? 'warning' : ($user->user_type == 'student' ? 'info' : 'secondary')) }}">
-                            {{ ucfirst($user->user_type) }}
-                        </span>
+                    @endif
+                    <h5 class="mb-1">{{ $user->name }}</h5>
+                    <p class="text-muted mb-2">{{ $user->email }}</p>
+                    <p class="mb-2">
+                        @if($user->role == 'admin')
+                            <span class="badge bg-danger">Admin</span>
+                        @elseif($user->role == 'teacher')
+                            <span class="badge bg-warning">Teacher</span>
+                        @elseif($user->role == 'student')
+                            <span class="badge bg-info">Student</span>
+                        @elseif($user->role == 'finance')
+                            <span class="badge bg-success">Finance</span>
+                        @else
+                            <span class="badge bg-secondary">{{ ucfirst($user->role) }}</span>
+                        @endif
                     </p>
                     <p class="text-muted">
                         <small>Member since {{ $user->created_at->format('M Y') }}</small>
                     </p>
+                    
+                    <div class="mt-3">
+                        <a href="{{ route('users.edit', $user) }}" class="btn btn-warning btn-sm me-2">
+                            <i class="mdi mdi-pencil"></i> Edit Profile
+                        </a>
+                        <a href="{{ route('users.change-password', $user) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="mdi mdi-key"></i> Change Password
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Profile Information</h5>
+                        </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3">Personal Information</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Full Name:</strong></td>
+                                    <td>{{ $user->name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Email:</strong></td>
+                                    <td>{{ $user->email }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Phone:</strong></td>
+                                    <td>{{ $user->phone ?? 'Not provided' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Date of Birth:</strong></td>
+                                    <td>{{ $user->date_of_birth ? \Carbon\Carbon::parse($user->date_of_birth)->format('M d, Y') : 'Not provided' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Gender:</strong></td>
+                                    <td>{{ $user->gender ? ucfirst($user->gender) : 'Not provided' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Address:</strong></td>
+                                    <td>{{ $user->address ?? 'Not provided' }}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3">Account Information</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Role:</strong></td>
+                                    <td>
+                                        @if($user->role == 'admin')
+                                            <span class="badge bg-danger">Admin</span>
+                                        @elseif($user->role == 'teacher')
+                                            <span class="badge bg-warning">Teacher</span>
+                                        @elseif($user->role == 'student')
+                                            <span class="badge bg-info">Student</span>
+                                        @elseif($user->role == 'finance')
+                                            <span class="badge bg-success">Finance</span>
+                                        @else
+                                            <span class="badge bg-secondary">{{ ucfirst($user->role) }}</span>
+                        @endif
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td>
+                                        @if($user->status == 'active')
+                                            <span class="badge bg-success">Active</span>
+                                        @elseif($user->status == 'inactive')
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        @elseif($user->status == 'suspended')
+                                            <span class="badge bg-danger">Suspended</span>
+                                        @else
+                                            <span class="badge bg-secondary">{{ ucfirst($user->status) }}</span>
+                        @endif
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Created:</strong></td>
+                                    <td>{{ $user->created_at->format('M d, Y H:i') }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Last Login:</strong></td>
+                                    <td>{{ $user->last_login_at ? \Carbon\Carbon::parse($user->last_login_at)->format('M d, Y H:i') : 'Never' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Email Verified:</strong></td>
+                                    <td>{{ $user->email_verified_at ? 'Yes' : 'No' }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Role-specific Information -->
+                    @if($user->student)
+                    <div class="mt-4">
+                        <h6 class="text-primary mb-3">Student Information</h6>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Student ID:</strong></td>
+                                <td>{{ $user->student->student_id ?? 'Not assigned' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Class:</strong></td>
+                                <td>{{ $user->student->classRoom->name ?? 'Not assigned' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td>
+                                    @if($user->student->status == 'active')
+                                        <span class="badge bg-success">Active</span>
+                                    @else
+                                        <span class="badge bg-secondary">{{ ucfirst($user->student->status) }}</span>
+                        @endif
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    @elseif($user->teacher)
+                    <div class="mt-4">
+                        <h6 class="text-primary mb-3">Teacher Information</h6>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Employee ID:</strong></td>
+                                <td>{{ $user->teacher->employee_id ?? 'Not assigned' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Department:</strong></td>
+                                <td>{{ $user->teacher->department ?? 'Not assigned' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td>
+                                    @if($user->teacher->status == 'active')
+                                        <span class="badge bg-success">Active</span>
+                                    @else
+                                        <span class="badge bg-secondary">{{ ucfirst($user->teacher->status) }}</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>

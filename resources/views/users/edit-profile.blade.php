@@ -3,224 +3,43 @@
 @section('title', 'Edit Profile')
 
 @section('content')
-<style>
-.edit-profile-container {
-    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-    min-height: 100vh;
-    color: #e2e8f0;
-}
-
-.edit-profile-header {
-    background: rgba(30, 41, 59, 0.8);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-    padding: 2rem 0;
-}
-
-.edit-profile-content {
-    padding: 2rem 0;
-}
-
-.section-title {
-    color: #cbd5e1;
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 1.5rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.card-premium {
-    background: rgba(15, 23, 42, 0.5);
-    border: 1px solid rgba(148, 163, 184, 0.15);
-    border-radius: 1rem;
-    padding: 1.25rem;
-    box-shadow: 0 10px 25px rgba(2, 6, 23, 0.2);
-}
-
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-label {
-    color: #94a3b8;
-    font-weight: 500;
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-    display: block;
-}
-
-.form-control {
-    background: rgba(30, 41, 59, 0.5);
-    border: 1px solid rgba(148, 163, 184, 0.3);
-    border-radius: 0.5rem;
-    color: #e2e8f0;
-    padding: 0.75rem 1rem;
-    transition: all 0.3s ease;
-}
-
-.form-control:focus {
-    background: rgba(30, 41, 59, 0.8);
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    color: #e2e8f0;
-}
-
-.form-control:disabled {
-    background: rgba(30, 41, 59, 0.3);
-    border-color: rgba(148, 163, 184, 0.2);
-    color: #94a3b8;
-}
-
-.form-control::placeholder {
-    color: #64748b;
-}
-
-.invalid-feedback {
-    color: #ef4444;
-    font-size: 0.8rem;
-    margin-top: 0.25rem;
-}
-
-.form-text {
-    color: #64748b;
-    font-size: 0.8rem;
-    margin-top: 0.25rem;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #93c5fd 0%, #3b82f6 100%);
-    border: none;
-    border-radius: 0.5rem;
-    color: white;
-    padding: 0.75rem 1.5rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-.btn-primary:hover {
-    filter: brightness(1.05);
-    transform: translateY(-1px);
-    box-shadow: 0 8px 20px rgba(30, 64, 175, 0.35);
-}
-
-.btn-secondary {
-    background: rgba(148, 163, 184, 0.15);
-    border: 1px solid rgba(148, 163, 184, 0.3);
-    border-radius: 0.5rem;
-    color: #e2e8f0;
-    padding: 0.75rem 1.5rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    text-decoration: none;
-}
-
-.btn-secondary:hover {
-    background: rgba(148, 163, 184, 0.3);
-    border-color: rgba(148, 163, 184, 0.5);
-    color: #f1f5f9;
-    text-decoration: none;
-}
-
-.nav-link {
-    color: #94a3b8;
-    text-decoration: none;
-    margin-right: 2rem;
-    transition: color 0.3s ease;
-}
-
-.nav-link.active {
-    color: #e2e8f0;
-    font-weight: 500;
-}
-
-.nav-link:hover {
-    color: #e2e8f0;
-    text-decoration: none;
-}
-
-.user-summary {
-    text-align: right;
-}
-
-.user-name {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #e2e8f0;
-    margin-bottom: 0.25rem;
-}
-
-.user-email {
-    color: #94a3b8;
-    font-size: 0.9rem;
-    margin-bottom: 0.25rem;
-}
-
-.user-role {
-    color: #22c55e;
-    font-size: 0.8rem;
-    font-weight: 500;
-}
-
-.current-photo {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid rgba(148, 163, 184, 0.3);
-}
-
-.photo-placeholder {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background: rgba(30, 41, 59, 0.5);
-    border: 2px solid rgba(148, 163, 184, 0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #94a3b8;
-}
-
-@media (max-width: 768px) {
-    .user-summary {
-        text-align: left;
-        margin-top: 1rem;
-    }
-}
-</style>
-
-<div class="edit-profile-container">
-    <div class="container">
-        <!-- Header -->
-        <div class="edit-profile-header">
-            <div class="d-flex justify-content-between align-items-center" style="gap:1rem;">
-                <div>
-                    <a href="{{ auth()->id() === $user->id && auth()->user()->user_type !== 'admin' ? route('me.profile') : route('users.profile', $user->id) }}" class="nav-link">My Profile</a>
-                    <a href="{{ auth()->id() === $user->id && auth()->user()->user_type !== 'admin' ? route('me.profile.edit') : route('users.profile.edit', $user->id) }}" class="nav-link active">Edit Profile</a>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('users.index') }}">Users</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('users.show', $user) }}">{{ $user->name }}</a></li>
+                        <li class="breadcrumb-item active">Edit Profile</li>
+                    </ol>
                 </div>
-                <div class="user-summary">
-                    <div class="user-name">{{ $user->name }}</div>
-                    <div class="user-email">{{ $user->email }}</div>
-                    <div class="user-role">{{ ucfirst($user->user_type) }}</div>
-                </div>
+                <h4 class="page-title">Edit Profile: {{ $user->name }}</h4>
+            </div>
             </div>
         </div>
 
-        <!-- Content -->
-        <div class="edit-profile-content">
-            <form action="{{ auth()->id() === $user->id && auth()->user()->user_type !== 'admin' ? route('me.profile.update') : route('users.profile.update', $user->id) }}" method="POST" enctype="multipart/form-data">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Profile Information</h5>
+                    <a href="{{ route('users.show', $user) }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="mdi mdi-arrow-left"></i> Back to User
+                    </a>
+                </div>
+                <div class="card-body">
+                    <form action="{{ route('users.update', $user) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 
                 <div class="row">
-                    <div class="col-lg-10 col-xl-9">
-                        <!-- Personal Information -->
-                        <div class="mb-5 card-premium">
-                            <h3 class="section-title">Personal Information</h3>
-                            
-                            <div class="form-group">
-                                <label for="name" class="form-label">Full Name</label>
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3">Personal Information</h6>
+                                
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control @error('name') is-invalid @enderror" 
                                        id="name" name="name" value="{{ old('name', $user->name) }}" required>
                                 @error('name')
@@ -228,130 +47,221 @@
                                 @enderror
                             </div>
                             
-                            <div class="form-group">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="email" value="{{ $user->email }}" disabled>
-                                <small class="form-text">Email cannot be changed</small>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control @error('email') is-invalid @enderror" 
+                                           id="email" name="email" value="{{ old('email', $user->email) }}" required>
+                                    @error('email')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                             </div>
                             
-                            <div class="form-group">
-                                <label for="phone" class="form-label">Phone</label>
+                                <div class="mb-3">
+                                    <label for="phone" class="form-label">Phone Number</label>
                                 <input type="text" class="form-control @error('phone') is-invalid @enderror" 
                                        id="phone" name="phone" value="{{ old('phone', $user->phone) }}" 
-                                       placeholder="Enter your phone number">
+                                           placeholder="Enter phone number">
                                 @error('phone')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                             
-                            <div class="form-group">
-                                <label for="address" class="form-label">Address</label>
-                                <textarea class="form-control @error('address') is-invalid @enderror" 
-                                          id="address" name="address" rows="3" 
-                                          placeholder="Enter your address">{{ old('address', $user->address) }}</textarea>
-                                @error('address')
+                                <div class="mb-3">
+                                    <label for="date_of_birth" class="form-label">Date of Birth</label>
+                                    <input type="date" class="form-control @error('date_of_birth') is-invalid @enderror" 
+                                           id="date_of_birth" name="date_of_birth" value="{{ old('date_of_birth', $user->date_of_birth) }}">
+                                    @error('date_of_birth')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                             
-                            <div class="form-group">
-                                <label for="city" class="form-label">City</label>
-                                <input type="text" class="form-control @error('city') is-invalid @enderror" 
-                                       id="city" name="city" value="{{ old('city', $user->city) }}" 
-                                       placeholder="Enter your city">
-                                @error('city')
+                                <div class="mb-3">
+                                    <label for="gender" class="form-label">Gender</label>
+                                    <select class="form-control @error('gender') is-invalid @enderror" 
+                                            id="gender" name="gender">
+                                        <option value="">Select Gender</option>
+                                        <option value="male" {{ old('gender', $user->gender) == 'male' ? 'selected' : '' }}>Male</option>
+                                        <option value="female" {{ old('gender', $user->gender) == 'female' ? 'selected' : '' }}>Female</option>
+                                        <option value="other" {{ old('gender', $user->gender) == 'other' ? 'selected' : '' }}>Other</option>
+                                    </select>
+                                    @error('gender')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                             
-                            <div class="form-group">
-                                <label for="country" class="form-label">Country</label>
-                                <input type="text" class="form-control @error('country') is-invalid @enderror" 
-                                       id="country" name="country" value="{{ old('country', $user->country) }}" 
-                                       placeholder="Enter your country">
-                                @error('country')
+                                <div class="mb-3">
+                                    <label for="address" class="form-label">Address</label>
+                                    <textarea class="form-control @error('address') is-invalid @enderror" 
+                                              id="address" name="address" rows="3" 
+                                              placeholder="Enter address">{{ old('address', $user->address) }}</textarea>
+                                    @error('address')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
 
-                        <!-- Profile Photo -->
-                        <div class="mb-5 card-premium">
-                            <h3 class="section-title">Profile Photo</h3>
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3">Account Information</h6>
                             
-                            <div class="form-group">
-                                <label class="form-label">Current Photo</label>
                                 <div class="mb-3">
-                                    @if($user->profile_photo)
-                                        <img src="{{ asset('storage/' . $user->profile_photo) }}" alt="Current Photo" 
-                                             class="current-photo">
-                                    @else
-                                        <div class="photo-placeholder">
-                                            <i class="fas fa-user fa-2x"></i>
+                                    <label for="role" class="form-label">User Role <span class="text-danger">*</span></label>
+                                    <select class="form-control @error('role') is-invalid @enderror" 
+                                            id="role" name="role" required>
+                                        <option value="">Select Role</option>
+                                        <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Administrator</option>
+                                        <option value="teacher" {{ old('role', $user->role) == 'teacher' ? 'selected' : '' }}>Teacher</option>
+                                        <option value="student" {{ old('role', $user->role) == 'student' ? 'selected' : '' }}>Student</option>
+                                        <option value="finance" {{ old('role', $user->role) == 'finance' ? 'selected' : '' }}>Finance Officer</option>
+                                    </select>
+                                    @error('role')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                         </div>
-                                    @endif
+                                
+                                <div class="mb-3">
+                                    <label for="status" class="form-label">Account Status</label>
+                                    <select class="form-control @error('status') is-invalid @enderror" 
+                                            id="status" name="status">
+                                        <option value="active" {{ old('status', $user->status) == 'active' ? 'selected' : '' }}>Active</option>
+                                        <option value="inactive" {{ old('status', $user->status) == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                        <option value="suspended" {{ old('status', $user->status) == 'suspended' ? 'selected' : '' }}>Suspended</option>
+                                    </select>
+                                    @error('status')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 
-                                <label for="profile_photo" class="form-label">Upload New Photo</label>
-                                <input type="file" class="form-control @error('profile_photo') is-invalid @enderror" 
-                                       id="profile_photo" name="profile_photo" accept="image/*">
-                                @error('profile_photo')
+                                <div class="mb-3">
+                                    <label for="photo" class="form-label">Profile Photo</label>
+                                    <input type="file" class="form-control @error('photo') is-invalid @enderror" 
+                                           id="photo" name="photo" accept="image/*">
+                                    @error('photo')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <small class="form-text">Upload a profile photo (JPG, PNG, GIF - Max 2MB)</small>
+                                    <small class="form-text text-muted">Max file size: 2MB. Supported formats: JPG, PNG, GIF</small>
+                                </div>
+                                
+                                @if($user->photo)
+                                <div class="mb-3">
+                                    <label class="form-label">Current Photo</label>
+                                    <div>
+                                        <img src="{{ asset('storage/' . $user->photo) }}" alt="Current Photo" 
+                                             class="rounded-circle" style="width: 80px; height: 80px;">
+                                    </div>
+                                </div>
+                                @endif
                             </div>
                         </div>
 
-                        @if($user->teacher)
-                        <!-- Professional Information -->
-                        <div class="mb-5">
-                            <h3 class="section-title">Professional Information</h3>
+                        <!-- Role-specific Information -->
+                        <div id="role-specific-info" style="display: none;">
+                            <hr>
+                            <h6 class="text-primary mb-3">Role-specific Information</h6>
                             
-                            <div class="form-group">
-                                <label for="qualification" class="form-label">Qualification</label>
-                                <textarea class="form-control @error('qualification') is-invalid @enderror" 
-                                          id="qualification" name="qualification" rows="3" 
-                                          placeholder="Enter your qualifications">{{ old('qualification', $user->teacher->qualification) }}</textarea>
-                                @error('qualification')
+                            <!-- Teacher Information -->
+                            <div id="teacher-info" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="employee_id" class="form-label">Employee ID</label>
+                                            <input type="text" class="form-control @error('employee_id') is-invalid @enderror" 
+                                                   id="employee_id" name="employee_id" value="{{ old('employee_id', $user->teacher->employee_id ?? '') }}">
+                                            @error('employee_id')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="department" class="form-label">Department</label>
+                                            <input type="text" class="form-control @error('department') is-invalid @enderror" 
+                                                   id="department" name="department" value="{{ old('department', $user->teacher->department ?? '') }}">
+                                            @error('department')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Student Information -->
+                            <div id="student-info" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="student_id" class="form-label">Student ID</label>
+                                            <input type="text" class="form-control @error('student_id') is-invalid @enderror" 
+                                                   id="student_id" name="student_id" value="{{ old('student_id', $user->student->student_id ?? '') }}">
+                                            @error('student_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                            
-                            <div class="form-group">
-                                <label for="experience" class="form-label">Experience</label>
-                                <textarea class="form-control @error('experience') is-invalid @enderror" 
-                                          id="experience" name="experience" rows="3" 
-                                          placeholder="Enter your experience">{{ old('experience', $user->teacher->experience) }}</textarea>
-                                @error('experience')
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="class_id" class="form-label">Class</label>
+                                            <select class="form-control @error('class_id') is-invalid @enderror" 
+                                                    id="class_id" name="class_id">
+                                                <option value="">Select Class</option>
+                                                @foreach(\App\Models\ClassRoom::all() as $class)
+                                                    <option value="{{ $class->id }}" {{ old('class_id', $user->student->class_id ?? '') == $class->id ? 'selected' : '' }}>
+                                                        {{ $class->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('class_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="bio" class="form-label">Bio</label>
-                                <textarea class="form-control @error('bio') is-invalid @enderror" 
-                                          id="bio" name="bio" rows="4" 
-                                          placeholder="Tell us about yourself">{{ old('bio', $user->teacher->bio) }}</textarea>
-                                @error('bio')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        @endif
 
-                        <!-- Action Buttons -->
-                        <div class="form-group" style="display:flex;gap:1rem;align-items:center;">
-                            <button type="submit" class="btn btn-primary me-3">
-                                <i class="fas fa-save"></i> Update Profile
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="mdi mdi-content-save"></i> Update User
                             </button>
-                            <a href="{{ route('users.profile', $user->id) }}" class="btn btn-secondary">
-                                <i class="fas fa-times"></i> Cancel
+                            <a href="{{ route('users.show', $user) }}" class="btn btn-secondary">
+                                <i class="mdi mdi-close"></i> Cancel
                             </a>
                         </div>
-                    </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.getElementById('role').addEventListener('change', function() {
+    const role = this.value;
+    const roleSpecificInfo = document.getElementById('role-specific-info');
+    const teacherInfo = document.getElementById('teacher-info');
+    const studentInfo = document.getElementById('student-info');
+    
+    // Hide all role-specific sections
+    roleSpecificInfo.style.display = 'none';
+    teacherInfo.style.display = 'none';
+    studentInfo.style.display = 'none';
+    
+    if (role === 'teacher') {
+        roleSpecificInfo.style.display = 'block';
+        teacherInfo.style.display = 'block';
+    } else if (role === 'student') {
+        roleSpecificInfo.style.display = 'block';
+        studentInfo.style.display = 'block';
+    }
+});
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const roleSelect = document.getElementById('role');
+    if (roleSelect.value) {
+        roleSelect.dispatchEvent(new Event('change'));
+    }
+});
+</script>
+@endpush
 @endsection

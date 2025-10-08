@@ -3,77 +3,192 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\Book;
+use App\Models\BookIssue;
+use App\Models\LibraryMember;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class LibraryController extends Controller
 {
     public function index()
     {
         try {
-            $user = auth()->user();
+            $user = Auth::user();
             $student = $user->student;
-        } catch (\Exception $e) {
-            return redirect()->route('student.dashboard')
-                ->with('error', 'Student profile not available. Please contact administrator.');
-        }
-        
-        if (!$student) {
-            return redirect()->route('student.dashboard')
-                ->with('error', 'Student record not found. Please contact administrator.');
-        }
+            
+            if (!$student) {
+                return redirect()->route('student.dashboard')
+                    ->with('error', 'Student profile not found.');
+            }
 
-        // Get real-time library statistics with error handling
-        try {
-            $libraryStats = [
-                'total_books' => \App\Models\Book::count(),
-                'available_books' => \App\Models\Book::where('status', 'available')->count(),
-                'borrowed_books' => \App\Models\BookIssue::where('status', 'borrowed')->count(),
-                'my_borrowed' => \App\Models\BookIssue::where('student_id', $student->id)->where('status', 'borrowed')->count(),
+            // Get library statistics
+            $stats = [
+                'total_books' => Book::count(),
+                'available_books' => Book::where('status', 'available')->count(),
+                'my_borrowed' => BookIssue::where('student_id', $student->id)
+                    ->where('status', 'borrowed')
+                    ->count(),
+                'overdue_books' => BookIssue::where('student_id', $student->id)
+                    ->where('status', 'borrowed')
+                    ->where('due_date', '<', now())
+                    ->count(),
             ];
 
             // Get student's borrowed books
-            $myBooks = \App\Models\BookIssue::with(['book'])
+            $borrowedBooks = BookIssue::with(['book', 'book.author'])
                 ->where('student_id', $student->id)
                 ->where('status', 'borrowed')
+                ->orderBy('due_date', 'asc')
                 ->get();
 
-            // Get recent books
-            $recentBooks = \App\Models\Book::where('status', 'available')
+            // Get recent book issues
+            $recentIssues = BookIssue::with(['book'])
+                ->where('student_id', $student->id)
                 ->orderBy('created_at', 'desc')
-                ->take(6)
+                ->limit(5)
                 ->get();
+
+            // Get available books (recently added)
+            $availableBooks = Book::with(['author'])
+                ->where('status', 'available')
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get();
+
+            return view('student.library.index', compact(
+                'stats', 
+                'borrowedBooks', 
+                'recentIssues', 
+                'availableBooks'
+            ));
         } catch (\Exception $e) {
-            $libraryStats = [
+            \Log::error('Student LibraryController index error: ' . $e->getMessage());
+            
+            // Fallback data
+            $stats = [
                 'total_books' => 0,
                 'available_books' => 0,
-                'borrowed_books' => 0,
                 'my_borrowed' => 0,
+                'overdue_books' => 0,
             ];
-            $myBooks = collect();
-            $recentBooks = collect();
+            $borrowedBooks = collect();
+            $recentIssues = collect();
+            $availableBooks = collect();
+            
+            return view('student.library.index', compact(
+                'stats', 
+                'borrowedBooks', 
+                'recentIssues', 
+                'availableBooks'
+            ));
         }
-
-        return view('student.library.index', compact('libraryStats', 'myBooks', 'recentBooks'));
     }
 
-    public function search(Request $request)
+    public function books(Request $request)
     {
-        return view('student.library.search');
+        try {
+            $query = Book::with(['author']);
+
+            // Search functionality
+            if ($request->has('search') && $request->search) {
+                $query->where(function($q) use ($request) {
+                    $q->where('title', 'like', '%' . $request->search . '%')
+                      ->orWhere('isbn', 'like', '%' . $request->search . '%')
+                      ->orWhere('author', 'like', '%' . $request->search . '%');
+                });
+            }
+
+            // Filter by category
+            if ($request->has('category') && $request->category) {
+                $query->where('category', $request->category);
+            }
+
+            // Filter by status
+            if ($request->has('status') && $request->status) {
+                $query->where('status', $request->status);
+            }
+
+            $books = $query->orderBy('created_at', 'desc')->paginate(12);
+
+            $categories = Book::distinct()->pluck('category')->filter();
+
+            return view('student.library.books', compact('books', 'categories'));
+        } catch (\Exception $e) {
+            \Log::error('Student LibraryController books error: ' . $e->getMessage());
+            
+            $books = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                0,
+                12,
+                1,
+                ['path' => request()->url()]
+            );
+            $categories = collect();
+            
+            return view('student.library.books', compact('books', 'categories'));
+        }
     }
 
-    public function books()
+    public function show(Book $book)
     {
-        return view('student.library.books');
+        try {
+            $book->load(['author']);
+            
+            // Check if student has borrowed this book
+            $user = Auth::user();
+            $student = $user->student;
+            $isBorrowed = false;
+            $borrowRecord = null;
+            
+            if ($student) {
+                $borrowRecord = BookIssue::where('book_id', $book->id)
+                    ->where('student_id', $student->id)
+                    ->where('status', 'borrowed')
+                    ->first();
+                $isBorrowed = $borrowRecord ? true : false;
+            }
+
+            return view('student.library.show', compact('book', 'isBorrowed', 'borrowRecord'));
+        } catch (\Exception $e) {
+            \Log::error('Student LibraryController show error: ' . $e->getMessage());
+            return redirect()->route('student.library.index')
+                ->with('error', 'Book not found.');
+        }
     }
 
     public function myBooks()
     {
-        return view('student.library.my-books');
-    }
+        try {
+            $user = Auth::user();
+            $student = $user->student;
+            
+            if (!$student) {
+                return redirect()->route('student.dashboard')
+                    ->with('error', 'Student profile not found.');
+            }
 
-    public function requestBook($bookId)
-    {
-        // Placeholder for book request
-        return redirect()->route('student.library.my-books')->with('success', 'Book requested successfully');
+            $borrowedBooks = BookIssue::with(['book', 'book.author'])
+                ->where('student_id', $student->id)
+                ->where('status', 'borrowed')
+                ->orderBy('due_date', 'asc')
+                ->get();
+
+            $returnedBooks = BookIssue::with(['book', 'book.author'])
+                ->where('student_id', $student->id)
+                ->where('status', 'returned')
+                ->orderBy('returned_at', 'desc')
+                ->limit(10)
+                ->get();
+
+            return view('student.library.my-books', compact('borrowedBooks', 'returnedBooks'));
+        } catch (\Exception $e) {
+            \Log::error('Student LibraryController myBooks error: ' . $e->getMessage());
+            
+            $borrowedBooks = collect();
+            $returnedBooks = collect();
+            
+            return view('student.library.my-books', compact('borrowedBooks', 'returnedBooks'));
+        }
     }
 }
