@@ -1,43 +1,25 @@
-# VCS
+node_modules
+npm-debug.log
 .git
 .gitignore
-
-# Node
-node_modules
-npm-debug.log*
-yarn.lock
-pnpm-lock.yaml
-
-# Composer
-vendor
-composer.lock
-
-# Laravel runtime
-storage/logs
-storage/framework/cache
-storage/framework/sessions
-storage/framework/testing
-storage/framework/views
-bootstrap/cache/*.php
-
-# Environment & IDE
+README.md
 .env
-.env.*
+.env.example
+.env.local
+.env.production
+.env.testing
+storage/app/*
+!storage/app/.gitkeep
+storage/framework/cache/*
+!storage/framework/cache/.gitkeep
+storage/framework/sessions/*
+!storage/framework/sessions/.gitkeep
+storage/framework/views/*
+!storage/framework/views/.gitkeep
+storage/logs/*
+!storage/logs/.gitkeep
+bootstrap/cache/*
+!bootstrap/cache/.gitkeep
+vendor
 .DS_Store
-*.swp
-.vscode
-.idea
-
-# Tests & docs
-tests
-docs
-
-# Build artifacts
-public/storage
-public/hot
-public/build
-
-# Docker
-docker-compose*.yml
-.docker
-
+Thumbs.db
