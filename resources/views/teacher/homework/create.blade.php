@@ -59,8 +59,8 @@
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Maximum Points</label>
-                    <input type="number" name="max_points" class="mt-1 block w-full border-gray-300 rounded-md" value="100" required>
+                    <label class="block text-sm font-medium text-gray-700">Total Points</label>
+                    <input type="number" name="total_points" class="mt-1 block w-full border-gray-300 rounded-md" value="100" required>
                 </div>
             </div>
 
@@ -103,3 +103,138 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-save draft functionality
+    const form = document.querySelector('form');
+    const inputs = form.querySelectorAll('input, textarea, select');
+    
+    // Auto-save every 30 seconds
+    setInterval(function() {
+        autoSaveDraft();
+    }, 30000);
+
+    // Save draft on input change
+    inputs.forEach(input => {
+        input.addEventListener('input', debounce(autoSaveDraft, 2000));
+    });
+
+    function autoSaveDraft() {
+        const formData = new FormData(form);
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+        formData.append('auto_save', 'true');
+
+        fetch('{{ route("teacher.homework.store") }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Draft auto-saved', 'success');
+            }
+        })
+        .catch(error => {
+            console.log('Auto-save failed:', error);
+        });
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+            type === 'success' ? 'bg-green-500 text-white' : 
+            type === 'error' ? 'bg-red-500 text-white' : 
+            'bg-blue-500 text-white'
+        }`;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+    // Real-time character count for textareas
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(textarea => {
+        const maxLength = textarea.getAttribute('maxlength');
+        if (maxLength) {
+            const counter = document.createElement('div');
+            counter.className = 'text-sm text-gray-500 mt-1 text-right';
+            counter.textContent = `0/${maxLength} characters`;
+            
+            textarea.parentNode.appendChild(counter);
+            
+            textarea.addEventListener('input', function() {
+                const currentLength = this.value.length;
+                counter.textContent = `${currentLength}/${maxLength} characters`;
+                
+                if (currentLength > maxLength * 0.9) {
+                    counter.className = 'text-sm text-red-500 mt-1 text-right';
+                } else if (currentLength > maxLength * 0.8) {
+                    counter.className = 'text-sm text-yellow-500 mt-1 text-right';
+                } else {
+                    counter.className = 'text-sm text-gray-500 mt-1 text-right';
+                }
+            });
+        }
+    });
+
+    // Form validation with real-time feedback
+    const requiredFields = form.querySelectorAll('[required]');
+    requiredFields.forEach(field => {
+        field.addEventListener('blur', function() {
+            validateField(this);
+        });
+    });
+
+    function validateField(field) {
+        const value = field.value.trim();
+        const isValid = value !== '';
+        
+        if (isValid) {
+            field.classList.remove('border-red-300');
+            field.classList.add('border-green-300');
+        } else {
+            field.classList.remove('border-green-300');
+            field.classList.add('border-red-300');
+        }
+    }
+
+    // Due date validation
+    const dueDateInput = document.querySelector('input[name="due_date"]');
+    if (dueDateInput) {
+        dueDateInput.addEventListener('change', function() {
+            const dueDate = new Date(this.value);
+            const now = new Date();
+            
+            if (dueDate <= now) {
+                this.classList.add('border-red-300');
+                showNotification('Due date must be in the future', 'error');
+            } else {
+                this.classList.remove('border-red-300');
+                this.classList.add('border-green-300');
+            }
+        });
+    }
+});
+</script>
+@endpush

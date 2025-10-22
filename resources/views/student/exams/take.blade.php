@@ -457,20 +457,32 @@ function closeSubmitModal() {
 function confirmSubmit() {
     examSubmitted = true;
     
-    fetch('{{ route("student.exams.submit", $attempt) }}', {
+    fetch('{{ route("student.exams.submit-exam") }}', {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
             'Content-Type': 'application/json',
-        }
-    }).then(response => {
-        if (response.ok) {
+        },
+        body: JSON.stringify({
+            exam_id: {{ $exam->id }},
+            attempt_id: {{ $attempt->id }}
+        })
+    }).then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show submission success
+            alert(`Exam submitted successfully!\nMarks: ${data.marks_obtained}/${data.total_marks}\nPercentage: ${data.percentage.toFixed(2)}%\n${data.is_passed ? 'PASSED' : 'FAILED'}`);
             window.location.href = '{{ route("student.exams.result", $attempt) }}';
         } else {
-            alert('Error submitting exam. Please try again.');
+            alert('Error submitting exam: ' + (data.error || 'Unknown error'));
             closeSubmitModal();
             examSubmitted = false;
         }
+    }).catch(error => {
+        console.error('Submission error:', error);
+        alert('Error submitting exam. Please try again.');
+        closeSubmitModal();
+        examSubmitted = false;
     });
 }
 

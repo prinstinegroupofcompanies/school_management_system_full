@@ -33,9 +33,11 @@ class GradeController extends Controller
         
         // Get teacher's assigned subjects and classes
         $subjects = Subject::where('teacher_id', $teacher->id)->get();
-        $classes = ClassRoom::whereHas('subjects', function($query) use ($teacher) {
-            $query->where('teacher_id', $teacher->id);
-        })->get();
+        
+        // Get classes assigned via both methods
+        $pivotClasses = $teacher->classes()->get();
+        $directClasses = ClassRoom::where('class_teacher_id', $teacher->id)->get();
+        $classes = $pivotClasses->merge($directClasses)->unique('id');
         
         // Build grades query with filters
         $gradesQuery = Grade::where('teacher_id', $teacher->id)

@@ -189,7 +189,7 @@
                                         {{ $attendance->student->user->name }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ $attendance->classRoom->name }}
+                                        {{ $attendance->class->name }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
@@ -231,7 +231,7 @@
                                 </div>
                                 <div class="ml-4">
                                     <p class="text-sm font-medium text-gray-900">{{ $attendance->student->user->name }}</p>
-                                    <p class="text-sm text-gray-500">{{ $attendance->classRoom->name }} • {{ \Carbon\Carbon::parse($attendance->date)->format('M d, Y') }}</p>
+                                    <p class="text-sm text-gray-500">{{ $attendance->class->name }} • {{ \Carbon\Carbon::parse($attendance->attendance_date)->format('M d, Y') }}</p>
                                 </div>
                             </div>
                             <div class="flex items-center space-x-2">

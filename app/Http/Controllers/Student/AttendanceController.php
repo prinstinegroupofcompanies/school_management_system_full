@@ -68,7 +68,7 @@ class AttendanceController extends Controller
         return view('student.attendance.index', compact('attendanceStats', 'recentAttendance', 'thisMonthAttendance', 'todayAttendance'));
     }
 
-    public function history()
+    public function history(Request $request)
     {
         try {
             $user = auth()->user();
@@ -83,16 +83,46 @@ class AttendanceController extends Controller
                 ->with('error', 'Student record not found. Please contact administrator.');
         }
 
-        // Get attendance history with pagination
+        // Get filter parameters
+        $year = $request->get('year', date('Y'));
+        $month = $request->get('month', '');
+
+        // Get available years for filter
         try {
-            $attendanceHistory = \App\Models\StudentAttendance::where('student_id', $student->id)
-                ->orderBy('attendance_date', 'desc')
-                ->paginate(20);
+            $availableYears = \App\Models\StudentAttendance::where('student_id', $student->id)
+                ->selectRaw('YEAR(attendance_date) as year')
+                ->distinct()
+                ->orderBy('year', 'desc')
+                ->pluck('year')
+                ->toArray();
+            
+            // Add current year if not in list
+            if (!in_array(date('Y'), $availableYears)) {
+                $availableYears[] = date('Y');
+                rsort($availableYears);
+            }
+        } catch (\Exception $e) {
+            $availableYears = [date('Y')];
+        }
+
+        // Get attendance history with pagination and filters
+        try {
+            $query = \App\Models\StudentAttendance::where('student_id', $student->id);
+            
+            if ($year) {
+                $query->whereYear('attendance_date', $year);
+            }
+            
+            if ($month) {
+                $query->whereMonth('attendance_date', $month);
+            }
+            
+            $attendanceHistory = $query->orderBy('attendance_date', 'desc')->paginate(20);
         } catch (\Exception $e) {
             $attendanceHistory = collect()->paginate(20);
         }
 
-        return view('student.attendance.history', compact('attendanceHistory'));
+        return view('student.attendance.history', compact('attendanceHistory', 'availableYears', 'year', 'month'));
     }
 
     public function summary()
@@ -108,6 +138,35 @@ class AttendanceController extends Controller
         if (!$student) {
             return redirect()->route('student.dashboard')
                 ->with('error', 'Student record not found. Please contact administrator.');
+        }
+
+        // Get yearly attendance statistics
+        try {
+            $yearlyStats = \App\Models\StudentAttendance::where('student_id', $student->id)
+                ->whereYear('attendance_date', date('Y'))
+                ->selectRaw('
+                    COUNT(*) as total,
+                    SUM(CASE WHEN status = "present" THEN 1 ELSE 0 END) as present,
+                    SUM(CASE WHEN status = "absent" THEN 1 ELSE 0 END) as absent,
+                    SUM(CASE WHEN status = "late" THEN 1 ELSE 0 END) as late
+                ')
+                ->first();
+            
+            if (!$yearlyStats) {
+                $yearlyStats = (object)[
+                    'total' => 0,
+                    'present' => 0,
+                    'absent' => 0,
+                    'late' => 0
+                ];
+            }
+        } catch (\Exception $e) {
+            $yearlyStats = (object)[
+                'total' => 0,
+                'present' => 0,
+                'absent' => 0,
+                'late' => 0
+            ];
         }
 
         // Get monthly attendance summary
@@ -132,6 +191,6 @@ class AttendanceController extends Controller
             $monthlySummary = collect();
         }
 
-        return view('student.attendance.summary', compact('monthlySummary'));
+        return view('student.attendance.summary', compact('monthlySummary', 'yearlyStats'));
     }
 }

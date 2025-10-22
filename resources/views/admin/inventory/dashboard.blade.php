@@ -170,7 +170,7 @@
                     </div>
                 </div>
                 <div class="mt-4">
-                    <a href="{{ route('admin.inventory.categories') }}" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                    <a href="{{ route('admin.inventory.categories.index') }}" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium">
                         Manage
                     </a>
                 </div>
@@ -182,7 +182,7 @@
             <div class="px-4 py-5 sm:p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">Recent Transactions</h3>
-                    <a href="{{ route('admin.inventory.transactions') }}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">View All</a>
+                    <a href="{{ route('admin.inventory.transactions.index') }}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">View All</a>
                 </div>
                 <div class="space-y-3">
                     @forelse($recentTransactions as $transaction)
@@ -204,7 +204,7 @@
                         </div>
                         <div class="flex items-center space-x-2">
                             <span class="text-sm text-gray-500">{{ $transaction->created_at->format('M d, Y') }}</span>
-                            <a href="{{ route('admin.inventory.transactions.show', $transaction) }}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">View</a>
+                            <a href="{{ route('admin.inventory.transactions.index') }}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">View All</a>
                         </div>
                     </div>
                     @empty
@@ -219,7 +219,7 @@
             <div class="px-4 py-5 sm:p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">Low Stock Items</h3>
-                    <a href="{{ route('admin.inventory.items.low-stock') }}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">View All</a>
+                    <a href="{{ route('admin.inventory.items.index', ['filter' => 'low-stock']) }}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">View All</a>
                 </div>
                 <div class="space-y-3">
                     @forelse($lowStockItems as $item)

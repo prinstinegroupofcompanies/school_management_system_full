@@ -1,154 +1,98 @@
 @extends('layouts.app')
 
+@section('title', 'Create E-Signature Template')
+
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="card-title">
-                        <i class="fas fa-plus mr-2"></i>
-                        Create E-Signature Template
-                    </h3>
-                </div>
-                <div class="card-body">
-                    <form action="{{ route('admin.e-signatures.templates.store') }}" method="POST">
-                        @csrf
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="template_name">Template Name <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control @error('template_name') is-invalid @enderror" 
-                                           id="template_name" name="template_name" value="{{ old('template_name') }}" required>
-                                    @error('template_name')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="document_type">Document Type <span class="text-danger">*</span></label>
-                                    <select class="form-control @error('document_type') is-invalid @enderror" 
-                                            id="document_type" name="document_type" required>
-                                        <option value="">Select Document Type</option>
-                                        @foreach($documentTypes as $key => $label)
-                                            <option value="{{ $key }}" {{ old('document_type') === $key ? 'selected' : '' }}>
-                                                {{ $label }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('document_type')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">Create E-Signature Template</h1>
+        <form action="{{ route('admin.e-signatures.templates.store') }}" method="POST" class="space-y-6">
+            @csrf
 
-                        <div class="form-group">
-                            <label for="description">Description</label>
-                            <textarea class="form-control @error('description') is-invalid @enderror" 
-                                      id="description" name="description" rows="3">{{ old('description') }}</textarea>
-                            @error('description')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="form-group">
-                            <label for="signature_fields">Signature Fields <span class="text-danger">*</span></label>
-                            <div id="signature-fields-container">
-                                @if(old('signature_fields'))
-                                    @foreach(old('signature_fields') as $index => $field)
-                                        <div class="input-group mb-2" data-field-index="{{ $index }}">
-                                            <input type="text" class="form-control" name="signature_fields[]" value="{{ $field }}" required>
-                                            <div class="input-group-append">
-                                                <button type="button" class="btn btn-outline-danger remove-field">Remove</button>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                @else
-                                    <div class="input-group mb-2" data-field-index="0">
-                                        <input type="text" class="form-control" name="signature_fields[]" placeholder="Enter signature field name" required>
-                                        <div class="input-group-append">
-                                            <button type="button" class="btn btn-outline-danger remove-field">Remove</button>
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-                            <button type="button" class="btn btn-sm btn-secondary" id="add-signature-field">
-                                <i class="fas fa-plus mr-1"></i>
-                                Add Signature Field
-                            </button>
-                            @error('signature_fields')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="form-group">
-                            <label for="signature_requirements">Signature Requirements</label>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="requires_witness" name="requires_witness" value="1" {{ old('requires_witness') ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="requires_witness">
-                                            Requires Witness
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="expiry_days">Expiry Days <span class="text-danger">*</span></label>
-                                        <input type="number" class="form-control @error('expiry_days') is-invalid @enderror" 
-                                               id="expiry_days" name="expiry_days" value="{{ old('expiry_days', 30) }}" min="1" max="365" required>
-                                        @error('expiry_days')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save mr-1"></i>
-                                Create Template
-                            </button>
-                            <a href="{{ route('admin.e-signatures.templates') }}" class="btn btn-secondary">
-                                <i class="fas fa-times mr-1"></i>
-                                Cancel
-                            </a>
-                        </div>
-                    </form>
-                </div>
+            <!-- Template Name -->
+            <div>
+                <label for="template_name" class="block text-sm font-medium text-gray-700">Template Name <span class="text-red-500">*</span></label>
+                <input type="text" id="template_name" name="template_name" required
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500">
             </div>
-        </div>
+
+            <!-- Document Type -->
+            <div>
+                <label for="document_type" class="block text-sm font-medium text-gray-700">Document Type <span class="text-red-500">*</span></label>
+                <select id="document_type" name="document_type" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Select Document Type</option>
+                    @foreach($documentTypes as $type)
+                        <option value="{{ $type }}">{{ ucfirst($type) }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                <textarea id="description" name="description" rows="3"
+                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+            </div>
+
+            <!-- Signature Fields -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Signature Fields <span class="text-red-500">*</span></label>
+                <div id="signature-fields-list" class="space-y-2">
+                    <div class="flex items-center space-x-2">
+                        <input type="text" name="signature_fields[]" placeholder="Enter signature field name" required
+                               class="block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        <button type="button" class="remove-field text-red-600 hover:text-red-800">Remove</button>
+                    </div>
+                </div>
+                <button type="button" id="add-signature-field" class="mt-2 px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm font-medium">Add Signature Field</button>
+            </div>
+
+            <!-- Signature Requirements -->
+            <div class="flex items-center">
+                <input type="checkbox" id="requires_witness" name="requires_witness" value="1"
+                       class="h-4 w-4 text-blue-600 border-gray-300 rounded">
+                <label for="requires_witness" class="ml-2 block text-sm text-gray-700">Requires Witness</label>
+            </div>
+
+            <!-- Expiry Days -->
+            <div>
+                <label for="expiry_days" class="block text-sm font-medium text-gray-700">Expiry Days <span class="text-red-500">*</span></label>
+                <input type="number" id="expiry_days" name="expiry_days" value="30" min="1" required
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex items-center justify-end space-x-4 pt-4 border-t border-gray-200">
+                <a href="{{ route('admin.e-signatures.templates') }}" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                    Cancel
+                </a>
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    Create Template
+                </button>
+            </div>
+        </form>
     </div>
 </div>
-@endsection
-
 @push('scripts')
 <script>
-let fieldIndex = {{ old('signature_fields') ? count(old('signature_fields')) : 1 }};
-
-document.getElementById('add-signature-field').addEventListener('click', function() {
-    const container = document.getElementById('signature-fields-container');
-    const fieldHtml = `
-        <div class="input-group mb-2" data-field-index="${fieldIndex}">
-            <input type="text" class="form-control" name="signature_fields[]" placeholder="Enter signature field name" required>
-            <div class="input-group-append">
-                <button type="button" class="btn btn-outline-danger remove-field">Remove</button>
-            </div>
-        </div>
-    `;
-    container.insertAdjacentHTML('beforeend', fieldHtml);
-    fieldIndex++;
-});
-
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('remove-field')) {
-        const fieldGroup = e.target.closest('.input-group');
-        fieldGroup.remove();
-    }
+document.addEventListener('DOMContentLoaded', function() {
+    const addBtn = document.getElementById('add-signature-field');
+    const fieldsList = document.getElementById('signature-fields-list');
+    addBtn.addEventListener('click', function() {
+        const div = document.createElement('div');
+        div.className = 'flex items-center space-x-2';
+        div.innerHTML = `<input type="text" name="signature_fields[]" placeholder="Enter signature field name" required
+            class="block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500">
+            <button type="button" class="remove-field text-red-600 hover:text-red-800">Remove</button>`;
+        fieldsList.appendChild(div);
+    });
+    fieldsList.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-field')) {
+            e.target.parentElement.remove();
+        }
+    });
 });
 </script>
 @endpush
+@endsection

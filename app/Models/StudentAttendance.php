@@ -10,6 +10,8 @@ class StudentAttendance extends Model
 {
     use HasFactory;
 
+    protected $table = 'student_attendances';
+
     protected $fillable = [
         'student_id',
         'class_id',

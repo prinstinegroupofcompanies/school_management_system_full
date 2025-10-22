@@ -180,6 +180,11 @@ class HomeworkController extends Controller
             $validated['allow_late_submission'] = $request->boolean('allow_late_submission', true);
             $validated['late_penalty_percentage'] = $validated['late_penalty_percentage'] ?? 10.0;
             $validated['is_published'] = false; // Start as draft
+            
+            // Handle auto-save requests
+            if ($request->boolean('auto_save')) {
+                $validated['status'] = 'draft';
+            }
 
             // Handle file uploads
             $attachmentPaths = [];
@@ -198,10 +203,23 @@ class HomeworkController extends Controller
 
             $assignment = HomeworkAssignment::create($validated);
 
+            // Handle auto-save response
+            if ($request->boolean('auto_save')) {
+                DB::commit();
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Draft saved successfully',
+                    'assignment_id' => $assignment->id
+                ]);
+            }
+
+            // Send real-time notifications to students in the class
+            $this->notifyStudentsOfNewAssignment($assignment);
+
             DB::commit();
 
             return redirect()->route('teacher.homework.show', $assignment)
-                           ->with('success', 'Homework assignment created successfully.');
+                           ->with('success', 'Homework assignment created successfully and students have been notified.');
 
         } catch (\Exception $e) {
             DB::rollback();
@@ -290,21 +308,6 @@ class HomeworkController extends Controller
         }
     }
 
-    /**
-     * Publish homework assignment
-     */
-    public function publish(HomeworkAssignment $assignment)
-    {
-        $teacher = auth()->user()->teacher;
-        
-        if ($assignment->teacher_id !== $teacher->id) {
-            return back()->withErrors(['error' => 'Unauthorized']);
-        }
-
-        $assignment->update(['is_published' => true]);
-
-        return back()->with('success', 'Assignment published successfully. Students can now view and submit.');
-    }
 
     /**
      * Delete homework assignment
@@ -346,5 +349,187 @@ class HomeworkController extends Controller
         if ($percentage >= 67) return 'D+';
         if ($percentage >= 65) return 'D';
         return 'F';
+    }
+
+    /**
+     * Notify students when a new assignment is created
+     */
+    private function notifyStudentsOfNewAssignment($assignment)
+    {
+        try {
+            // Get all students in the class
+            $students = \App\Models\Student::where('class_id', $assignment->class_id)
+                ->with('user')
+                ->get();
+
+            foreach ($students as $student) {
+                if ($student->user) {
+                    $notification = new \App\Models\Notification([
+                        'user_id' => $student->user->id,
+                        'type' => 'homework_assigned',
+                        'title' => 'New Assignment: ' . $assignment->title,
+                        'message' => 'A new assignment "' . $assignment->title . '" has been assigned in ' . $assignment->subject->name . '. Due: ' . $assignment->getFormattedDueDate(),
+                        'category' => 'academic',
+                        'subcategory' => 'homework',
+                        'priority' => 6, // High priority
+                        'status' => 'pending',
+                        'delivery_method' => 'in_app',
+                        'delivery_status' => 'pending',
+                        'action_url' => route('student.homework.show', $assignment),
+                        'action_text' => 'View Assignment',
+                        'related_model' => 'HomeworkAssignment',
+                        'related_id' => $assignment->id,
+                        'metadata' => [
+                            'assignment_id' => $assignment->id,
+                            'subject_name' => $assignment->subject->name,
+                            'class_name' => $assignment->classRoom->name,
+                            'due_date' => $assignment->due_date->toISOString(),
+                            'total_points' => $assignment->total_points,
+                            'assignment_type' => $assignment->assignment_type
+                        ],
+                        'is_active' => true
+                    ]);
+                    $notification->save();
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to notify students of new assignment: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show the form for editing the specified assignment
+     */
+    public function edit(HomeworkAssignment $assignment)
+    {
+        $teacher = auth()->user()->teacher;
+        
+        if ($assignment->teacher_id !== $teacher->id) {
+            return redirect()->route('teacher.homework.index')
+                           ->withErrors(['error' => 'You are not authorized to edit this assignment.']);
+        }
+
+        $assignment->load(['subject', 'classRoom']);
+        
+        // Get subjects and classes for the teacher
+        $subjects = Subject::where('teacher_id', $teacher->id)->get();
+        $classes = ClassRoom::where('class_teacher_id', $teacher->id)->get();
+
+        return view('teacher.homework.edit', compact('assignment', 'subjects', 'classes'));
+    }
+
+    /**
+     * Update the specified assignment
+     */
+    public function update(Request $request, HomeworkAssignment $assignment)
+    {
+        $teacher = auth()->user()->teacher;
+        
+        if ($assignment->teacher_id !== $teacher->id) {
+            return redirect()->route('teacher.homework.index')
+                           ->withErrors(['error' => 'You are not authorized to update this assignment.']);
+        }
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'subject_id' => 'required|exists:subjects,id',
+            'class_id' => 'required|exists:class_rooms,id',
+            'due_date' => 'required|date|after:now',
+            'total_points' => 'required|integer|min:1',
+            'assignment_type' => 'required|string|in:homework,project,quiz,essay',
+            'instructions' => 'nullable|string',
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'file|mimes:pdf,doc,docx,txt,jpg,jpeg,png|max:10240',
+        ]);
+
+        // Verify teacher has permission for this subject
+        $subject = Subject::where('id', $validated['subject_id'])
+                         ->where('teacher_id', $teacher->id)
+                         ->first();
+
+        if (!$subject) {
+            return back()->withErrors(['subject_id' => 'You are not authorized to create assignments for this subject.'])
+                        ->withInput();
+        }
+
+        DB::beginTransaction();
+        try {
+            // Handle file uploads
+            $attachments = [];
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    $path = $file->store('homework/attachments', 'public');
+                    $attachments[] = [
+                        'name' => $file->getClientOriginalName(),
+                        'path' => $path,
+                        'size' => $file->getSize(),
+                        'type' => $file->getMimeType(),
+                    ];
+                }
+            }
+
+            $validated['attachments'] = $attachments;
+            $validated['teacher_id'] = $teacher->id;
+
+            $assignment->update($validated);
+
+            DB::commit();
+
+            return redirect()->route('teacher.homework.show', $assignment)
+                           ->with('success', 'Assignment updated successfully.');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('HomeworkController update error: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Failed to update assignment. Please try again.'])
+                        ->withInput();
+        }
+    }
+
+    /**
+     * Publish assignment to make it visible to students
+     */
+    public function publish(HomeworkAssignment $assignment)
+    {
+        $teacher = auth()->user()->teacher;
+        
+        if ($assignment->teacher_id !== $teacher->id) {
+            return back()->withErrors(['error' => 'Unauthorized']);
+        }
+
+        if ($assignment->is_published) {
+            return back()->withErrors(['error' => 'Assignment is already published.']);
+        }
+
+        $assignment->publish();
+
+        // Notify students when assignment is published
+        $this->notifyStudentsOfNewAssignment($assignment);
+
+        return back()->with('success', 'Assignment published successfully. Students have been notified.');
+    }
+
+    /**
+     * Unpublish assignment
+     */
+    public function unpublish(HomeworkAssignment $assignment)
+    {
+        $teacher = auth()->user()->teacher;
+        
+        if ($assignment->teacher_id !== $teacher->id) {
+            return back()->withErrors(['error' => 'Unauthorized']);
+        }
+
+        if (!$assignment->is_published) {
+            return back()->withErrors(['error' => 'Assignment is not published.']);
+        }
+
+        try {
+            $assignment->unpublish();
+            return back()->with('success', 'Assignment unpublished successfully.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
     }
 }

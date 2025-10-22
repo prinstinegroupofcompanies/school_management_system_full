@@ -182,7 +182,7 @@
             <div class="px-4 py-5 sm:p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">Recent Visits</h3>
-                    <a href="{{ route('admin.visitor-management.logs') }}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">View All</a>
+                    <a href="{{ route('admin.visitor-management.logs.index') }}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">View All</a>
                 </div>
                 <div class="space-y-3">
                     @forelse($recentVisits as $visit)

@@ -11,9 +11,8 @@
                     <a href="{{ route('admin.health-safety.incidents.create') }}" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium">
                         Report Incident
                     </a>
-                    <a href="{{ route('admin.health-safety.safety-checks.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-                        Safety Check
-                    </a>
+                    <a href="{{ route('admin.health-safety.incidents.index') }}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">View All</a>
+                    <a href="{{ route('admin.health-safety.safety-checks.index') }}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">Safety Check</a>
                 </div>
             </div>
         </div>
@@ -182,7 +181,7 @@
             <div class="px-4 py-5 sm:p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">Recent Incidents</h3>
-                    <a href="{{ route('admin.health-safety.incidents') }}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">View All</a>
+                    <a href="{{ route('admin.health-safety.incidents.index') }}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">View All</a>
                 </div>
                 <div class="space-y-3">
                     @forelse($recentIncidents as $incident)

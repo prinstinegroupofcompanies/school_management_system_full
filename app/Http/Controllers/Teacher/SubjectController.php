@@ -19,20 +19,12 @@ class SubjectController extends Controller
             }
 
             // Get subjects taught by this teacher
-            $subjects = \App\Models\Subject::whereHas('teachers', function($query) use ($teacher) {
-                $query->where('teacher_id', $teacher->id);
-            })->with(['classes', 'grades' => function($query) use ($teacher) {
-                $query->where('teacher_id', $teacher->id);
-            }])->orderBy('name')->get();
-
-            // If no subjects found via teacher relationship, try to find via grades
-            if ($subjects->isEmpty()) {
-                $subjects = \App\Models\Subject::whereHas('grades', function($query) use ($teacher) {
+            $subjects = \App\Models\Subject::where('teacher_id', $teacher->id)
+                ->with(['classes', 'grades' => function($query) use ($teacher) {
                     $query->where('teacher_id', $teacher->id);
-                })->with(['classes', 'grades' => function($query) use ($teacher) {
-                    $query->where('teacher_id', $teacher->id);
-                }])->distinct()->orderBy('name')->get();
-            }
+                }])
+                ->orderBy('name')
+                ->get();
 
             // Get subject statistics
             $stats = [
@@ -73,9 +65,7 @@ class SubjectController extends Controller
 
             // Get the specific subject (ensure teacher teaches it)
             $subject = \App\Models\Subject::where('id', $id)
-                ->whereHas('grades', function($query) use ($teacher) {
-                    $query->where('teacher_id', $teacher->id);
-                })
+                ->where('teacher_id', $teacher->id)
                 ->with(['classes', 'grades' => function($query) use ($teacher) {
                     $query->where('teacher_id', $teacher->id)->with(['student.user', 'class']);
                 }])

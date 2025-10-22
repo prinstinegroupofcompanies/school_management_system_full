@@ -1,31 +1,35 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box">
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('library.index') }}">Library</a></li>
-                        <li class="breadcrumb-item active">Books</li>
-                    </ol>
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white shadow">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between">
+                <h1 class="text-3xl font-bold text-gray-900">
+                    <i class="fas fa-book text-blue-500 mr-3"></i>
+                    Library Books Management
+                </h1>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ route('library.books.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200">
+                        <i class="fas fa-plus mr-2"></i>
+                        Add New Book
+                    </a>
+                    <a href="{{ route('library.index') }}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Back to Library
+                    </a>
                 </div>
-                <h4 class="page-title">Library Books</h4>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Books Management</h5>
-                    <a href="{{ route('library.books.create') }}" class="btn btn-primary">
-                        <i class="mdi mdi-plus"></i> Add New Book
-                    </a>
-                </div>
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Books Management</h3>
+            </div>
                 <div class="card-body">
                     <!-- Search and Filter -->
                     <div class="row mb-3">

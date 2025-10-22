@@ -31,7 +31,7 @@ class AdminMiddleware
             }
             
             abort(403, 'Access denied. Admin privileges required.');
-        }
+    }
 
         return $next($request);
     }

@@ -477,11 +477,12 @@ class ESignatureController extends Controller
 
         $approvals = $query->latest()->paginate(20);
 
-        $users = User::select('id', 'name')->orderBy('name')->get();
-        $approvalLevels = ESignatureApproval::select('approval_level')->distinct()->pluck('approval_level');
+        $approvers = User::select('id', 'name')->orderBy('name')->get();
+        $levels = ESignatureApproval::select('approval_level')->distinct()->pluck('approval_level');
+        $statuses = ['pending', 'approved', 'rejected', 'delegated', 'overdue'];
 
         return view('admin.e-signatures.approvals', compact(
-            'approvals', 'users', 'approvalLevels'
+            'approvals', 'approvers', 'levels', 'statuses'
         ));
     }
 

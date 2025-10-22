@@ -32,27 +32,14 @@
                             </svg>
                             Edit
                         </a>
-                        @if($lessonPlan->status === 'submitted')
-                            <form action="{{ route('admin.lesson-plans.approve', $lessonPlan) }}" method="POST" class="inline">
-                                @csrf
-                                <button type="submit" 
-                                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    Approve
-                                </button>
-                            </form>
-                            <form action="{{ route('admin.lesson-plans.reject', $lessonPlan) }}" method="POST" class="inline">
-                                @csrf
-                                <button type="submit" 
-                                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                    Reject
-                                </button>
-                            </form>
+                        @if($lessonPlan->status === 'submitted' || $lessonPlan->status === 'first_level_approved')
+                            <a href="{{ route('admin.lesson-plan-approvals.show', $lessonPlan) }}" 
+                               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Review & Approve
+                            </a>
                         @endif
                     </div>
                 </div>
@@ -68,11 +55,13 @@
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg leading-6 font-medium text-gray-900">Lesson Plan Information</h3>
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                @if($lessonPlan->status === 'approved') bg-green-100 text-green-800
+                                @if($lessonPlan->status === 'second_level_approved') bg-green-100 text-green-800
                                 @elseif($lessonPlan->status === 'rejected') bg-red-100 text-red-800
                                 @elseif($lessonPlan->status === 'submitted') bg-yellow-100 text-yellow-800
+                                @elseif($lessonPlan->status === 'first_level_approved') bg-blue-100 text-blue-800
+                                @elseif($lessonPlan->status === 'draft') bg-gray-100 text-gray-800
                                 @else bg-gray-100 text-gray-800 @endif">
-                                {{ ucfirst($lessonPlan->status) }}
+                                {{ ucfirst(str_replace('_', ' ', $lessonPlan->status)) }}
                             </span>
                         </div>
                         

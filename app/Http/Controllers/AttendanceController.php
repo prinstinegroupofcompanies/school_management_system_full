@@ -18,18 +18,22 @@ class AttendanceController extends Controller
 {
     public function index()
     {
-        try {
-            $classes = ClassRoom::all();
-            $subjects = Subject::all();
-            $today = now()->format('Y-m-d');
-            
-            return view('attendance.index', compact('classes', 'subjects', 'today'));
-        } catch (\Exception $e) {
-            \Log::error('AttendanceController index error: ' . $e->getMessage());
-            $classes = collect();
-            $subjects = collect();
-            $today = now()->format('Y-m-d');
-            return view('attendance.index', compact('classes', 'subjects', 'today'));
+        // Redirect based on user type to appropriate attendance dashboard
+        $user = auth()->user();
+        
+        if (!$user) {
+            return redirect()->route('login');
+        }
+        
+        switch ($user->user_type) {
+            case 'admin':
+                return redirect()->route('admin.attendance.index');
+            case 'teacher':
+                return redirect()->route('teacher.attendance.index');
+            case 'student':
+                return redirect()->route('student.attendance.index');
+            default:
+                return redirect()->route('dashboard');
         }
     }
 
@@ -190,7 +194,7 @@ class AttendanceController extends Controller
 
         $attendance = StudentAttendance::where('student_id', $student->id)
             ->whereBetween('attendance_date', [$startDate, $endDate])
-            ->orderBy('date')
+            ->orderBy('attendance_date')
             ->get();
 
         $stats = $this->calculateAttendanceStats($attendance, $startDate, $endDate);

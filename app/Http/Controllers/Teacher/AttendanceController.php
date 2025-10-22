@@ -35,8 +35,8 @@ class AttendanceController extends Controller
             // Get today's attendance for teacher's classes
             $today = now()->format('Y-m-d');
             $todayAttendance = \App\Models\StudentAttendance::whereIn('class_id', $classes->pluck('id'))
-                ->where('date', $today)
-                ->with(['student.user', 'classRoom'])
+                ->where('attendance_date', $today)
+                ->with(['student.user', 'class'])
                 ->get();
 
             // Get attendance statistics
@@ -52,8 +52,8 @@ class AttendanceController extends Controller
 
             // Get recent attendance records
             $recentAttendance = \App\Models\StudentAttendance::whereIn('class_id', $classes->pluck('id'))
-                ->with(['student.user', 'classRoom'])
-                ->orderBy('date', 'desc')
+                ->with(['student.user', 'class'])
+                ->orderBy('attendance_date', 'desc')
                 ->limit(10)
                 ->get();
 
@@ -103,7 +103,7 @@ class AttendanceController extends Controller
             
             // Get existing attendance for this date
             $existingAttendance = \App\Models\StudentAttendance::where('class_id', $classId)
-                ->where('date', $date)
+                ->where('attendance_date', $date)
                 ->get()
                 ->keyBy('student_id');
 
@@ -154,12 +154,13 @@ class AttendanceController extends Controller
                     [
                         'student_id' => $attendanceData['student_id'],
                         'class_id' => $request->class_id,
-                        'date' => $request->date,
+                        'attendance_date' => $request->date,
                     ],
                     [
                         'status' => $attendanceData['status'],
                         'remarks' => $attendanceData['remarks'] ?? null,
-                        'recorded_by' => $teacher->id,
+                        'marked_by' => auth()->id(),
+                        'marked_at' => now(),
                     ]
                 );
             }
@@ -208,12 +209,12 @@ class AttendanceController extends Controller
 
             // Get attendance history
             $attendanceHistory = \App\Models\StudentAttendance::where('class_id', $classId)
-                ->whereBetween('date', [$startDate, $endDate])
+                ->whereBetween('attendance_date', [$startDate, $endDate])
                 ->with(['student.user'])
-                ->orderBy('date', 'desc')
+                ->orderBy('attendance_date', 'desc')
                 ->orderBy('student_id')
                 ->get()
-                ->groupBy('date');
+                ->groupBy('attendance_date');
 
             // Calculate statistics
             $totalDays = \Carbon\Carbon::parse($startDate)->diffInDays(\Carbon\Carbon::parse($endDate)) + 1;
@@ -273,8 +274,8 @@ class AttendanceController extends Controller
 
             // Get student's attendance
             $attendance = \App\Models\StudentAttendance::where('student_id', $studentId)
-                ->whereBetween('date', [$startDate, $endDate])
-                ->orderBy('date', 'desc')
+                ->whereBetween('attendance_date', [$startDate, $endDate])
+                ->orderBy('attendance_date', 'desc')
                 ->get();
 
             // Calculate statistics

@@ -18,13 +18,22 @@ class StudentController extends Controller
                     ->with('error', 'Teacher profile not found. Please contact administrator.');
             }
 
-            // Get students from classes assigned to this teacher
-            $teacherClasses = \App\Models\ClassRoom::where('teacher_id', $teacher->id)->pluck('id');
+            // Get students from classes assigned to this teacher (both methods)
+            $pivotClasses = $teacher->classes()->pluck('class_rooms.id');
+            $directClasses = \App\Models\ClassRoom::where('class_teacher_id', $teacher->id)->pluck('id');
+            $teacherClasses = $pivotClasses->merge($directClasses)->unique();
+            
+            \Log::info('Teacher student index - Teacher ID: ' . $teacher->id);
+            \Log::info('Teacher student index - Pivot classes: ' . $pivotClasses->toJson());
+            \Log::info('Teacher student index - Direct classes: ' . $directClasses->toJson());
+            \Log::info('Teacher student index - Combined classes: ' . $teacherClasses->toJson());
             
             $students = \App\Models\Student::whereIn('class_id', $teacherClasses)
                 ->with(['user', 'classRoom'])
                 ->orderBy('created_at', 'desc')
                 ->paginate(15);
+                
+            \Log::info('Teacher student index - Found ' . $students->count() . ' students');
 
             // Get student statistics
             $stats = [
@@ -68,7 +77,16 @@ class StudentController extends Controller
             }
 
             // Get the specific student (ensure they're in one of teacher's classes)
-            $teacherClasses = \App\Models\ClassRoom::where('teacher_id', $teacher->id)->pluck('id');
+            // Use both assignment methods (pivot table and direct foreign key)
+            $pivotClasses = $teacher->classes()->pluck('class_rooms.id');
+            $directClasses = \App\Models\ClassRoom::where('class_teacher_id', $teacher->id)->pluck('id');
+            $teacherClasses = $pivotClasses->merge($directClasses)->unique();
+            
+            \Log::info('Teacher student show - Teacher ID: ' . $teacher->id);
+            \Log::info('Teacher student show - Pivot classes: ' . $pivotClasses->toJson());
+            \Log::info('Teacher student show - Direct classes: ' . $directClasses->toJson());
+            \Log::info('Teacher student show - Combined classes: ' . $teacherClasses->toJson());
+            \Log::info('Teacher student show - Looking for student ID: ' . $id);
             
             $student = \App\Models\Student::where('id', $id)
                 ->whereIn('class_id', $teacherClasses)
@@ -76,9 +94,21 @@ class StudentController extends Controller
                 ->first();
 
             if (!$student) {
+                \Log::error('Student not found - Student ID: ' . $id . ', Teacher classes: ' . $teacherClasses->toJson());
+                
+                // Let's also check if the student exists at all
+                $studentExists = \App\Models\Student::where('id', $id)->first();
+                if ($studentExists) {
+                    \Log::error('Student exists but not in teacher classes - Student class: ' . $studentExists->class_id);
+                } else {
+                    \Log::error('Student does not exist at all');
+                }
+                
                 return redirect()->route('teacher.students.index')
                     ->with('error', 'Student not found or you do not have permission to view them.');
             }
+            
+            \Log::info('Student found: ' . $student->first_name . ' ' . $student->last_name);
 
             // Get student's grades in subjects taught by this teacher
             $grades = \App\Models\Grade::where('student_id', $student->id)

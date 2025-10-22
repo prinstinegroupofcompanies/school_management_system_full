@@ -34,20 +34,43 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        @forelse($examSchedules as $ex)
+                        @forelse($exams as $ex)
                             <tr>
-                                <td class="px-4 py-2">{{ \Carbon\Carbon::parse($ex->exam_date)->toFormattedDateString() }} {{ $ex->start_time }}</td>
-                                <td class="px-4 py-2">{{ $ex->class->name ?? '-' }}</td>
+                                <td class="px-4 py-2">{{ \Carbon\Carbon::parse($ex->start_time)->toFormattedDateString() }} {{ \Carbon\Carbon::parse($ex->start_time)->format('H:i') }}</td>
+                                <td class="px-4 py-2">{{ $ex->classRoom->name ?? '-' }}</td>
                                 <td class="px-4 py-2">{{ $ex->subject->name ?? '-' }}</td>
                                 <td class="px-4 py-2">
-                                    <span>{{ $ex->examType->name ?? '-' }}</span>
+                                    <span>{{ ucfirst($ex->exam_type) }}</span>
                                     @php($now = now())
-                                    @if(($ex->is_live ?? false) || ($ex->exam_date && $ex->start_time && $ex->end_time && \Carbon\Carbon::parse($ex->exam_date.' '.$ex->start_time) <= $now && $now <= \Carbon\Carbon::parse($ex->exam_date.' '.$ex->end_time)))
+                                    @if($ex->is_published && $ex->start_time && $ex->end_time && \Carbon\Carbon::parse($ex->start_time) <= $now && $now <= \Carbon\Carbon::parse($ex->end_time))
                                         <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Live</span>
+                                    @elseif($ex->is_published)
+                                        <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Published</span>
+                                    @else
+                                        <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Draft</span>
                                     @endif
                                 </td>
                                 <td class="px-4 py-2 text-right">
-                                    <a href="{{ route('teacher.exams.marks', $ex) }}" class="px-3 py-1 text-sm bg-green-600 text-white rounded">Enter Marks</a>
+                                    <div class="flex space-x-2">
+                                        <a href="{{ route('teacher.exams.show', $ex) }}" class="px-3 py-1 text-sm bg-blue-600 text-white rounded">View</a>
+                                        <a href="{{ route('teacher.exams.edit', $ex) }}" class="px-3 py-1 text-sm bg-yellow-600 text-white rounded">Edit</a>
+                                        @if($ex->is_published)
+                                            <form method="POST" action="{{ route('teacher.exams.unpublish', $ex) }}" class="inline">
+                                                @csrf
+                                                <button type="submit" class="px-3 py-1 text-sm bg-orange-600 text-white rounded">Unpublish</button>
+                                            </form>
+                                        @else
+                                            <form method="POST" action="{{ route('teacher.exams.publish', $ex) }}" class="inline">
+                                                @csrf
+                                                <button type="submit" class="px-3 py-1 text-sm bg-green-600 text-white rounded">Publish</button>
+                                            </form>
+                                        @endif
+                                        <form method="POST" action="{{ route('teacher.exams.destroy', $ex) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this exam?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="px-3 py-1 text-sm bg-red-600 text-white rounded">Delete</button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -58,7 +81,7 @@
                     </tbody>
                 </table>
             </div>
-            <div class="mt-4">{{ $examSchedules->withQueryString()->links() }}</div>
+            <div class="mt-4">{{ $exams->withQueryString()->links() }}</div>
         </div>
     </div>
 </div>

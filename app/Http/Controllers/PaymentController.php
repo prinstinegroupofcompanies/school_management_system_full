@@ -24,7 +24,7 @@ class PaymentController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Payment::with(['student.user', 'payable']);
+            $query = Payment::with(['student.user']);
 
             // Filter by payment type
             if ($request->filled('type')) {
@@ -159,7 +159,16 @@ class PaymentController extends Controller
     public function show(Payment $payment)
     {
         try {
-            $payment->load(['student.user', 'payable']);
+            $payment->load(['student.user']);
+            
+            // Try to load payable relationship, but handle cases where it might not exist
+            try {
+                $payment->load('payable');
+            } catch (\Exception $e) {
+                // If payable relationship fails, continue without it
+                Log::warning('PaymentController show: Could not load payable relationship for payment ' . $payment->id . ': ' . $e->getMessage());
+            }
+            
             return view('payments.show', compact('payment'));
 
         } catch (\Exception $e) {

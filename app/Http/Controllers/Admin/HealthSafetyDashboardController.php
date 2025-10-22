@@ -31,7 +31,7 @@ class HealthSafetyDashboardController extends Controller
         ];
 
         // Get recent incidents
-        $recentIncidents = HealthIncident::with(['reportedBy', 'assignedTo'])
+        $recentIncidents = HealthIncident::with(['reportedBy'])
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();

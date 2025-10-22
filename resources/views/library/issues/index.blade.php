@@ -30,14 +30,14 @@
                     <!-- Search and Filter -->
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <form method="GET" action="{{ route('library.issues') }}" class="d-flex">
+                            <form method="GET" action="{{ route('library.issues.index') }}" class="d-flex">
                                 <input type="text" name="search" class="form-control me-2" 
                                        placeholder="Search issues..." value="{{ request('search') }}">
                                 <button type="submit" class="btn btn-outline-primary">Search</button>
                             </form>
                         </div>
                         <div class="col-md-6">
-                            <form method="GET" action="{{ route('library.issues') }}" class="d-flex">
+                            <form method="GET" action="{{ route('library.issues.index') }}" class="d-flex">
                                 <select name="status" class="form-control me-2">
                                     <option value="">All Status</option>
                                     <option value="issued" {{ request('status') == 'issued' ? 'selected' : '' }}>Issued</option>

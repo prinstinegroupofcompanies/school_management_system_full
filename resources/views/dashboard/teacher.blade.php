@@ -116,6 +116,81 @@
             </div>
         </div>
 
+        <!-- Lesson Plans Statistics -->
+        <div class="bg-white shadow rounded-lg mb-8">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Lesson Plans</h3>
+                    <a href="{{ route('teacher.lesson-plans.index') }}" class="text-sm text-blue-600 hover:text-blue-800">View All</a>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-blue-600">{{ $lessonPlanStats['total'] }}</div>
+                        <div class="text-xs text-gray-500">Total</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-gray-600">{{ $lessonPlanStats['draft'] }}</div>
+                        <div class="text-xs text-gray-500">Draft</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-yellow-600">{{ $lessonPlanStats['submitted'] }}</div>
+                        <div class="text-xs text-gray-500">Submitted</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-600">{{ $lessonPlanStats['approved'] }}</div>
+                        <div class="text-xs text-gray-500">Approved</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-red-600">{{ $lessonPlanStats['rejected'] }}</div>
+                        <div class="text-xs text-gray-500">Rejected</div>
+                    </div>
+                </div>
+
+                <!-- Recent Lesson Plans -->
+                @if($recentLessonPlans->count() > 0)
+                <div class="border-t pt-4">
+                    <h4 class="text-sm font-medium text-gray-900 mb-2">Recent Lesson Plans</h4>
+                    <div class="space-y-2 max-h-32 overflow-y-auto">
+                        @foreach($recentLessonPlans as $lessonPlan)
+                        <div class="flex items-center justify-between text-sm">
+                            <div class="flex items-center">
+                                <span class="w-2 h-2 rounded-full mr-2 
+                                    @if($lessonPlan->status === 'draft') bg-gray-500
+                                    @elseif($lessonPlan->status === 'submitted') bg-blue-500
+                                    @elseif($lessonPlan->status === 'first_level_approved') bg-yellow-500
+                                    @elseif($lessonPlan->status === 'second_level_approved') bg-green-500
+                                    @elseif($lessonPlan->status === 'rejected') bg-red-500
+                                    @else bg-gray-500 @endif"></span>
+                                <span class="text-gray-900">{{ $lessonPlan->title }}</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-gray-500">{{ $lessonPlan->subject->name ?? 'N/A' }}</span>
+                                <span class="px-2 py-1 text-xs rounded-full
+                                    @if($lessonPlan->status === 'draft') bg-gray-100 text-gray-800
+                                    @elseif($lessonPlan->status === 'submitted') bg-blue-100 text-blue-800
+                                    @elseif($lessonPlan->status === 'first_level_approved') bg-yellow-100 text-yellow-800
+                                    @elseif($lessonPlan->status === 'second_level_approved') bg-green-100 text-green-800
+                                    @elseif($lessonPlan->status === 'rejected') bg-red-100 text-red-800
+                                    @else bg-gray-100 text-gray-800 @endif">
+                                    {{ ucfirst(str_replace('_', ' ', $lessonPlan->status)) }}
+                                </span>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @else
+                <div class="text-center py-4">
+                    <p class="text-gray-500 text-sm">No lesson plans created yet.</p>
+                    <a href="{{ route('teacher.lesson-plans.create') }}" class="mt-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
+                        Create Your First Lesson Plan
+                    </a>
+                </div>
+                @endif
+            </div>
+        </div>
+
         <!-- My Classes -->
         <div class="bg-white shadow rounded-lg mb-8">
             <div class="px-4 py-5 sm:p-6">

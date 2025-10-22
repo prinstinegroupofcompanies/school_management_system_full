@@ -10,6 +10,8 @@ class TeacherAttendance extends Model
 {
     use HasFactory;
 
+    protected $table = 'teacher_attendances';
+
     protected $fillable = [
         'teacher_id',
         'date',
@@ -25,6 +27,11 @@ class TeacherAttendance extends Model
     public function teacher(): BelongsTo
     {
         return $this->belongsTo(Teacher::class);
+    }
+
+    public function markedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'marked_by');
     }
 }
 

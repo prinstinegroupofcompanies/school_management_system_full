@@ -164,7 +164,7 @@ class TransportController extends Controller
             return view('transport.vehicles', compact('vehicles', 'vehicleStats'));
         } catch (\Exception $e) {
             \Log::error('TransportController vehicles error: ' . $e->getMessage());
-            $vehicles = collect()->paginate(20);
+            $vehicles = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
             $vehicleStats = [
                 'total_vehicles' => 0,
                 'active_vehicles' => 0,

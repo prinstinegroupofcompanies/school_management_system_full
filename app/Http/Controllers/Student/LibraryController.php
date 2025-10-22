@@ -191,4 +191,60 @@ class LibraryController extends Controller
             return view('student.library.my-books', compact('borrowedBooks', 'returnedBooks'));
         }
     }
+
+    public function search(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $student = $user->student;
+            
+            if (!$student) {
+                return redirect()->route('student.dashboard')
+                    ->with('error', 'Student profile not found.');
+            }
+
+            // Get search parameters
+            $search = $request->get('search', '');
+            $category = $request->get('category', '');
+            $author = $request->get('author', '');
+
+            // Build search query
+            $query = Book::with(['author']);
+
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhere('isbn', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%");
+                });
+            }
+
+            if ($category) {
+                $query->where('category', $category);
+            }
+
+            if ($author) {
+                $query->whereHas('author', function($q) use ($author) {
+                    $q->where('name', 'like', "%{$author}%");
+                });
+            }
+
+            $books = $query->orderBy('title')->paginate(12);
+            $categories = Book::distinct()->pluck('category')->filter();
+
+            return view('student.library.search', compact('books', 'categories', 'search', 'category', 'author'));
+        } catch (\Exception $e) {
+            \Log::error('Student LibraryController search error: ' . $e->getMessage());
+            
+            $books = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(), 0, 12, 1, ['path' => request()->url()]
+            );
+            $categories = collect();
+            $search = '';
+            $category = '';
+            $author = '';
+            
+            return view('student.library.search', compact('books', 'categories', 'search', 'category', 'author'));
+        }
+    }
 }

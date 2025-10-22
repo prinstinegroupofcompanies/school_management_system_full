@@ -268,9 +268,18 @@ class PaymentController extends Controller
             ->limit(10)
             ->get();
 
+        // Prepare stats array for the view
+        $stats = [
+            'total_collected' => $totalRevenue,
+            'monthly_revenue' => $monthlyRevenue,
+            'total_outstanding' => $totalOutstanding,
+            'students_with_balance' => StudentFee::where('balance', '>', 0)->count(),
+            'collection_rate' => $totalRevenue > 0 ? round(($totalRevenue / ($totalRevenue + $totalOutstanding)) * 100, 1) : 0
+        ];
+
         return view('finance.payments.analytics', compact(
             'totalRevenue', 'monthlyRevenue', 'totalOutstanding', 
-            'paymentMethodBreakdown', 'classWiseRevenue', 'monthlyTrend', 'recentPayments'
+            'paymentMethodBreakdown', 'classWiseRevenue', 'monthlyTrend', 'recentPayments', 'stats'
         ));
     }
 }

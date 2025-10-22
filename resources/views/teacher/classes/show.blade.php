@@ -54,7 +54,7 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $subject->name }}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-300">Teacher: {{ $subject->teacher->user->name ?? '-' }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-300">Teacher: {{ $subject->teacher->user->name ?? $subject->teacher->name ?? 'Not Assigned' }}</p>
                                 </div>
                             </div>
                         </li>

@@ -44,7 +44,7 @@ class StudentController extends Controller
             $students = $query->orderBy('created_at', 'desc')->paginate(15);
             $hostels = Hostel::where('status', 'active')->get();
 
-            return view('hostel.students.index', compact('students', 'hostels'));
+            return view('hostel.students', compact('students', 'hostels'));
         } catch (\Exception $e) {
             \Log::error('HostelStudentController index error: ' . $e->getMessage());
             
@@ -58,7 +58,7 @@ class StudentController extends Controller
             );
             $hostels = collect();
             
-            return view('hostel.students.index', compact('students', 'hostels'));
+            return view('hostel.students', compact('students', 'hostels'));
         }
     }
 
@@ -141,7 +141,7 @@ class StudentController extends Controller
 
             DB::commit();
 
-            return redirect()->route('hostel.students.index')
+            return redirect()->route('hostel.students')
                 ->with('success', 'Student assigned to hostel room successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -159,7 +159,7 @@ class StudentController extends Controller
             return view('hostel.students.show', compact('student'));
         } catch (\Exception $e) {
             \Log::error('HostelStudentController show error: ' . $e->getMessage());
-            return redirect()->route('hostel.students.index')
+            return redirect()->route('hostel.students')
                 ->with('error', 'Student not found.');
         }
     }
@@ -168,7 +168,7 @@ class StudentController extends Controller
     {
         try {
             if (!$student->hostel_room_id) {
-                return redirect()->route('hostel.students.index')
+                return redirect()->route('hostel.students')
                     ->with('error', 'Student does not have a hostel room assigned.');
             }
 
@@ -178,7 +178,7 @@ class StudentController extends Controller
             return view('hostel.students.edit', compact('student', 'rooms', 'hostels'));
         } catch (\Exception $e) {
             \Log::error('HostelStudentController edit error: ' . $e->getMessage());
-            return redirect()->route('hostel.students.index')
+            return redirect()->route('hostel.students')
                 ->with('error', 'Student not found.');
         }
     }
@@ -187,7 +187,7 @@ class StudentController extends Controller
     {
         try {
             if (!$student->hostel_room_id) {
-                return redirect()->route('hostel.students.index')
+                return redirect()->route('hostel.students')
                     ->with('error', 'Student does not have a hostel room assigned.');
             }
 
@@ -245,7 +245,7 @@ class StudentController extends Controller
 
             DB::commit();
 
-            return redirect()->route('hostel.students.index')
+            return redirect()->route('hostel.students')
                 ->with('success', 'Student hostel assignment updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -259,7 +259,7 @@ class StudentController extends Controller
     {
         try {
             if (!$student->hostel_room_id) {
-                return redirect()->route('hostel.students.index')
+                return redirect()->route('hostel.students')
                     ->with('error', 'Student does not have a hostel room assigned.');
             }
 
@@ -286,7 +286,7 @@ class StudentController extends Controller
 
             DB::commit();
 
-            return redirect()->route('hostel.students.index')
+            return redirect()->route('hostel.students')
                 ->with('success', 'Student hostel assignment removed successfully.');
         } catch (\Exception $e) {
             DB::rollBack();

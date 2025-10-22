@@ -21,8 +21,6 @@ class LessonPlan extends Model
 
     protected $casts = [
         'lesson_date' => 'date',
-        'start_time' => 'datetime',
-        'end_time' => 'datetime',
         'duration_minutes' => 'integer',
         'is_active' => 'boolean',
         'attachments' => 'array',

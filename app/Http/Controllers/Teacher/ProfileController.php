@@ -12,7 +12,7 @@ class ProfileController extends Controller
     {
         try {
             $user = auth()->user();
-            $teacher = $user->teacher;
+            $teacher = $user->teacher()->with(['department', 'designation'])->first();
             
             if (!$teacher) {
                 return redirect()->route('teacher.dashboard')
@@ -21,13 +21,11 @@ class ProfileController extends Controller
 
             // Get teacher statistics
             $stats = [
-                'classes_taught' => \App\Models\ClassRoom::where('teacher_id', $teacher->id)->count(),
+                'classes_taught' => $teacher->classes()->count(),
                 'total_students' => \App\Models\Student::whereIn('class_id', 
-                    \App\Models\ClassRoom::where('teacher_id', $teacher->id)->pluck('id')
+                    $teacher->classes()->pluck('class_rooms.id')
                 )->count(),
-                'subjects_taught' => \App\Models\Subject::whereHas('grades', function($query) use ($teacher) {
-                    $query->where('teacher_id', $teacher->id);
-                })->distinct()->count(),
+                'subjects_taught' => $teacher->subjects()->count(),
                 'total_grades' => \App\Models\Grade::where('teacher_id', $teacher->id)->count()
             ];
 

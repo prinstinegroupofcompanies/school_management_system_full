@@ -1,37 +1,50 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box">
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('library.index') }}">Library</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('library.issues') }}">Issues</a></li>
-                        <li class="breadcrumb-item active">Issue New Book</li>
-                    </ol>
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <!-- Header -->
+    <div class="bg-white shadow-lg relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-5"></div>
+        <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 relative">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-4xl font-bold text-gray-900 mb-2">
+                        <i class="fas fa-book-open text-purple-600 mr-3"></i>
+                        Issue New Book
+                    </h1>
+                    <p class="text-lg text-gray-600">Issue a book to a library member</p>
                 </div>
-                <h4 class="page-title">Issue New Book</h4>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ route('library.issues.index') }}" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Back to Issues
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Book Issue Information</h5>
-                </div>
-                <div class="card-body">
-                    <form action="{{ route('library.issues.store') }}" method="POST">
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto py-8 sm:px-6 lg:px-8">
+        <div class="bg-white shadow-xl rounded-2xl overflow-hidden">
+            <div class="px-8 py-8">
+                <form action="{{ route('library.issues.store') }}" method="POST" class="space-y-8">
                         @csrf
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="book_id" class="form-label">Select Book <span class="text-danger">*</span></label>
-                                    <select class="form-control @error('book_id') is-invalid @enderror" id="book_id" name="book_id" required>
+                    
+                    <!-- Book and Member Selection -->
+                    <div class="bg-gray-50 rounded-xl p-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                            <i class="fas fa-book text-blue-600 mr-3"></i>
+                            Book and Member Selection
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="book_id" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Select Book <span class="text-red-500">*</span>
+                                </label>
+                                <select id="book_id" name="book_id" 
+                                        class="block w-full border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 @error('book_id') border-red-300 @enderror" required>
                                         <option value="">Select Book</option>
                                         @foreach(\App\Models\Book::where('status', 'available')->get() as $book)
                                             <option value="{{ $book->id }}" {{ old('book_id') == $book->id ? 'selected' : '' }}>
@@ -40,14 +53,16 @@
                                         @endforeach
                                     </select>
                                     @error('book_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
-                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="member_id" class="form-label">Select Member <span class="text-danger">*</span></label>
-                                    <select class="form-control @error('member_id') is-invalid @enderror" id="member_id" name="member_id" required>
+
+                            <div>
+                                <label for="member_id" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Select Member <span class="text-red-500">*</span>
+                                </label>
+                                <select id="member_id" name="member_id" 
+                                        class="block w-full border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 @error('member_id') border-red-300 @enderror" required>
                                         <option value="">Select Member</option>
                                         @foreach(\App\Models\LibraryMember::where('is_active', true)->with('user')->get() as $member)
                                             <option value="{{ $member->id }}" {{ old('member_id') == $member->id ? 'selected' : '' }}>
@@ -56,73 +71,104 @@
                                         @endforeach
                                     </select>
                                     @error('member_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
-                                </div>
+                            </div>
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="issue_date" class="form-label">Issue Date <span class="text-danger">*</span></label>
-                                    <input type="date" class="form-control @error('issue_date') is-invalid @enderror" 
-                                           id="issue_date" name="issue_date" value="{{ old('issue_date', date('Y-m-d')) }}" required>
+                    <!-- Issue Details -->
+                    <div class="bg-gray-50 rounded-xl p-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                            <i class="fas fa-calendar text-green-600 mr-3"></i>
+                            Issue Details
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="issue_date" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Issue Date <span class="text-red-500">*</span>
+                                </label>
+                                <input type="date" id="issue_date" name="issue_date" value="{{ old('issue_date', date('Y-m-d')) }}" 
+                                       class="block w-full border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 @error('issue_date') border-red-300 @enderror" required>
                                     @error('issue_date')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
-                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="due_date" class="form-label">Due Date <span class="text-danger">*</span></label>
-                                    <input type="date" class="form-control @error('due_date') is-invalid @enderror" 
-                                           id="due_date" name="due_date" value="{{ old('due_date', date('Y-m-d', strtotime('+14 days'))) }}" required>
+
+                            <div>
+                                <label for="due_date" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Due Date <span class="text-red-500">*</span>
+                                </label>
+                                <input type="date" id="due_date" name="due_date" value="{{ old('due_date', date('Y-m-d', strtotime('+14 days'))) }}" 
+                                       class="block w-full border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 @error('due_date') border-red-300 @enderror" required>
                                     @error('due_date')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
-                                </div>
+                            </div>
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="issue_no" class="form-label">Issue Number</label>
-                                    <input type="text" class="form-control @error('issue_no') is-invalid @enderror" 
-                                           id="issue_no" name="issue_no" value="{{ old('issue_no', 'ISS' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT)) }}">
+                    <!-- Additional Information -->
+                    <div class="bg-gray-50 rounded-xl p-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                            <i class="fas fa-info-circle text-orange-600 mr-3"></i>
+                            Additional Information
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="issue_no" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Issue Number
+                                </label>
+                                <input type="text" id="issue_no" name="issue_no" value="{{ old('issue_no', 'ISS' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT)) }}" 
+                                       class="block w-full border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 @error('issue_no') border-red-300 @enderror" 
+                                       placeholder="Auto-generated issue number">
                                     @error('issue_no')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
-                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="fine_amount" class="form-label">Fine Amount (if any)</label>
-                                    <input type="number" step="0.01" class="form-control @error('fine_amount') is-invalid @enderror" 
-                                           id="fine_amount" name="fine_amount" value="{{ old('fine_amount', 0) }}" min="0">
+
+                            <div>
+                                <label for="fine_amount" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Fine Amount (if any)
+                                </label>
+                                <input type="number" step="0.01" id="fine_amount" name="fine_amount" value="{{ old('fine_amount', 0) }}" 
+                                       class="block w-full border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 @error('fine_amount') border-red-300 @enderror" 
+                                       placeholder="Enter fine amount" min="0">
                                     @error('fine_amount')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
-                                </div>
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="notes" class="form-label">Notes</label>
-                            <textarea class="form-control @error('notes') is-invalid @enderror" 
-                                      id="notes" name="notes" rows="3">{{ old('notes') }}</textarea>
+                        <div class="mt-6">
+                            <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
+                                Notes
+                            </label>
+                            <textarea id="notes" name="notes" rows="4" 
+                                      class="block w-full border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 @error('notes') border-red-300 @enderror" 
+                                      placeholder="Enter any additional notes about the book issue">{{ old('notes') }}</textarea>
                             @error('notes')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
+                        </div>
 
-                        <div class="d-flex justify-content-end">
-                            <a href="{{ route('library.issues') }}" class="btn btn-secondary me-2">Cancel</a>
-                            <button type="submit" class="btn btn-primary">Issue Book</button>
+                    <!-- Submit Buttons -->
+                    <div class="flex items-center justify-end space-x-4 pt-8 border-t border-gray-200">
+                        <a href="{{ route('library.issues.index') }}" 
+                           class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg">
+                            <i class="fas fa-times mr-2"></i>
+                            Cancel
+                        </a>
+                        <button type="submit" 
+                                class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg">
+                            <i class="fas fa-book-open mr-2"></i>
+                            Issue Book
+                        </button>
                         </div>
                     </form>
-                </div>
             </div>
         </div>
     </div>

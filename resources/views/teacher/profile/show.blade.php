@@ -37,19 +37,19 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-500">Phone Number</label>
-                                <p class="mt-1 text-sm text-gray-900">{{ $teacher->phone ?? 'Not provided' }}</p>
+                                <p class="mt-1 text-sm text-gray-900">{{ $user->phone ?? 'Not provided' }}</p>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-500">Date of Birth</label>
-                                <p class="mt-1 text-sm text-gray-900">{{ $teacher->date_of_birth ? \Carbon\Carbon::parse($teacher->date_of_birth)->format('M d, Y') : 'Not provided' }}</p>
+                                <label class="block text-sm font-medium text-gray-500">City</label>
+                                <p class="mt-1 text-sm text-gray-900">{{ $user->city ?? 'Not provided' }}</p>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-500">Gender</label>
-                                <p class="mt-1 text-sm text-gray-900">{{ $teacher->gender ?? 'Not provided' }}</p>
+                                <label class="block text-sm font-medium text-gray-500">Country</label>
+                                <p class="mt-1 text-sm text-gray-900">{{ $user->country ?? 'Not provided' }}</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-500">Address</label>
-                                <p class="mt-1 text-sm text-gray-900">{{ $teacher->address ?? 'Not provided' }}</p>
+                                <p class="mt-1 text-sm text-gray-900">{{ $user->address ?? 'Not provided' }}</p>
                             </div>
                         </div>
                     </div>
@@ -63,28 +63,28 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-500">Employee ID</label>
-                                <p class="mt-1 text-sm text-gray-900">{{ $teacher->employee_id ?? 'Not assigned' }}</p>
+                                <p class="mt-1 text-sm text-gray-900">{{ $teacher ? $teacher->employee_id ?? 'Not assigned' : 'Not available' }}</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-500">Department</label>
-                                <p class="mt-1 text-sm text-gray-900">{{ $teacher->department ?? 'Not assigned' }}</p>
+                                <p class="mt-1 text-sm text-gray-900">{{ $teacher && $teacher->department ? $teacher->department->name : 'Not assigned' }}</p>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-500">Qualification</label>
-                                <p class="mt-1 text-sm text-gray-900">{{ $teacher->qualification ?? 'Not provided' }}</p>
+                                <label class="block text-sm font-medium text-gray-500">Designation</label>
+                                <p class="mt-1 text-sm text-gray-900">{{ $teacher && $teacher->designation ? $teacher->designation->name : 'Not assigned' }}</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-500">Experience</label>
-                                <p class="mt-1 text-sm text-gray-900">{{ $teacher->experience ?? '0' }} years</p>
+                                <p class="mt-1 text-sm text-gray-900">{{ $teacher ? ($teacher->experience_years ?? 0) : 0 }} years</p>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-500">Basic Salary</label>
-                                <p class="mt-1 text-sm text-gray-900">${{ number_format($teacher->basic_salary ?? 0, 2) }}</p>
+                                <label class="block text-sm font-medium text-gray-500">Joining Date</label>
+                                <p class="mt-1 text-sm text-gray-900">{{ $teacher && $teacher->joining_date ? \Carbon\Carbon::parse($teacher->joining_date)->format('M d, Y') : 'Not provided' }}</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-500">Status</label>
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $teacher->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                    {{ ucfirst($teacher->status ?? 'inactive') }}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $teacher && $teacher->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                    {{ $teacher && $teacher->is_active ? 'Active' : 'Inactive' }}
                                 </span>
                             </div>
                         </div>

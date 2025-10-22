@@ -87,3 +87,38 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh the page every 30 seconds to show real-time updates
+    setInterval(function() {
+        // Only refresh if user is not actively interacting with forms or modals
+        if (!document.querySelector('.modal:not(.hidden)') && 
+            !document.activeElement.tagName.match(/INPUT|TEXTAREA|SELECT|BUTTON/)) {
+            window.location.reload();
+        }
+    }, 30000); // 30 seconds
+
+    // Real-time notification polling
+    if (typeof window.pollNotifications === 'function') {
+        window.pollNotifications();
+    }
+
+    // Add smooth transitions for status changes
+    const statusElements = document.querySelectorAll('[data-status]');
+    statusElements.forEach(element => {
+        element.style.transition = 'all 0.3s ease-in-out';
+    });
+
+    // Highlight new assignments
+    const newAssignments = document.querySelectorAll('.assignment-item[data-new="true"]');
+    newAssignments.forEach(item => {
+        item.classList.add('animate-pulse');
+        setTimeout(() => {
+            item.classList.remove('animate-pulse');
+        }, 3000);
+    });
+});
+</script>
+@endpush

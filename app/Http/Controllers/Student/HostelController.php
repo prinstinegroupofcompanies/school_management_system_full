@@ -87,7 +87,8 @@ class HostelController extends Controller
     public function rooms()
     {
         try {
-            $rooms = HostelRoom::orderBy('room_number')->get();
+            $rooms = HostelRoom::with(['hostel'])->orderBy('room_number')->paginate(12);
+            $hostels = \App\Models\Hostel::orderBy('name')->get();
 
             $user = Auth::user();
             $student = $user->student;
@@ -100,14 +101,17 @@ class HostelController extends Controller
                     ->first();
             }
 
-            return view('student.hostel.rooms', compact('rooms', 'myAssignment'));
+            return view('student.hostel.rooms', compact('rooms', 'hostels', 'myAssignment'));
         } catch (\Exception $e) {
             \Log::error('Student HostelController rooms error: ' . $e->getMessage());
             
-            $rooms = collect();
+            $rooms = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(), 0, 12, 1, ['path' => request()->url()]
+            );
+            $hostels = collect();
             $myAssignment = null;
             
-            return view('student.hostel.rooms', compact('rooms', 'myAssignment'));
+            return view('student.hostel.rooms', compact('rooms', 'hostels', 'myAssignment'));
         }
     }
 

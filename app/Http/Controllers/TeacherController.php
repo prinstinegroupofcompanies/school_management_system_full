@@ -13,6 +13,7 @@ use App\Models\ExamSchedule;
 use App\Models\Homework;
 use App\Models\TeacherAttendance;
 use App\Models\StudentAttendance;
+use App\Models\LessonPlan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -41,23 +42,24 @@ class TeacherController extends Controller
             'semester' => (int) (date('n') <= 6 ? 1 : 2),
         ];
         
-        // Get real-time data from database with safe queries
-        $subjects = $this->safeQuery(function() use ($teacher) {
-            return Subject::where('teacher_id', $teacher->id)->get();
-        }) ?: collect();
+        // Get real-time data from database
+        $subjects = Subject::where('teacher_id', $teacher->id)->get();
         
-        $classes = $this->safeQuery(function() use ($teacher) {
-            return ClassRoom::whereHas('subjects', function($query) use ($teacher) {
-                $query->where('teacher_id', $teacher->id);
-            })->get();
-        }) ?: collect();
+        // Get classes assigned via both methods (pivot table and direct foreign key)
+        $pivotClasses = $teacher->classes()->get();
+        $directClasses = ClassRoom::where('class_teacher_id', $teacher->id)->get();
+        $classes = $pivotClasses->merge($directClasses)->unique('id');
         
         // Get total students across all classes taught by this teacher
-        $totalStudents = $this->safeQuery(function() use ($teacher) {
-            return Student::whereHas('classRoom.subjects', function($query) use ($teacher) {
-                $query->where('teacher_id', $teacher->id);
-            })->count();
-        }) ?: 0;
+        $totalStudents = Student::where(function($query) use ($teacher) {
+            $query->whereHas('classRoom', function($q) use ($teacher) {
+                $q->whereHas('teachers', function($subQ) use ($teacher) {
+                    $subQ->where('teachers.id', $teacher->id);
+                });
+            })->orWhereHas('classRoom', function($q) use ($teacher) {
+                $q->where('class_teacher_id', $teacher->id);
+            });
+        })->count();
 
         // Get upcoming exams for subjects taught by this teacher
         $upcomingExams = ExamSchedule::whereHas('subject', function($query) use ($teacher) {
@@ -76,6 +78,26 @@ class TeacherController extends Controller
             ->orderBy('due_date')
             ->take(5)
             ->get();
+
+        // Get lesson plan statistics
+        $lessonPlanStats = $this->safeQuery(function() use ($teacher) {
+            return [
+                'total' => LessonPlan::where('teacher_id', $teacher->id)->count(),
+                'draft' => LessonPlan::where('teacher_id', $teacher->id)->where('status', 'draft')->count(),
+                'submitted' => LessonPlan::where('teacher_id', $teacher->id)->where('status', 'submitted')->count(),
+                'approved' => LessonPlan::where('teacher_id', $teacher->id)->where('status', 'second_level_approved')->count(),
+                'rejected' => LessonPlan::where('teacher_id', $teacher->id)->where('status', 'rejected')->count(),
+            ];
+        }) ?: ['total' => 0, 'draft' => 0, 'submitted' => 0, 'approved' => 0, 'rejected' => 0];
+
+        // Get recent lesson plans
+        $recentLessonPlans = $this->safeQuery(function() use ($teacher) {
+            return LessonPlan::where('teacher_id', $teacher->id)
+                ->with(['subject', 'class'])
+                ->orderBy('lesson_date', 'desc')
+                ->take(5)
+                ->get();
+        }) ?: collect();
 
         // Get recent activities (homework assignments, exam results, attendance)
         $recent_activities = collect();
@@ -172,8 +194,8 @@ class TeacherController extends Controller
         ];
 
         // Get all students from classes taught by this teacher
-        $students = collect(Student::whereHas('classRoom.subjects', function($query) use ($teacher) {
-            $query->where('teacher_id', $teacher->id);
+        $students = collect(Student::whereHas('classRoom', function($query) use ($teacher) {
+            $query->where('class_teacher_id', $teacher->id);
         })->with('user')->get()->map(function($student) {
             return (object) [
                 'id' => $student->id,
@@ -223,7 +245,7 @@ class TeacherController extends Controller
             ];
         }));
 
-        return view('dashboard.teacher', compact(
+        return view('teacher.dashboard', compact(
             'stats', 
             'recent_activities', 
             'recent_homework', 
@@ -235,7 +257,9 @@ class TeacherController extends Controller
             'recentTeacherAttendance',
             'recentStudentAttendance',
             'teacherAttendanceStats',
-            'studentAttendanceStats'
+            'studentAttendanceStats',
+            'lessonPlanStats',
+            'recentLessonPlans'
         ) + ['recentActivities' => $recent_activities, 'session' => $session]);
     }
 
@@ -525,5 +549,58 @@ class TeacherController extends Controller
     public function bulkCreateGrade()
     {
         return view('teacher.grades.bulk-create');
+    }
+
+    /**
+     * Get real-time dashboard data via AJAX
+     */
+    public function getDashboardData()
+    {
+        $user = auth()->user();
+        
+        try {
+            $teacher = $user->teacher;
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Teacher not found'], 404);
+        }
+        
+        if (!$teacher) {
+            return response()->json(['error' => 'Teacher not found'], 404);
+        }
+
+        // Get real-time statistics
+        $subjects = Subject::where('teacher_id', $teacher->id)->count();
+        
+        // Get classes assigned via both methods
+        $pivotClassesCount = $teacher->classes()->count();
+        $directClassesCount = ClassRoom::where('class_teacher_id', $teacher->id)->count();
+        $classes = $pivotClassesCount + $directClassesCount;
+        
+        $totalStudents = Student::where(function($query) use ($teacher) {
+            $query->whereHas('classRoom', function($q) use ($teacher) {
+                $q->whereHas('teachers', function($subQ) use ($teacher) {
+                    $subQ->where('teachers.id', $teacher->id);
+                });
+            })->orWhereHas('classRoom', function($q) use ($teacher) {
+                $q->where('class_teacher_id', $teacher->id);
+            });
+        })->count();
+
+        $upcomingExams = ExamSchedule::whereHas('subject', function($query) use ($teacher) {
+            $query->where('teacher_id', $teacher->id);
+        })
+        ->where('status', 'published')
+        ->where('start_date', '>=', now()->toDateString())
+        ->count();
+
+        return response()->json([
+            'stats' => [
+                'total_classes' => $classes,
+                'total_subjects' => $subjects,
+                'total_students' => $totalStudents,
+                'upcoming_exams' => $upcomingExams,
+            ],
+            'timestamp' => now()->toISOString()
+        ]);
     }
 }

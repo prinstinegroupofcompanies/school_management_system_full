@@ -28,9 +28,9 @@ class UserController extends Controller
                 });
             }
 
-            // Filter by role
-            if ($request->has('role') && $request->role) {
-                $query->where('role', $request->role);
+            // Filter by user type
+            if ($request->has('user_type') && $request->user_type) {
+                $query->where('user_type', $request->user_type);
             }
 
             // Filter by status
@@ -44,10 +44,10 @@ class UserController extends Controller
             $stats = [
                 'total_users' => User::count(),
                 'active_users' => User::where('status', 'active')->count(),
-                'students' => User::where('role', 'student')->count(),
-                'teachers' => User::where('role', 'teacher')->count(),
-                'admins' => User::where('role', 'admin')->count(),
-                'finance_officers' => User::where('role', 'finance')->count(),
+                'students' => User::where('user_type', 'student')->count(),
+                'teachers' => User::where('user_type', 'teacher')->count(),
+                'admins' => User::where('user_type', 'admin')->count(),
+                'finance_officers' => User::where('user_type', 'finance')->count(),
             ];
 
             return view('users.index', compact('users', 'stats'));

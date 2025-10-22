@@ -89,7 +89,7 @@ class TransportController extends Controller
             $routes = TransportRoute::with(['vehicle'])
                 ->where('status', 'active')
                 ->orderBy('name')
-                ->get();
+                ->paginate(12);
 
             $user = Auth::user();
             $student = $user->student;
@@ -106,7 +106,9 @@ class TransportController extends Controller
         } catch (\Exception $e) {
             \Log::error('Student TransportController routes error: ' . $e->getMessage());
             
-            $routes = collect();
+            $routes = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(), 0, 12, 1, ['path' => request()->url()]
+            );
             $myAssignment = null;
             
             return view('student.transport.routes', compact('routes', 'myAssignment'));

@@ -77,6 +77,10 @@ class StudentController extends Controller
             'nationality' => 'nullable|string|max:100',
             'religion' => 'nullable|string|max:100',
             'blood_group' => 'nullable|string|max:10',
+            'guardian_name' => 'required|string|max:255',
+            'guardian_email' => 'required|email',
+            'guardian_phone' => 'required|string|max:20',
+            'guardian_relationship' => 'required|string|max:100',
         ]);
 
         DB::beginTransaction();
@@ -92,10 +96,32 @@ class StudentController extends Controller
                 'status' => 'active',
             ]);
 
-            // Create student record (auto-generation will happen in boot method)
+            // Create guardian user account
+            $guardianUser = User::create([
+                'name' => $validated['guardian_name'],
+                'email' => $validated['guardian_email'],
+                'password' => bcrypt('password123'), // Default password
+                'user_type' => 'parent',
+                'phone' => $validated['guardian_phone'],
+                'status' => 'active',
+            ]);
+
+            // Create guardian record
+            $guardian = \App\Models\Guardian::create([
+                'user_id' => $guardianUser->id,
+                'guardian_id' => 'G' . str_pad((\App\Models\Guardian::count() + 1), 4, '0', STR_PAD_LEFT),
+                'relationship' => $validated['guardian_relationship'],
+                'status' => 'active',
+            ]);
+
+            // Generate admission number
+            $admissionNo = 'ADM' . date('Y') . str_pad((Student::count() + 1), 4, '0', STR_PAD_LEFT);
+
+            // Create student record
             $student = Student::create([
                 'user_id' => $user->id,
                 'class_id' => $validated['class_id'],
+                'admission_no' => $admissionNo,
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
                 'middle_name' => $validated['middle_name'],
@@ -108,6 +134,7 @@ class StudentController extends Controller
                 'nationality' => $validated['nationality'] ?? 'Liberian',
                 'religion' => $validated['religion'],
                 'blood_group' => $validated['blood_group'],
+                'guardian_id' => $guardian->id,
                 'status' => 'active',
                 'is_active' => true,
             ]);
@@ -115,10 +142,11 @@ class StudentController extends Controller
             DB::commit();
 
             return redirect()->route('admin.students.show', $student)
-                           ->with('success', 'Student created successfully! Admission Number: ' . $student->admission_number);
+                           ->with('success', 'Student created successfully! Admission Number: ' . $student->admission_no);
 
         } catch (\Exception $e) {
             DB::rollback();
+            \Log::error('Student creation error: ' . $e->getMessage());
             return back()->withErrors(['error' => 'Failed to create student: ' . $e->getMessage()])
                         ->withInput();
         }
@@ -152,33 +180,77 @@ class StudentController extends Controller
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:users,email,' . $student->user_id,
                 'class_id' => 'required|exists:class_rooms,id',
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'middle_name' => 'nullable|string|max:255',
+                'date_of_birth' => 'required|date',
+                'gender' => 'required|in:male,female,other',
+                'phone' => 'nullable|string|max:20',
+                'address' => 'nullable|string|max:500',
+                'nationality' => 'nullable|string|max:100',
+                'religion' => 'nullable|string|max:100',
+                'blood_group' => 'nullable|string|max:10',
             ]);
 
+            DB::beginTransaction();
+
+            // Update user account
             $student->user->update([
                 'name' => $request->name,
                 'email' => $request->email,
+                'phone' => $request->phone,
+                'address' => $request->address,
             ]);
 
+            // Update student record
             $student->update([
                 'class_id' => $request->class_id,
-                'date_of_birth' => $request->date_of_birth ?? $student->date_of_birth,
-                'address' => $request->address ?? $student->address,
-                'phone' => $request->phone ?? $student->phone,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'middle_name' => $request->middle_name,
+                'date_of_birth' => $request->date_of_birth,
+                'gender' => $request->gender,
+                'phone' => $request->phone,
+                'address' => $request->address,
+                'nationality' => $request->nationality ?? 'Liberian',
+                'religion' => $request->religion,
+                'blood_group' => $request->blood_group,
             ]);
 
-            return redirect()->route('students.index')->with('success', 'Student updated successfully.');
+            DB::commit();
+
+            return redirect()->route('admin.students.show', $student)->with('success', 'Student updated successfully.');
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to update student: ' . $e->getMessage()]);
+            DB::rollback();
+            \Log::error('Student update error: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Failed to update student: ' . $e->getMessage()])
+                        ->withInput();
         }
     }
 
     public function destroy(Student $student)
     {
         try {
+            DB::beginTransaction();
+            
+            // Delete associated guardian if exists
+            if ($student->guardian) {
+                $student->guardian->user->delete();
+                $student->guardian->delete();
+            }
+            
+            // Delete student user account
             $student->user->delete();
+            
+            // Delete student record
             $student->delete();
-            return redirect()->route('students.index')->with('success', 'Student deleted successfully.');
+            
+            DB::commit();
+            
+            return redirect()->route('admin.students.index')->with('success', 'Student deleted successfully.');
         } catch (\Exception $e) {
+            DB::rollback();
+            \Log::error('Student deletion error: ' . $e->getMessage());
             return back()->withErrors(['error' => 'Failed to delete student: ' . $e->getMessage()]);
         }
     }

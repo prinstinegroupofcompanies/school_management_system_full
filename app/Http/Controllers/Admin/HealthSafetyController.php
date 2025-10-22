@@ -93,8 +93,8 @@ class HealthSafetyController extends Controller
 
         HealthIncident::create($data);
 
-        return redirect()->route('admin.health-safety.incidents')
-            ->with('success', 'Health incident reported successfully.');
+        return redirect()->route('admin.health-safety.incidents.index')
+    ->with('success', 'Health incident reported successfully.');
     }
 
     public function showIncident(HealthIncident $incident)
@@ -225,7 +225,7 @@ class HealthSafetyController extends Controller
 
         HealthRecord::create($data);
 
-        return redirect()->route('admin.health-safety.records')
+        return redirect()->route('admin.health-safety.records.index')
             ->with('success', 'Health record created successfully.');
     }
 
@@ -298,8 +298,8 @@ class HealthSafetyController extends Controller
 
         SafetyCheck::create($data);
 
-        return redirect()->route('admin.health-safety.safety-checks')
-            ->with('success', 'Safety check recorded successfully.');
+        return redirect()->route('admin.health-safety.safety-checks.index')
+    ->with('success', 'Safety check recorded successfully.');
     }
 
     public function showSafetyCheck(SafetyCheck $check)

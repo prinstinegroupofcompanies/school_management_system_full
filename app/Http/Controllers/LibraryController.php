@@ -450,10 +450,10 @@ class LibraryController extends Controller
     public function createMember()
     {
         try {
-            return view('library.members.index.create');
+            return view('library.members.create');
         } catch (\Exception $e) {
             \Log::error('LibraryController createMember error: ' . $e->getMessage());
-            return view('library.members.index.create');
+            return view('library.members.create');
         }
     }
 

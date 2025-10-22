@@ -155,7 +155,7 @@ class HomeworkController extends Controller
 
         $isLate = now()->gt($assignment->due_date);
 
-        HomeworkSubmission::create([
+        $submission = HomeworkSubmission::create([
             'homework_assignment_id' => $assignment->id,
             'student_id' => $student->id,
             'submission_text' => $validated['submission_text'],
@@ -166,7 +166,54 @@ class HomeworkController extends Controller
             'status' => 'submitted',
         ]);
 
+        // Notify teacher of submission
+        $this->notifyTeacherOfSubmission($submission);
+
         return redirect()->route('student.homework.show', $assignment)
-                       ->with('success', 'Homework submitted successfully!');
+                       ->with('success', 'Homework submitted successfully! Teacher has been notified.');
+    }
+
+    /**
+     * Notify teacher when a student submits homework
+     */
+    private function notifyTeacherOfSubmission($submission)
+    {
+        try {
+            $assignment = $submission->homeworkAssignment;
+            $student = $submission->student;
+            $teacher = $assignment->teacher;
+
+            if ($teacher && $teacher->user) {
+                $notification = new \App\Models\Notification([
+                    'user_id' => $teacher->user->id,
+                    'type' => 'homework_submitted',
+                    'title' => 'New Homework Submission: ' . $assignment->title,
+                    'message' => $student->user->name . ' has submitted their homework for "' . $assignment->title . '".',
+                    'category' => 'academic',
+                    'subcategory' => 'homework',
+                    'priority' => 5, // Medium-High priority
+                    'status' => 'pending',
+                    'delivery_method' => 'in_app',
+                    'delivery_status' => 'pending',
+                    'action_url' => route('teacher.homework.show', $assignment),
+                    'action_text' => 'Review Submission',
+                    'related_model' => 'HomeworkSubmission',
+                    'related_id' => $submission->id,
+                    'metadata' => [
+                        'submission_id' => $submission->id,
+                        'assignment_id' => $assignment->id,
+                        'student_name' => $student->user->name,
+                        'submitted_at' => $submission->submitted_at->toISOString(),
+                        'is_late' => $submission->is_late,
+                        'subject_name' => $assignment->subject->name,
+                        'class_name' => $assignment->classRoom->name
+                    ],
+                    'is_active' => true
+                ]);
+                $notification->save();
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to notify teacher of homework submission: ' . $e->getMessage());
+        }
     }
 }

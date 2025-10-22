@@ -18,11 +18,12 @@ class ClassController extends Controller
                     ->with('error', 'Teacher profile not found. Please contact administrator.');
             }
 
-            // Get classes assigned to this teacher
-            $classes = \App\Models\ClassRoom::where('teacher_id', $teacher->id)
+            // Get classes assigned to this teacher (both methods)
+            $pivotClasses = $teacher->classes()->with(['students', 'subjects'])->get();
+            $directClasses = \App\Models\ClassRoom::where('class_teacher_id', $teacher->id)
                 ->with(['students', 'subjects'])
-                ->orderBy('name')
                 ->get();
+            $classes = $pivotClasses->merge($directClasses)->unique('id')->sortBy('name');
 
             // Get class statistics
             $stats = [
@@ -61,16 +62,21 @@ class ClassController extends Controller
                     ->with('error', 'Teacher profile not found. Please contact administrator.');
             }
 
-            // Get the specific class (ensure it belongs to this teacher)
-            $class = \App\Models\ClassRoom::where('id', $id)
-                ->where('teacher_id', $teacher->id)
-                ->with(['students.user', 'subjects', 'teacher.user'])
-                ->first();
+            // Get the specific class (ensure it belongs to this teacher using both methods)
+            $pivotClasses = $teacher->classes()->where('class_rooms.id', $id)->get();
+            $directClasses = \App\Models\ClassRoom::where('id', $id)
+                ->where('class_teacher_id', $teacher->id)
+                ->get();
+            
+            $class = $pivotClasses->merge($directClasses)->unique('id')->first();
 
             if (!$class) {
                 return redirect()->route('teacher.classes.index')
                     ->with('error', 'Class not found or you do not have permission to view it.');
             }
+
+            // Load relationships
+            $class->load(['students.user', 'subjects', 'teachers.user']);
 
             // Get recent activities for this class
             $recentActivities = collect([

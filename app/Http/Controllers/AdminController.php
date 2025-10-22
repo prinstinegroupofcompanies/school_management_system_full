@@ -15,6 +15,7 @@ use App\Models\StudentFee;
 use App\Models\StudentAttendance;
 use App\Models\TeacherAttendance;
 use App\Models\Notification;
+use App\Models\LessonPlan;
 
 class AdminController extends Controller
 {
@@ -60,6 +61,32 @@ class AdminController extends Controller
             $totalFeePayments = 0;
         }
         
+        // Get lesson plan statistics
+        try {
+            $lessonPlanCount = LessonPlan::count();
+            $pendingLessonPlans = LessonPlan::whereIn('status', ['submitted', 'first_level_approved'])->count();
+            $approvedLessonPlans = LessonPlan::where('status', 'second_level_approved')->count();
+        } catch (\Exception $e) {
+            $lessonPlanCount = 0;
+            $pendingLessonPlans = 0;
+            $approvedLessonPlans = 0;
+        }
+
+        // Get user statistics
+        try {
+            $totalUsers = User::count();
+            $activeUsers = User::where('status', 'active')->count();
+            $adminUsers = User::where('user_type', 'admin')->count();
+            $financeUsers = User::where('user_type', 'finance')->count();
+            $recentUsers = User::where('created_at', '>=', now()->subDays(30))->count();
+        } catch (\Exception $e) {
+            $totalUsers = 0;
+            $activeUsers = 0;
+            $adminUsers = 0;
+            $financeUsers = 0;
+            $recentUsers = 0;
+        }
+
         $stats = [
             'total_students' => $studentCount,
             'total_teachers' => $teacherCount,
@@ -68,6 +95,14 @@ class AdminController extends Controller
             'total_exams' => $examCount,
             'total_fee_payments' => $totalFeePayments,
             'attendance_rate' => $this->getAttendanceRate(),
+            'total_lesson_plans' => $lessonPlanCount,
+            'pending_lesson_plans' => $pendingLessonPlans,
+            'approved_lesson_plans' => $approvedLessonPlans,
+            'total_users' => $totalUsers,
+            'active_users' => $activeUsers,
+            'admin_users' => $adminUsers,
+            'finance_users' => $financeUsers,
+            'recent_users' => $recentUsers,
         ];
 
         // Real-time fee collection data
@@ -131,7 +166,7 @@ class AdminController extends Controller
         
         // Recent student attendance records
         try {
-            $recentStudentAttendance = StudentAttendance::with(['student.user', 'student.classRoom'])
+            $recentStudentAttendance = StudentAttendance::with(['student.user', 'student.class'])
                 ->whereDate('attendance_date', today())
                 ->latest()
                 ->limit(10)

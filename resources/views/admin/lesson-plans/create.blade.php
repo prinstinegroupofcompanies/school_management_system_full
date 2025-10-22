@@ -26,7 +26,7 @@
 
         <!-- Form -->
         <div class="bg-white shadow rounded-lg">
-            <form action="{{ route('admin.lesson-plans.store') }}" method="POST" class="px-4 py-5 sm:p-6">
+            <form action="{{ route('admin.lesson-plans.store') }}" method="POST" enctype="multipart/form-data" class="px-4 py-5 sm:p-6">
                 @csrf
                 
                 <div class="grid grid-cols-1 gap-6">
@@ -92,21 +92,40 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Description -->
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700">Description *</label>
+                        <textarea name="description" id="description" rows="3" required
+                                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">{{ old('description') }}</textarea>
+                        @error('description')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                            <label for="week_start_date" class="block text-sm font-medium text-gray-700">Week Start Date *</label>
-                            <input type="date" name="week_start_date" id="week_start_date" value="{{ old('week_start_date') }}" required
+                            <label for="lesson_date" class="block text-sm font-medium text-gray-700">Lesson Date *</label>
+                            <input type="date" name="lesson_date" id="lesson_date" value="{{ old('lesson_date') }}" required
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                            @error('week_start_date')
+                            @error('lesson_date')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
 
                         <div>
-                            <label for="week_end_date" class="block text-sm font-medium text-gray-700">Week End Date *</label>
-                            <input type="date" name="week_end_date" id="week_end_date" value="{{ old('week_end_date') }}" required
+                            <label for="start_time" class="block text-sm font-medium text-gray-700">Start Time *</label>
+                            <input type="time" name="start_time" id="start_time" value="{{ old('start_time') }}" required
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                            @error('week_end_date')
+                            @error('start_time')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="end_time" class="block text-sm font-medium text-gray-700">End Time *</label>
+                            <input type="time" name="end_time" id="end_time" value="{{ old('end_time') }}" required
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            @error('end_time')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
@@ -124,10 +143,10 @@
 
                     <!-- Materials -->
                     <div>
-                        <label for="materials" class="block text-sm font-medium text-gray-700">Materials Needed *</label>
-                        <textarea name="materials" id="materials" rows="3" required
-                                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">{{ old('materials') }}</textarea>
-                        @error('materials')
+                        <label for="materials_needed" class="block text-sm font-medium text-gray-700">Materials Needed *</label>
+                        <textarea name="materials_needed" id="materials_needed" rows="3" required
+                                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">{{ old('materials_needed') }}</textarea>
+                        @error('materials_needed')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
@@ -168,6 +187,21 @@
                         <textarea name="notes" id="notes" rows="3"
                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">{{ old('notes') }}</textarea>
                         @error('notes')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- File Attachments -->
+                    <div>
+                        <label for="attachments" class="block text-sm font-medium text-gray-700">Attachments</label>
+                        <input type="file" name="attachments[]" id="attachments" multiple
+                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <p class="mt-1 text-sm text-gray-500">Upload lesson materials (PDF, DOC, DOCX, JPG, PNG). Max 2MB per file.</p>
+                        @error('attachments')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                        @error('attachments.*')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>

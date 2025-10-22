@@ -37,6 +37,11 @@ if (!function_exists('safeRoute')) {
             'student.transport.index' => '/student/transport',
             'student.hostel.index' => '/student/hostel',
             'student.attendance.index' => '/student/attendance',
+            'admin.attendance.index' => '/admin/attendance',
+            'admin.attendance.students' => '/admin/attendance/students',
+            'admin.attendance.teachers' => '/admin/attendance/teachers',
+            'admin.users.index' => '/admin/users',
+            'admin.users.create' => '/admin/users/create',
             'student.settings.index' => '/student/settings',
             'teacher.dashboard' => '/teacher/dashboard',
             'teacher.classes.index' => '/teacher/classes',
@@ -46,6 +51,8 @@ if (!function_exists('safeRoute')) {
             'teacher.grades.index' => '/teacher/grades',
             'teacher.grades.create' => '/teacher/grades/create',
             'teacher.grades.bulk-create' => '/teacher/grades/bulk-create',
+            'teacher.lesson-plans.index' => '/teacher/lesson-plans',
+            'teacher.lesson-plans.create' => '/teacher/lesson-plans/create',
             'parent.grades.index' => '/parent/grades',
             'parent.grades.progress' => '/parent/grades/progress',
             'parent.grades.download' => '/parent/grades/download',
@@ -304,7 +311,7 @@ if (!function_exists('safeRoute')) {
                 </svg>
                 Financial
             </a>
-            <a href="{{ safeRoute('admin.reports.attendance') }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.reports.attendance') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+            <a href="{{ safeRoute('admin.attendance.index') }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.attendance.*') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
                 <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -625,6 +632,36 @@ if (!function_exists('safeRoute')) {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                 </svg>
                 Bulk Entry
+            </a>
+        </div>
+    </div>
+
+    <!-- Lesson Plans -->
+    <div x-data="{ open: {{ request()->routeIs('teacher.lesson-plans.*') ? 'true' : 'false' }} }">
+        <button @click="open = !open" 
+                class="nav-item-premium group w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-premium {{ request()->routeIs('teacher.lesson-plans.*') ? 'bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 shadow-lg' : 'text-gray-700 hover:bg-white/50 hover:text-gray-900' }}">
+            <div class="flex items-center">
+                <svg class="mr-3 h-5 w-5 {{ request()->routeIs('teacher.lesson-plans.*') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Lesson Plans
+            </div>
+            <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+        </button>
+        <div x-show="open" x-transition class="ml-6 space-y-2 mt-2">
+            <a href="{{ safeRoute('teacher.lesson-plans.index') }}" class="group flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-premium {{ request()->routeIs('teacher.lesson-plans.index') ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-600 shadow-md' : 'text-gray-600 hover:bg-white/30 hover:text-gray-900' }}">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                My Lesson Plans
+            </a>
+            <a href="{{ safeRoute('teacher.lesson-plans.create') }}" class="group flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-premium {{ request()->routeIs('teacher.lesson-plans.create') ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-600 shadow-md' : 'text-gray-600 hover:bg-white/30 hover:text-gray-900' }}">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Create Lesson Plan
             </a>
         </div>
     </div>
