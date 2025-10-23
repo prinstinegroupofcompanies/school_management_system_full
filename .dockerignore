@@ -53,3 +53,7 @@ docs/
 # Ignore deployment scripts (not needed in container)
 deploy-*.sh
 deploy-*.ps1
+
+# Ignore large files that might cause permission issues
+storage/app/public/*
+public/storage

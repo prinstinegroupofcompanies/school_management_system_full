@@ -67,7 +67,7 @@ RUN mkdir -p /database
 RUN chmod 755 /database
 
 # Copy environment file
-COPY .env.fly .env
+COPY env.fly .env
 
 # Generate application key
 RUN php artisan key:generate --force
