@@ -1,6 +1,6 @@
-# Fly.io configuration for School Management System
+# Fly.io configuration for School Management System (Laravel)
 app = "school-management-system"
-primary_region = "iad"  # Washington DC - good for US East Coast
+primary_region = "iad"
 
 [build]
   dockerfile = "Dockerfile"

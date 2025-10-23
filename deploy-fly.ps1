@@ -73,7 +73,8 @@ if ($appExists -and -not $SkipConfirmation) {
 
 if (-not $appExists) {
     Write-Status "Creating new Fly.io app..."
-    fly launch --no-deploy --name school-management-system
+    # Use --no-launch to avoid conflicts with existing fly.toml
+    fly apps create school-management-system --org personal
 }
 
 Write-Status "Creating volume for SQLite database..."

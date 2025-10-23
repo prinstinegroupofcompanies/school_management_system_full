@@ -57,7 +57,8 @@ if fly apps list | grep -q "school-management-system"; then
     fi
 else
     print_status "Creating new Fly.io app..."
-    fly launch --no-deploy --name school-management-system
+    # Use apps create to avoid conflicts with Laravel detection
+    fly apps create school-management-system --org personal
 fi
 
 print_status "Creating volume for SQLite database..."
