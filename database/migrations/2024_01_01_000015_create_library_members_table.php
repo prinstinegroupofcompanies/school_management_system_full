@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('library_members', function (Blueprint $table) {
             $table->id();
             $table->string('member_id')->unique();
-            $table->unsignedBigInteger->constrained();
+            $table->unsignedBigInteger('user_id')->constrained();
             $table->enum('member_type', ['student', 'teacher', 'staff', 'parent', 'external'])->default('student');
             $table->string('card_number')->unique();
             $table->date('issue_date');
