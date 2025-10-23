@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('title'); // e.g., "Mathematics Mid-Term Online Exam"
             $table->text('description')->nullable();
-            $table->unsignedBigInteger;
-            $table->unsignedBigInteger->constrained();
-            $table->unsignedBigInteger->constrained();
+            $table->unsignedBigInteger('subject_id')->constrained();
+            $table->unsignedBigInteger('class_id')->constrained();
+            $table->unsignedBigInteger('teacher_id')->constrained();
             $table->string('academic_year');
             $table->date('exam_date');
             $table->time('start_time');
