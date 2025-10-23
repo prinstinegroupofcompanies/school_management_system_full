@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('chat_messages', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('class_id')->nullable();
-            $table->unsignedBigInteger->nullable();
+            $table->unsignedBigInteger('sender_id')->nullable();
             $table->text('message');
             $table->string('message_type')->default('text'); // text, image, file, audio, video
             $table->string('file_path')->nullable();
@@ -31,9 +31,9 @@ return new class extends Migration
             $table->timestamp('read_at')->nullable();
             $table->boolean('is_pinned')->default(false);
             $table->timestamp('pinned_at')->nullable();
-            $table->unsignedBigInteger->nullable();
+            $table->unsignedBigInteger('receiver_id')->nullable();
             $table->text('reply_to_message')->nullable(); // For reply functionality
-            $table->unsignedBigInteger->nullable();
+            $table->unsignedBigInteger('group_id')->nullable();
             $table->enum('status', ['sent', 'delivered', 'read', 'failed'])->default('sent');
             $table->timestamps();
             

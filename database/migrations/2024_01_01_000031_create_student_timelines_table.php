@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('student_timelines', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger->constrained();
+            $table->unsignedBigInteger('student_id')->constrained();
             $table->string('title');
             $table->text('description')->nullable();
             $table->enum('type', ['admission', 'class_change', 'exam_result', 'attendance', 'fee_payment', 'achievement', 'discipline', 'other'])->default('other');
@@ -24,7 +24,7 @@ return new class extends Migration
             $table->json('data')->nullable(); // Additional data in JSON format
             $table->string('related_model')->nullable(); // Model class name
             $table->unsignedBigInteger('related_id')->nullable(); // Related record ID
-            $table->unsignedBigInteger;
+            $table->unsignedBigInteger('created_by');
             $table->boolean('is_public')->default(true); // Visible to parents/guardians
             $table->boolean('is_active')->default(true);
             $table->timestamps();

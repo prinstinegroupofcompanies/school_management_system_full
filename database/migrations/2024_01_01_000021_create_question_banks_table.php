@@ -16,9 +16,9 @@ return new class extends Migration
             $table->text('question_text');
             $table->text('question_image')->nullable();
             $table->enum('question_type', ['single_choice', 'multiple_choice', 'true_false', 'fill_blank', 'essay', 'matching'])->default('single_choice');
-            $table->unsignedBigInteger->constrained();
-            $table->unsignedBigInteger;
-            $table->unsignedBigInteger->constrained();
+            $table->unsignedBigInteger('subject_id')->constrained();
+            $table->unsignedBigInteger('class_id');
+            $table->unsignedBigInteger('teacher_id')->constrained();
             $table->string('academic_year');
             $table->enum('difficulty_level', ['easy', 'medium', 'hard', 'expert'])->default('medium');
             $table->decimal('marks', 5, 2)->default(1.00);

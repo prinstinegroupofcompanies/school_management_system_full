@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('online_exam_attempts', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger->constrained();
-            $table->unsignedBigInteger->constrained();
+            $table->unsignedBigInteger('student_id')->constrained();
+            $table->unsignedBigInteger('online_exam_id')->constrained();
             $table->string('attempt_number')->default('1');
             $table->timestamp('started_at');
             $table->timestamp('submitted_at')->nullable();
@@ -35,7 +35,7 @@ return new class extends Migration
             $table->text('feedback')->nullable();
             $table->text('teacher_comments')->nullable();
             $table->boolean('is_reviewed')->default(false);
-            $table->unsignedBigInteger->nullable();
+            $table->unsignedBigInteger('reviewed_by')->nullable();
             $table->timestamp('reviewed_at')->nullable();
             $table->timestamps();
             
