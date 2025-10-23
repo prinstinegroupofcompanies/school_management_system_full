@@ -3,6 +3,7 @@ app = "school-management-system"
 primary_region = "iad"  # Washington DC - good for US East Coast
 
 [build]
+  dockerfile = "Dockerfile"
 
 [env]
   APP_ENV = "production"

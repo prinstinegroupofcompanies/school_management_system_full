@@ -1,7 +1,7 @@
-# Use PHP 8.3 with FPM for better performance
-FROM php:8.3-fpm-alpine
+# Use PHP 8.3 with Alpine for Fly.io deployment
+FROM php:8.3-alpine
 
-# Install system dependencies
+# Install system dependencies and PHP extensions
 RUN apk add --no-cache \
     git \
     curl \
@@ -14,7 +14,20 @@ RUN apk add --no-cache \
     sqlite \
     nodejs \
     npm \
-    && docker-php-ext-install pdo pdo_pgsql pdo_sqlite mbstring exif pcntl bcmath gd
+    freetype-dev \
+    libjpeg-turbo-dev \
+    libwebp-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
+    && docker-php-ext-install -j$(nproc) \
+        pdo \
+        pdo_pgsql \
+        pdo_sqlite \
+        mbstring \
+        exif \
+        pcntl \
+        bcmath \
+        gd \
+        zip
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
