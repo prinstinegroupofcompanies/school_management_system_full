@@ -37,7 +37,8 @@ RUN npm ci --only=production
 # Copy application
 COPY . .
 
-# Build frontend assets
+# Create CSS directory and build frontend assets
+RUN mkdir -p public/css
 RUN npm run build
 
 # Create directories

@@ -1,4 +1,11 @@
 {
+  "name": "school-management-system",
+  "version": "1.0.0",
+  "description": "School Management System",
+  "scripts": {
+    "build": "tailwindcss -i ./resources/css/app.css -o ./public/css/app.css --minify",
+    "dev": "tailwindcss -i ./resources/css/app.css -o ./public/css/app.css --watch"
+  },
   "devDependencies": {
     "tailwindcss": "^4.1.12"
   }
