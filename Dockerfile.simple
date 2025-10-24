@@ -12,8 +12,6 @@ RUN apk add --no-cache \
     unzip \
     sqlite-dev \
     libzip-dev \
-    nodejs \
-    npm \
     && docker-php-ext-install pdo pdo_sqlite mbstring gd zip
 
 # Install Composer
@@ -28,18 +26,11 @@ COPY composer.json composer.lock ./
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Copy package files
-COPY package.json package-lock.json ./
-
-# Install Node dependencies
-RUN npm ci
-
 # Copy application
 COPY . .
 
-# Create CSS directory and build frontend assets
+# Create CSS directory
 RUN mkdir -p public/css
-RUN npm run build
 
 # Create directories
 RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
