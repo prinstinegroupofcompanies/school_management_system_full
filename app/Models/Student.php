@@ -26,10 +26,6 @@ class Student extends Model
         'phone',
         'address',
         'status',
-        // Auto-generated fields
-        'admission_number',
-        'student_number',
-        'international_student_id',
         // Enhanced academic tracking
         'assigned_subjects',
         'assigned_teachers',
@@ -386,23 +382,19 @@ class Student extends Model
         parent::boot();
 
         static::creating(function ($student) {
-            // Generate unique admission number
-            $student->admission_number = self::generateAdmissionNumber();
+            // Generate unique admission number (use existing admission_no column)
+            if (!$student->admission_no) {
+                $student->admission_no = self::generateAdmissionNumber();
+            }
             
-            // Generate unique student number
-            $student->student_number = self::generateStudentNumber();
-            
-            // Generate international student ID
-            $student->international_student_id = self::generateInternationalStudentId();
+            // Generate unique student ID (use existing student_id column)
+            if (!$student->student_id) {
+                $student->student_id = self::generateStudentNumber();
+            }
             
             // Set default academic year if not provided
             if (!$student->academic_year) {
                 $student->academic_year = date('Y');
-            }
-            
-            // Set default curriculum type
-            if (!$student->curriculum_type) {
-                $student->curriculum_type = 'international';
             }
         });
 
@@ -424,12 +416,12 @@ class Student extends Model
     public static function generateAdmissionNumber(): string
     {
         $year = date('Y');
-        $lastStudent = self::where('admission_number', 'like', "ADM{$year}%")
-                          ->orderBy('admission_number', 'desc')
+        $lastStudent = self::where('admission_no', 'like', "ADM{$year}%")
+                          ->orderBy('admission_no', 'desc')
                           ->first();
         
         if ($lastStudent) {
-            $lastNumber = (int) substr($lastStudent->admission_number, -4);
+            $lastNumber = (int) substr($lastStudent->admission_no, -4);
             $newNumber = $lastNumber + 1;
         } else {
             $newNumber = 1;
@@ -440,10 +432,10 @@ class Student extends Model
 
     public static function generateStudentNumber(): string
     {
-        $lastStudent = self::orderBy('student_number', 'desc')->first();
+        $lastStudent = self::orderBy('student_id', 'desc')->first();
         
-        if ($lastStudent && $lastStudent->student_number) {
-            $lastNumber = (int) substr($lastStudent->student_number, 3);
+        if ($lastStudent && $lastStudent->student_id) {
+            $lastNumber = (int) substr($lastStudent->student_id, 3);
             $newNumber = $lastNumber + 1;
         } else {
             $newNumber = 1;
@@ -557,11 +549,11 @@ class Student extends Model
 
     public function getFormattedAdmissionNumber(): string
     {
-        return $this->admission_number ?? 'Not Assigned';
+        return $this->admission_no ?? 'Not Assigned';
     }
 
     public function getFormattedStudentNumber(): string
     {
-        return $this->student_number ?? 'Not Assigned';
+        return $this->student_id ?? 'Not Assigned';
     }
 } 
