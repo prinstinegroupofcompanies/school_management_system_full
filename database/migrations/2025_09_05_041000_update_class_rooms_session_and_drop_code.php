@@ -12,9 +12,6 @@ return new class extends Migration
             if (!Schema::hasColumn('class_rooms', 'session')) {
                 $table->enum('session', ['A','B','C','D','E','F'])->default('A')->after('name');
             }
-            if (Schema::hasColumn('class_rooms', 'code')) {
-                $table->dropColumn('code');
-            }
         });
     }
 
