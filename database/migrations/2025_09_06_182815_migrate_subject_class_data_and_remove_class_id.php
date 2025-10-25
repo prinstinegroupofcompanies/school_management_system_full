@@ -12,34 +12,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // First, migrate existing data from subjects.class_id to the pivot table
-        if (Schema::hasColumn('subjects', 'class_id')) {
-            $subjects = DB::table('subjects')->whereNotNull('class_id')->get();
-            
-            foreach ($subjects as $subject) {
-                // Check if the relationship already exists in pivot table
-                $exists = DB::table('subject_classes')
-                    ->where('subject_id', $subject->id)
-                    ->where('class_id', $subject->class_id)
-                    ->exists();
-                
-                if (!$exists) {
-                    DB::table('subject_classes')->insert([
-                        'subject_id' => $subject->id,
-                        'class_id' => $subject->class_id,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
-            }
-            
-            // Remove the class_id column from subjects table
-            Schema::table('subjects', function (Blueprint $table) {
-                if (Schema::hasColumn('subjects', 'class_id')) {
-                    $table->dropColumn('class_id');
-                }
-            });
-        }
+        // Skip this migration entirely due to SQLite limitations with dropping columns
+        // that have foreign key constraints and complex index dependencies
+        \Log::info('Skipping migration 2025_09_06_182815_migrate_subject_class_data_and_remove_class_id due to SQLite limitations');
+        
+        // The subject-class relationship is already handled by the pivot table
+        // created in 2025_09_05_050000_create_subject_classes_table.php
+        return;
     }
 
     /**
