@@ -11,7 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('hostel_payments', function (Blueprint $table) {
+        // Skip this migration - table already exists from earlier migration
+
+        if (!Schema::hasTable('hostel_payments')) {
+
+            Schema::create('hostel_payments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
             $table->foreignId('hostel_room_id')->nullable()->constrained('hostel_rooms')->onDelete('set null');
@@ -24,6 +28,8 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->timestamps();
         });
+
+        }
     }
 
     /**

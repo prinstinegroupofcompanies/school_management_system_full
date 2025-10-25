@@ -11,7 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('hostels', function (Blueprint $table) {
+        // Skip this migration - table already exists from earlier migration
+
+        if (!Schema::hasTable('hostels')) {
+
+            Schema::create('hostels', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->text('address')->nullable();
@@ -24,6 +28,8 @@ return new class extends Migration
             $table->enum('status', ['active', 'inactive', 'maintenance'])->default('active');
             $table->timestamps();
         });
+
+        }
     }
 
     /**
