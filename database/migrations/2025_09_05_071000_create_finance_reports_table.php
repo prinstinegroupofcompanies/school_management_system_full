@@ -8,17 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('finance_reports', function (Blueprint $table) {
-            $table->id();
-            $table->enum('range', ['daily','weekly','monthly','yearly']);
-            $table->decimal('total', 12, 2)->default(0);
-            $table->unsignedInteger('count')->default(0);
-            $table->foreignId('pushed_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->timestamp('pushed_at')->nullable();
-            $table->timestamps();
+        if (!Schema::hasTable('finance_reports')) {
+            Schema::create('finance_reports', function (Blueprint $table) {
+                $table->id();
+                $table->enum('range', ['daily','weekly','monthly','yearly']);
+                $table->decimal('total', 12, 2)->default(0);
+                $table->unsignedInteger('count')->default(0);
+                $table->foreignId('pushed_by')->nullable()->constrained('users')->nullOnDelete();
+                $table->timestamp('pushed_at')->nullable();
+                $table->timestamps();
 
-            $table->index(['range', 'pushed_at']);
-        });
+                $table->index(['range', 'pushed_at']);
+            });
+        }
     }
 
     public function down(): void
