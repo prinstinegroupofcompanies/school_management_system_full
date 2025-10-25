@@ -12,9 +12,6 @@ return new class extends Migration
             if (!Schema::hasColumn('subjects', 'level')) {
                 $table->string('level', 20)->default('junior')->after('teacher_id'); // junior|senior
             }
-            if (Schema::hasColumn('subjects', 'credits')) {
-                $table->dropColumn('credits');
-            }
         });
     }
 
