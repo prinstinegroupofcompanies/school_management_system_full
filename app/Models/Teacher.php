@@ -71,7 +71,7 @@ class Teacher extends Model
      */
     public function classes(): BelongsToMany
     {
-        return $this->belongsToMany(ClassRoom::class, 'teacher_class')
+        return $this->belongsToMany(ClassRoom::class, 'teacher_class', 'teacher_id', 'class_room_id')
                     ->withPivot(['is_class_teacher', 'assigned_at', 'unassigned_at'])
                     ->withTimestamps();
     }
@@ -81,7 +81,7 @@ class Teacher extends Model
      */
     public function classTeacherClasses(): BelongsToMany
     {
-        return $this->belongsToMany(ClassRoom::class, 'teacher_class')
+        return $this->belongsToMany(ClassRoom::class, 'teacher_class', 'teacher_id', 'class_room_id')
                     ->wherePivot('is_class_teacher', true)
                     ->withPivot(['is_class_teacher', 'assigned_at', 'unassigned_at'])
                     ->withTimestamps();
