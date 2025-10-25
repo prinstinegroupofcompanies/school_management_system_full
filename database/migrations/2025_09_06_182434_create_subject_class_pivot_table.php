@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('subject_classes', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('subject_id')->constrained()->onDelete('cascade');
-            $table->foreignId('class_id')->constrained('class_rooms')->onDelete('cascade');
-            $table->timestamps();
-            
-            // Ensure unique combinations
-            $table->unique(['subject_id', 'class_id']);
-        });
+        if (!Schema::hasTable('subject_classes')) {
+            Schema::create('subject_classes', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('subject_id')->constrained()->onDelete('cascade');
+                $table->foreignId('class_id')->constrained('class_rooms')->onDelete('cascade');
+                $table->timestamps();
+                
+                // Ensure unique combinations
+                $table->unique(['subject_id', 'class_id']);
+            });
+        }
     }
 
     /**
