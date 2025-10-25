@@ -26,22 +26,6 @@ class Student extends Model
         'phone',
         'address',
         'status',
-        // Enhanced academic tracking
-        'assigned_subjects',
-        'assigned_teachers',
-        'curriculum_type',
-        'learning_objectives',
-        // Fee management
-        'total_fees',
-        'paid_fees',
-        'balance_fees',
-        // Academic performance
-        'current_gpa',
-        'current_grade',
-        'attendance_percentage',
-        // Activity tracking
-        'activity_log',
-        'last_activity_at',
         // legacy/extended fields kept for compatibility
         'admission_no', 'roll_no', 'first_name', 'last_name', 'middle_name',
         'blood_group', 'religion', 'caste', 'mother_tongue', 'nationality',
@@ -64,16 +48,6 @@ class Student extends Model
         'is_hostel' => 'boolean',
         'sibling_ids' => 'array',
         'wallet_balance' => 'decimal:2',
-        // New casts
-        'assigned_subjects' => 'array',
-        'assigned_teachers' => 'array',
-        'learning_objectives' => 'array',
-        'total_fees' => 'decimal:2',
-        'paid_fees' => 'decimal:2',
-        'balance_fees' => 'decimal:2',
-        'current_gpa' => 'decimal:2',
-        'activity_log' => 'array',
-        'last_activity_at' => 'datetime',
         'last_payment_date' => 'date',
         'restricted_access' => 'boolean',
         'restriction_date' => 'date',
@@ -399,12 +373,6 @@ class Student extends Model
         });
 
         static::created(function ($student) {
-            // Auto-assign subjects and teachers based on class
-            $student->autoAssignSubjectsAndTeachers();
-            
-            // Auto-assign fee structure
-            $student->autoAssignFeeStructure();
-            
             // Log enrollment activity
             if (auth()->check()) {
                 StudentActivityLog::logEnrollment($student, $student->classRoom, auth()->user());
@@ -462,7 +430,8 @@ class Student extends Model
         return "{$country}{$year}" . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
     }
 
-    // Auto-assignment methods
+    // Auto-assignment methods (disabled - columns don't exist in database)
+    /*
     public function autoAssignSubjectsAndTeachers()
     {
         if (!$this->classRoom) return;
@@ -514,8 +483,10 @@ class Student extends Model
             ]);
         }
     }
+    */
 
-    // Fee management methods
+    // Fee management methods (disabled - columns don't exist in database)
+    /*
     public function recordPayment($amount, $paymentType = 'tuition', $approvedBy = null)
     {
         $newPaidAmount = $this->paid_fees + $amount;
@@ -540,6 +511,7 @@ class Student extends Model
     {
         return $this->balance_fees > 0;
     }
+    */
 
     // Display helpers
     public function getDisplayName(): string
