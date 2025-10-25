@@ -28,7 +28,7 @@ return new class extends Migration
                 'salary' => 2500.00,
                 'basic_salary' => 2000.00,
                 'status' => 'active',
-                'employment_status' => 'permanent',
+                'employment_status' => 'active',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
