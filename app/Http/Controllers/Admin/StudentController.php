@@ -110,7 +110,7 @@ class StudentController extends Controller
             $guardian = \App\Models\Guardian::create([
                 'user_id' => $guardianUser->id,
                 'guardian_id' => 'G' . str_pad((\App\Models\Guardian::count() + 1), 4, '0', STR_PAD_LEFT),
-                'relationship' => $validated['guardian_relationship'],
+                'relationship' => strtolower($validated['guardian_relationship']),
                 'status' => 'active',
             ]);
 
