@@ -11,20 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('exam_questions', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('teacher_id')->constrained('teachers')->onDelete('cascade');
-            $table->foreignId('class_id')->constrained('class_rooms')->onDelete('cascade');
-            $table->foreignId('subject_id')->constrained('subjects')->onDelete('cascade');
-            $table->string('title');
-            $table->text('description')->nullable();
-            $table->integer('total_marks');
-            $table->integer('duration_minutes')->default(60);
-            $table->json('questions'); // Store questions as JSON
-            $table->enum('status', ['draft', 'published', 'completed'])->default('draft');
-            $table->timestamp('exam_date')->nullable();
-            $table->timestamps();
-        });
+        // Skip this migration - table already exists from 2025_09_05_085000_create_exam_questions_table.php
+        if (!Schema::hasTable('exam_questions')) {
+            Schema::create('exam_questions', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('teacher_id')->constrained('teachers')->onDelete('cascade');
+                $table->foreignId('class_id')->constrained('class_rooms')->onDelete('cascade');
+                $table->foreignId('subject_id')->constrained('subjects')->onDelete('cascade');
+                $table->string('title');
+                $table->text('description')->nullable();
+                $table->integer('total_marks');
+                $table->integer('duration_minutes')->default(60);
+                $table->json('questions'); // Store questions as JSON
+                $table->enum('status', ['draft', 'published', 'completed'])->default('draft');
+                $table->timestamp('exam_date')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**
