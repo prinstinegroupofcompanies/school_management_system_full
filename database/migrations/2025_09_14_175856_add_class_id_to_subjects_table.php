@@ -11,10 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('subjects', function (Blueprint $table) {
-            $table->unsignedBigInteger('class_id')->nullable();
-            $table->foreign('class_id')->references('id')->on('class_rooms')->onDelete('set null');
-        });
+        // Skip this migration - class_id column already exists in subjects table
+        // and we're using the pivot table subject_classes for many-to-many relationships
+        if (!Schema::hasColumn('subjects', 'class_id')) {
+            Schema::table('subjects', function (Blueprint $table) {
+                $table->unsignedBigInteger('class_id')->nullable();
+                $table->foreign('class_id')->references('id')->on('class_rooms')->onDelete('set null');
+            });
+        }
     }
 
     /**
