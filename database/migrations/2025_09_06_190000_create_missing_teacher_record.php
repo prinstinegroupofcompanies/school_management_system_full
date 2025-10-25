@@ -21,6 +21,7 @@ return new class extends Migration
                 'teacher_id' => 'TCH0002',
                 'employee_id' => 'EMP0002',
                 'department_id' => 1,
+                'designation_id' => 1,
                 'qualification' => 'Bachelor of Education',
                 'experience' => 5,
                 'joining_date' => now()->subYears(5),
