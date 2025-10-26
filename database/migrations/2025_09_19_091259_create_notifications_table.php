@@ -11,44 +11,50 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('notifications', function (Blueprint $table) {
-            $table->id();
-            $table->string('type'); // grade_published, payment_approved, exam_available, etc.
-            $table->morphs('notifiable'); // User who receives the notification
-            $table->json('data'); // Notification data
-            $table->timestamp('read_at')->nullable();
-            $table->timestamps();
+        if (!Schema::hasTable('notifications')) {
+            Schema::create('notifications', function (Blueprint $table) {
+                $table->id();
+                $table->string('type'); // grade_published, payment_approved, exam_available, etc.
+                $table->morphs('notifiable'); // User who receives the notification
+                $table->json('data'); // Notification data
+                $table->timestamp('read_at')->nullable();
+                $table->timestamps();
 
-            $table->index(['notifiable_type', 'notifiable_id']);
-        });
+                $table->index(['notifiable_type', 'notifiable_id']);
+            });
+        }
 
-        Schema::create('real_time_activities', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('activity_type'); // login, grade_view, payment_made, exam_taken
-            $table->string('description');
-            $table->json('metadata')->nullable(); // Additional activity data
-            $table->string('ip_address')->nullable();
-            $table->string('user_agent')->nullable();
-            $table->timestamps();
+        if (!Schema::hasTable('real_time_activities')) {
+            Schema::create('real_time_activities', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                $table->string('activity_type'); // login, grade_view, payment_made, exam_taken
+                $table->string('description');
+                $table->json('metadata')->nullable(); // Additional activity data
+                $table->string('ip_address')->nullable();
+                $table->string('user_agent')->nullable();
+                $table->timestamps();
 
-            $table->index(['user_id', 'activity_type']);
-            $table->index('created_at');
-        });
+                $table->index(['user_id', 'activity_type']);
+                $table->index('created_at');
+            });
+        }
 
-        Schema::create('system_alerts', function (Blueprint $table) {
-            $table->id();
-            $table->string('alert_type'); // maintenance, exam_reminder, fee_due, etc.
-            $table->string('title');
-            $table->text('message');
-            $table->json('target_users')->nullable(); // User types or specific IDs
-            $table->string('priority')->default('normal'); // low, normal, high, urgent
-            $table->boolean('is_active')->default(true);
-            $table->timestamp('expires_at')->nullable();
-            $table->timestamps();
+        if (!Schema::hasTable('system_alerts')) {
+            Schema::create('system_alerts', function (Blueprint $table) {
+                $table->id();
+                $table->string('alert_type'); // maintenance, exam_reminder, fee_due, etc.
+                $table->string('title');
+                $table->text('message');
+                $table->json('target_users')->nullable(); // User types or specific IDs
+                $table->string('priority')->default('normal'); // low, normal, high, urgent
+                $table->boolean('is_active')->default(true);
+                $table->timestamp('expires_at')->nullable();
+                $table->timestamps();
 
-            $table->index(['alert_type', 'is_active']);
-        });
+                $table->index(['alert_type', 'is_active']);
+            });
+        }
     }
 
     /**
