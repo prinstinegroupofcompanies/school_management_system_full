@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('homework_assignments', function (Blueprint $table) {
+        if (!Schema::hasTable('homework_assignments')) {
+            Schema::create('homework_assignments', function (Blueprint $table) {
             $table->id();
             $table->string('title');
             $table->text('description')->nullable();
@@ -35,7 +36,8 @@ return new class extends Migration
             $table->index(['class_id', 'subject_id']);
             $table->index(['due_date', 'is_active']);
             $table->index(['assignment_type', 'is_published']);
-        });
+            });
+        }
     }
 
     /**
