@@ -53,7 +53,7 @@ return new class extends Migration
                     'name' => 'Guardian Of ' . $user->name,
                     'email' => 'guardian.' . $user->email,
                     'password' => bcrypt('password'),
-                    'user_type' => 'guardian',
+                    'user_type' => 'parent',
                     'phone' => $user->phone ?? '0000000000',
                     'address' => $user->address ?? 'Monrovia',
                     'status' => 'active',
