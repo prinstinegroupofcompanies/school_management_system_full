@@ -94,17 +94,35 @@ class ProfileController extends Controller
             ]);
 
             // Update user information
-            $user->update([
+            $userData = [
                 'name' => $request->name,
                 'email' => $request->email,
-            ]);
-
-            // Update teacher information
-            $teacherData = [
-                'phone' => $request->phone,
-                'address' => $request->address,
-                'bio' => $request->bio,
             ];
+            
+            if ($request->filled('phone')) {
+                $userData['phone'] = $request->phone;
+            }
+            
+            if ($request->filled('address')) {
+                $userData['address'] = $request->address;
+            }
+            
+            $user->update($userData);
+
+            // Update teacher information if provided
+            $teacherData = [];
+            
+            if ($request->filled('qualification')) {
+                $teacherData['qualification'] = $request->qualification;
+            }
+            
+            if ($request->filled('experience')) {
+                $teacherData['experience'] = $request->experience;
+            }
+            
+            if ($request->filled('basic_salary')) {
+                $teacherData['basic_salary'] = $request->basic_salary;
+            }
 
             // Handle profile photo upload
             if ($request->hasFile('profile_photo')) {
@@ -117,7 +135,10 @@ class ProfileController extends Controller
                 $user->update(['profile_photo' => $path]);
             }
 
-            $teacher->update($teacherData);
+            // Only update teacher data if there's data to update
+            if (!empty($teacherData)) {
+                $teacher->update($teacherData);
+            }
 
             return redirect()->route('teacher.profile.show')
                 ->with('success', 'Profile updated successfully');
