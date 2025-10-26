@@ -47,7 +47,7 @@ class FeeStructureController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'class_id' => 'required|exists:class_rooms,id',
-            'fee_type' => 'required|string|max:100',
+            'fee_type' => 'required|in:monthly,quarterly,semester,annual',
             'amount' => 'required|numeric|min:0',
             'due_date' => 'required|date',
             'academic_year' => 'required|string|max:20',
@@ -120,7 +120,7 @@ class FeeStructureController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'class_id' => 'required|exists:class_rooms,id',
-            'fee_type' => 'required|string|max:100',
+            'fee_type' => 'required|in:monthly,quarterly,semester,annual',
             'amount' => 'required|numeric|min:0',
             'due_date' => 'required|date',
             'academic_year' => 'required|string|max:20',
