@@ -46,14 +46,28 @@ return new class extends Migration
             }
             
             // Create a default guardian record
+            // Note: guardians table structure uses user_id, not first_name/last_name
+            $guardianUser = DB::table('users')->where('email', 'guardian.' . $user->email)->first();
+            if (!$guardianUser) {
+                $guardianUser = DB::table('users')->insertGetId([
+                    'name' => 'Guardian Of ' . $user->name,
+                    'email' => 'guardian.' . $user->email,
+                    'password' => bcrypt('password'),
+                    'user_type' => 'guardian',
+                    'phone' => $user->phone ?? '0000000000',
+                    'address' => $user->address ?? 'Monrovia',
+                    'status' => 'active',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            } else {
+                $guardianUser = $guardianUser->id;
+            }
+            
             $guardian = DB::table('guardians')->insertGetId([
+                'user_id' => $guardianUser,
                 'guardian_id' => 'G' . str_pad($user->id, 4, '0', STR_PAD_LEFT),
-                'first_name' => 'Guardian',
-                'last_name' => 'Of ' . $user->name,
                 'relationship' => 'parent',
-                'phone' => $user->phone ?? '0000000000',
-                'email' => 'guardian.' . $user->email,
-                'address' => $user->address ?? 'Monrovia',
                 'status' => 'active',
                 'created_at' => now(),
                 'updated_at' => now(),
