@@ -79,7 +79,7 @@ class FinanceController extends Controller
         $totalScholarships = Scholarship::count();
         $activeScholarships = Scholarship::where('is_active', true)->count();
         $approvedApplications = ScholarshipApplication::where('status', 'approved')->count();
-        $totalScholarshipAmount = ScholarshipApplication::where('status', 'approved')
+        $totalScholarshipAmount = ScholarshipApplication::where('scholarship_applications.status', 'approved')
             ->join('scholarships', 'scholarship_applications.scholarship_id', '=', 'scholarships.id')
             ->sum('scholarships.amount');
         
