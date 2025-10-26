@@ -147,11 +147,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/grades/bulk-create', [\App\Http\Controllers\TeacherController::class, 'bulkCreateGrade'])->name('grades.bulk-create');
     });
 
-    // Finance Routes
-    Route::prefix('finance')->name('finance.')->group(function () {
-        Route::get('/dashboard', [\App\Http\Controllers\FinanceController::class, 'dashboard'])->name('dashboard');
-        Route::get('/payments', [\App\Http\Controllers\FinanceController::class, 'payments'])->name('payments.index');
-    });
+    // Finance Routes - REMOVED (duplicate, defined in Finance Routes section below at line 829)
 
     // Parent Routes
     Route::prefix('parent')->name('parent.')->group(function () {
