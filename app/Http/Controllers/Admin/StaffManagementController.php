@@ -19,7 +19,24 @@ class StaffManagementController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('admin');
+        $this->middleware(['auth', 'role']);
+        
+        // Allow finance officers to access payroll methods
+        $this->middleware(function ($request, $next) {
+            $user = auth()->user();
+            // Allow admin and finance officers for payroll
+            $allowedRoutes = ['payroll', 'showPayroll', 'createPayroll', 'storePayroll', 'editPayroll', 'updatePayroll', 'destroyPayroll'];
+            
+            if (in_array($request->route()->getActionMethod(), $allowedRoutes)) {
+                if (in_array($user->user_type, ['admin', 'finance'])) {
+                    return $next($request);
+                }
+            } elseif ($user->user_type !== 'admin') {
+                abort(403, 'Admin privileges required.');
+            }
+            
+            return $next($request);
+        })->except($allowedRoutes ?? ['index']);
     }
 
     // Staff Management Dashboard

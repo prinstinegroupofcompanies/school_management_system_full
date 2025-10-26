@@ -63,21 +63,32 @@ class FeeStructureController extends Controller
             'allow_installments' => 'boolean'
         ]);
         
-        $data = $request->all();
-        $data['total_amount'] = $data['amount'];
+        $data = $request->only([
+            'name', 'description', 'class_id', 'academic_year', 'fee_type',
+            'due_date', 'status', 'discount_percentage', 'discount_amount',
+            'grace_period_days', 'late_fee_percentage', 'late_fee_amount',
+            'max_installments'
+        ]);
+        
+        // Set amounts
+        $amount = $request->input('amount');
+        $data['amount'] = $amount;
+        $data['total_amount'] = $amount;
         
         // Calculate final amount after discount
         $discountAmount = $data['discount_amount'] ?? 0;
         $discountPercentage = $data['discount_percentage'] ?? 0;
         
         if ($discountPercentage > 0) {
-            $discountAmount += ($data['amount'] * $discountPercentage / 100);
+            $discountAmount += ($amount * $discountPercentage / 100);
         }
         
-        $data['final_amount'] = $data['amount'] - $discountAmount;
+        $data['final_amount'] = $amount - $discountAmount;
         $data['discount_amount'] = $discountAmount;
-        $data['is_active'] = $request->has('is_active');
-        $data['allow_installments'] = $request->has('allow_installments');
+        
+        // Set boolean fields
+        $data['is_active'] = $request->has('is_active') ? true : false;
+        $data['allow_installments'] = $request->has('allow_installments') ? true : false;
         
         // Set defaults for nullable fields
         $data['discount_percentage'] = $data['discount_percentage'] ?? 0;
@@ -85,9 +96,6 @@ class FeeStructureController extends Controller
         $data['late_fee_percentage'] = $data['late_fee_percentage'] ?? 0;
         $data['late_fee_amount'] = $data['late_fee_amount'] ?? 0;
         $data['max_installments'] = $data['max_installments'] ?? 1;
-        
-        // Remove amount from data since we're using total_amount
-        unset($data['amount']);
         
         FeeStructure::create($data);
         
@@ -128,21 +136,32 @@ class FeeStructureController extends Controller
             'allow_installments' => 'boolean'
         ]);
         
-        $data = $request->all();
-        $data['total_amount'] = $data['amount'];
+        $data = $request->only([
+            'name', 'description', 'class_id', 'academic_year', 'fee_type',
+            'due_date', 'status', 'discount_percentage', 'discount_amount',
+            'grace_period_days', 'late_fee_percentage', 'late_fee_amount',
+            'max_installments'
+        ]);
+        
+        // Set amounts
+        $amount = $request->input('amount');
+        $data['amount'] = $amount;
+        $data['total_amount'] = $amount;
         
         // Calculate final amount after discount
         $discountAmount = $data['discount_amount'] ?? 0;
         $discountPercentage = $data['discount_percentage'] ?? 0;
         
         if ($discountPercentage > 0) {
-            $discountAmount += ($data['amount'] * $discountPercentage / 100);
+            $discountAmount += ($amount * $discountPercentage / 100);
         }
         
-        $data['final_amount'] = $data['amount'] - $discountAmount;
+        $data['final_amount'] = $amount - $discountAmount;
         $data['discount_amount'] = $discountAmount;
-        $data['is_active'] = $request->has('is_active');
-        $data['allow_installments'] = $request->has('allow_installments');
+        
+        // Set boolean fields
+        $data['is_active'] = $request->has('is_active') ? true : false;
+        $data['allow_installments'] = $request->has('allow_installments') ? true : false;
         
         // Set defaults for nullable fields
         $data['discount_percentage'] = $data['discount_percentage'] ?? 0;
@@ -150,9 +169,6 @@ class FeeStructureController extends Controller
         $data['late_fee_percentage'] = $data['late_fee_percentage'] ?? 0;
         $data['late_fee_amount'] = $data['late_fee_amount'] ?? 0;
         $data['max_installments'] = $data['max_installments'] ?? 1;
-        
-        // Remove amount from data since we're using total_amount
-        unset($data['amount']);
         
         $feeStructure->update($data);
         

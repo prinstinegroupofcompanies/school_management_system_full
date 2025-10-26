@@ -17,6 +17,7 @@ class FeeStructure extends Model
         'class_id',
         'academic_year',
         'fee_type',
+        'amount',
         'total_amount',
         'discount_percentage',
         'discount_amount',
@@ -32,6 +33,7 @@ class FeeStructure extends Model
     ];
 
     protected $casts = [
+        'amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'discount_percentage' => 'decimal:2',
         'discount_amount' => 'decimal:2',

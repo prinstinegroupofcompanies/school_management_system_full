@@ -827,11 +827,11 @@ Route::middleware(['auth', 'finance'])->group(function () {
     
     // Payment Management
     Route::prefix('finance/payments')->name('finance.payments.')->group(function () {
+        Route::get('/analytics', [\App\Http\Controllers\Finance\PaymentController::class, 'analytics'])->name('analytics');
         Route::get('/', [\App\Http\Controllers\Finance\PaymentController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\Finance\PaymentController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\Finance\PaymentController::class, 'store'])->name('store');
         Route::get('/{payment}', [\App\Http\Controllers\Finance\PaymentController::class, 'show'])->name('show');
-        Route::get('/analytics', [\App\Http\Controllers\Finance\PaymentController::class, 'analytics'])->name('analytics');
         
         // Payment Approval Actions
         Route::post('/{payment}/approve', [\App\Http\Controllers\Finance\PaymentApprovalController::class, 'approve'])->name('approve');
