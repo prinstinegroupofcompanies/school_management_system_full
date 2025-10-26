@@ -12,31 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('fee_structures', function (Blueprint $table) {
-            // Add total_amount column (rename amount)
-            $table->decimal('total_amount', 10, 2)->after('fee_type');
-            
-            // Add remaining financial columns
-            $table->decimal('discount_percentage', 5, 2)->default(0)->after('total_amount');
-            $table->decimal('discount_amount', 10, 2)->default(0)->after('discount_percentage');
-            $table->decimal('final_amount', 10, 2)->after('discount_amount');
-            $table->date('due_date')->after('final_amount');
-            $table->integer('grace_period_days')->default(0)->after('due_date');
-            $table->decimal('late_fee_percentage', 5, 2)->default(0)->after('grace_period_days');
-            $table->decimal('late_fee_amount', 10, 2)->default(0)->after('late_fee_percentage');
-            $table->boolean('allow_installments')->default(false)->after('late_fee_amount');
-            $table->integer('max_installments')->default(1)->after('allow_installments');
-            $table->enum('status', ['active', 'inactive', 'draft'])->default('active')->after('max_installments');
-            $table->boolean('is_active')->default(true)->after('status');
-        });
+        // Skip this migration entirely - all columns already exist in the fee_structures table
+        \Log::info('Skipping migration 2025_09_20_231326_add_remaining_fee_structure_columns - all columns already exist');
         
-        // Copy data from amount to total_amount and set final_amount
-        DB::statement('UPDATE fee_structures SET total_amount = amount, final_amount = amount');
-        
-        // Drop the old amount column
-        Schema::table('fee_structures', function (Blueprint $table) {
-            $table->dropColumn('amount');
-        });
+        // Note: The amount column is kept for backward compatibility alongside total_amount
+        return;
     }
 
     /**
