@@ -32,7 +32,7 @@ class FinancialReportController extends Controller
             
         $monthlyRevenue = $monthlyFeePayments + $monthlyPaymentRecords;
         
-        $totalOutstanding = StudentFee::where('status', '!=', 'paid')->sum('balance');
+        $totalOutstanding = StudentFee::where('balance', '>', 0)->sum('balance');
         $totalStudents = Student::count();
         
         // Monthly revenue trend (SQLite compatible) - Combined from both sources
@@ -83,9 +83,9 @@ class FinancialReportController extends Controller
             ]);
         }
         
-        // Outstanding by class
+        // Outstanding by class (using balance > 0 instead of status column that doesn't exist)
         $outstandingByClass = StudentFee::with(['student.classRoom'])
-            ->where('student_fees.status', '!=', 'paid')
+            ->where('student_fees.balance', '>', 0)
             ->join('students', 'student_fees.student_id', '=', 'students.id')
             ->join('class_rooms', 'students.class_id', '=', 'class_rooms.id')
             ->selectRaw('class_rooms.name as class_name, SUM(student_fees.balance) as outstanding')

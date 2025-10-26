@@ -50,7 +50,7 @@ class PaymentController extends Controller
 
         // Calculate REAL-TIME summary statistics to match view expectations
         $stats = [
-            'total_outstanding' => StudentFee::where('status', '!=', 'paid')->sum('balance'),
+            'total_outstanding' => StudentFee::where('balance', '>', 0)->sum('balance'),
             'total_students_with_balance' => StudentFee::where('balance', '>', 0)->distinct('student_id')->count(),
             'today_collections' => FeePayment::whereDate('payment_date', today())
                                             ->where('status', 'paid')
@@ -177,12 +177,7 @@ class PaymentController extends Controller
         $studentFee->paid_amount += $request->amount_paid;
         $studentFee->balance = max(0, $studentFee->total_amount - $studentFee->paid_amount);
         
-        if ($studentFee->balance <= 0) {
-            $studentFee->status = 'paid';
-        } elseif ($studentFee->paid_amount > 0) {
-            $studentFee->status = 'partial';
-        }
-        
+        // Note: No status column in student_fees table, using balance to determine payment status
         $studentFee->save();
 
         return redirect()->route('finance.payments.index')
@@ -231,7 +226,7 @@ class PaymentController extends Controller
             ->whereYear('created_at', now()->year)
             ->sum('amount');
         
-        $totalOutstanding = StudentFee::where('status', '!=', 'paid')->sum('balance');
+        $totalOutstanding = StudentFee::where('balance', '>', 0)->sum('balance');
         
         // Payment method breakdown
         $paymentMethodBreakdown = FeePayment::where('status', 'paid')

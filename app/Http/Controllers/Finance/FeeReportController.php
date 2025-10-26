@@ -22,7 +22,7 @@ class FeeReportController extends Controller
         $totalFeeStructures = FeeStructure::where('is_active', true)->count();
         $totalStudentFees = StudentFee::sum('total_amount');
         $totalPaidAmount = StudentFee::sum('paid_amount');
-        $totalPendingAmount = StudentFee::where('status', '!=', 'paid')->sum('balance');
+        $totalPendingAmount = StudentFee::where('balance', '>', 0)->sum('balance');
         
         // Monthly collection data (SQLite compatible) - Combined from both payment sources
         $feePaymentCollections = FeePayment::where('status', 'paid')
