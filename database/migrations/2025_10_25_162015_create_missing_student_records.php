@@ -67,7 +67,7 @@ return new class extends Migration
             $guardian = DB::table('guardians')->insertGetId([
                 'user_id' => $guardianUser,
                 'guardian_id' => 'G' . str_pad($user->id, 4, '0', STR_PAD_LEFT),
-                'relationship' => 'parent',
+                'relationship' => 'guardian',
                 'status' => 'active',
                 'created_at' => now(),
                 'updated_at' => now(),
