@@ -57,13 +57,11 @@ class Grade extends Model
         return $this->belongsTo(User::class, 'approved_by');
     }
 
-    public function academicPeriod()
-    {
-        if (!\Schema::hasTable('academic_periods')) {
-            return null;
-        }
-        return $this->belongsTo(AcademicPeriod::class);
-    }
+    // Note: academic_period relationship removed due to table compatibility issues
+    // public function academicPeriod()
+    // {
+    //     return $this->belongsTo(AcademicPeriod::class);
+    // }
 
     public function calculateSemesterAverages(): void
     {
