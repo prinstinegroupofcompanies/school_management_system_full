@@ -14,6 +14,7 @@ use App\Models\AcademicPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class StaffManagementController extends Controller
 {
@@ -74,9 +75,9 @@ class StaffManagementController extends Controller
                 'total_staff' => Staff::count(),
                 'active_staff' => Staff::where('employment_status', 'active')->count(),
                 'departments' => Department::count(),
-                'pending_performance' => StaffPerformance::where('status', 'draft')->count(),
-                'upcoming_schedules' => StaffSchedule::upcoming()->count(),
-                'pending_payroll' => Payroll::where('status', 'pending')->count()
+                'pending_performance' => \Schema::hasTable('staff_performance') ? DB::table('staff_performance')->where('status', 'draft')->count() : 0,
+                'upcoming_schedules' => \Schema::hasTable('staff_schedules') ? StaffSchedule::upcoming()->count() : 0,
+                'pending_payroll' => \Schema::hasTable('payroll') ? Payroll::where('status', 'pending')->count() : 0
             ];
         } catch (\Exception $e) {
             \Log::error('Stats calculation error: ' . $e->getMessage());
