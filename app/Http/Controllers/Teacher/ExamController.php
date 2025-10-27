@@ -193,8 +193,9 @@ class ExamController extends Controller
         DB::beginTransaction();
         try {
             $validated['teacher_id'] = $teacher->id;
+            $durationMinutes = is_string($validated['duration_minutes']) ? (int) $validated['duration_minutes'] : $validated['duration_minutes'];
             $validated['end_time'] = Carbon::parse($validated['start_time'])
-                                          ->addMinutes((int) $validated['duration_minutes']);
+                                          ->addMinutes($durationMinutes);
             $validated['randomize_questions'] = $request->boolean('randomize_questions', false);
             $validated['show_results_immediately'] = $request->boolean('show_results_immediately', false);
             $validated['allow_review'] = $request->boolean('allow_review', true);

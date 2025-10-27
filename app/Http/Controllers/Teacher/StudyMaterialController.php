@@ -25,7 +25,7 @@ class StudyMaterialController extends Controller
                            ->withErrors(['error' => 'Teacher profile not found.']);
         }
 
-        $materials = StudyMaterial::where('teacher_id', $teacher->id)
+        $materials = StudyMaterial::where('teacher_id', $teacher->user_id)
                                  ->with(['subject', 'class'])
                                  ->latest()
                                  ->paginate(15);
