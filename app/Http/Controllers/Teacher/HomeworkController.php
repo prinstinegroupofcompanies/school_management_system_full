@@ -179,7 +179,8 @@ class HomeworkController extends Controller
             $validated['assigned_at'] = now();
             $validated['allow_late_submission'] = $request->boolean('allow_late_submission', true);
             $validated['late_penalty_percentage'] = $validated['late_penalty_percentage'] ?? 10.0;
-            $validated['is_published'] = false; // Start as draft
+            // Check if user wants to publish immediately
+            $validated['is_published'] = $request->boolean('is_published', false);
             
             // Handle auto-save requests
             if ($request->boolean('auto_save')) {
@@ -213,13 +214,18 @@ class HomeworkController extends Controller
                 ]);
             }
 
-            // Send real-time notifications to students in the class
-            $this->notifyStudentsOfNewAssignment($assignment);
-
             DB::commit();
 
+            // Only notify students if assignment is published
+            if ($assignment->is_published) {
+                $this->notifyStudentsOfNewAssignment($assignment);
+                $message = 'Homework assignment created and published successfully. Students have been notified.';
+            } else {
+                $message = 'Homework assignment created as draft. Remember to publish it when ready.';
+            }
+
             return redirect()->route('teacher.homework.show', $assignment)
-                           ->with('success', 'Homework assignment created successfully and students have been notified.');
+                           ->with('success', $message);
 
         } catch (\Exception $e) {
             DB::rollback();
