@@ -1,5 +1,5 @@
 # Fly.io configuration for School Management System (Laravel)
-app = "school-management-system"
+app = "school-managment-system-liberia"
 primary_region = "iad"
 
 [build]
