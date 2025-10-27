@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class Staff extends Model
 {
@@ -84,16 +85,25 @@ class Staff extends Model
 
     public function payrolls(): HasMany
     {
+        if (!\Schema::hasTable('payroll')) {
+            return $this->hasMany(Payroll::class)->whereRaw('1 = 0');
+        }
         return $this->hasMany(Payroll::class);
     }
 
     public function performances(): HasMany
     {
+        if (!\Schema::hasTable('staff_performance')) {
+            return $this->hasMany(StaffPerformance::class)->whereRaw('1 = 0');
+        }
         return $this->hasMany(StaffPerformance::class);
     }
 
     public function schedules(): HasMany
     {
+        if (!\Schema::hasTable('staff_schedules')) {
+            return $this->hasMany(StaffSchedule::class)->whereRaw('1 = 0');
+        }
         return $this->hasMany(StaffSchedule::class);
     }
 
