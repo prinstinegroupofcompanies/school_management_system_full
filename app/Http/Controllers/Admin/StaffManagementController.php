@@ -47,51 +47,51 @@ class StaffManagementController extends Controller
         try {
             $query = Staff::with(['user', 'department', 'designation']);
 
-        // Search functionality
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->whereHas('user', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            })->orWhere('employee_id', 'like', "%{$search}%");
-        }
+            // Search functionality
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->whereHas('user', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+                })->orWhere('employee_id', 'like', "%{$search}%");
+            }
 
-        // Filter by department
-        if ($request->filled('department')) {
-            $query->where('department_id', $request->department);
-        }
+            // Filter by department
+            if ($request->filled('department')) {
+                $query->where('department_id', $request->department);
+            }
 
-        // Filter by status
-        if ($request->filled('status')) {
-            $query->where('employment_status', $request->status);
-        }
+            // Filter by status
+            if ($request->filled('status')) {
+                $query->where('employment_status', $request->status);
+            }
 
-        $staff = $query->paginate(15);
-        $departments = Department::all();
+            $staff = $query->paginate(15);
+            $departments = Department::all();
 
-        // Dashboard statistics
-        try {
-            $stats = [
-                'total_staff' => Staff::count(),
-                'active_staff' => Staff::where('employment_status', 'active')->count(),
-                'departments' => Department::count(),
-                'pending_performance' => \Schema::hasTable('staff_performance') ? DB::table('staff_performance')->where('status', 'draft')->count() : 0,
-                'upcoming_schedules' => 0, // Simplified to avoid model dependencies
-                'pending_payroll' => \Schema::hasTable('payroll') ? DB::table('payroll')->where('status', 'pending')->count() : 0
-            ];
-        } catch (\Exception $e) {
-            \Log::error('Stats calculation error: ' . $e->getMessage());
-            $stats = [
-                'total_staff' => Staff::count(),
-                'active_staff' => 0,
-                'departments' => 0,
-                'pending_performance' => 0,
-                'upcoming_schedules' => 0,
-                'pending_payroll' => 0
-            ];
-        }
+            // Dashboard statistics
+            try {
+                $stats = [
+                    'total_staff' => Staff::count(),
+                    'active_staff' => Staff::where('employment_status', 'active')->count(),
+                    'departments' => Department::count(),
+                    'pending_performance' => \Schema::hasTable('staff_performance') ? DB::table('staff_performance')->where('status', 'draft')->count() : 0,
+                    'upcoming_schedules' => 0, // Simplified to avoid model dependencies
+                    'pending_payroll' => \Schema::hasTable('payroll') ? DB::table('payroll')->where('status', 'pending')->count() : 0
+                ];
+            } catch (\Exception $e) {
+                \Log::error('Stats calculation error: ' . $e->getMessage());
+                $stats = [
+                    'total_staff' => Staff::count(),
+                    'active_staff' => 0,
+                    'departments' => 0,
+                    'pending_performance' => 0,
+                    'upcoming_schedules' => 0,
+                    'pending_payroll' => 0
+                ];
+            }
 
-        return view('admin.staff.index', compact('staff', 'departments', 'stats'));
+            return view('admin.staff.index', compact('staff', 'departments', 'stats'));
         } catch (\Exception $e) {
             \Log::error('StaffManagementController index error: ' . $e->getMessage());
             $staff = collect()->paginate(15);
