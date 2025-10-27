@@ -22,21 +22,22 @@ class StaffManagementController extends Controller
         $this->middleware(['auth', 'role']);
         
         // Allow finance officers to access payroll methods
-        $this->middleware(function ($request, $next) {
+        $allowedRoutes = ['payroll', 'showPayroll', 'createPayroll', 'storePayroll', 'editPayroll', 'updatePayroll', 'destroyPayroll'];
+        
+        $this->middleware(function ($request, $next) use ($allowedRoutes) {
             $user = auth()->user();
-            // Allow admin and finance officers for payroll
-            $allowedRoutes = ['payroll', 'showPayroll', 'createPayroll', 'storePayroll', 'editPayroll', 'updatePayroll', 'destroyPayroll'];
             
             if (in_array($request->route()->getActionMethod(), $allowedRoutes)) {
                 if (in_array($user->user_type, ['admin', 'finance'])) {
                     return $next($request);
                 }
+                abort(403, 'Access denied.');
             } elseif ($user->user_type !== 'admin') {
                 abort(403, 'Admin privileges required.');
             }
             
             return $next($request);
-        })->except($allowedRoutes ?? ['index']);
+        })->except(array_merge($allowedRoutes, ['index']));
     }
 
     // Staff Management Dashboard
@@ -68,14 +69,26 @@ class StaffManagementController extends Controller
         $departments = Department::all();
 
         // Dashboard statistics
-        $stats = [
-            'total_staff' => Staff::count(),
-            'active_staff' => Staff::where('employment_status', 'active')->count(),
-            'departments' => Department::count(),
-            'pending_performance' => StaffPerformance::where('status', 'draft')->count(),
-            'upcoming_schedules' => StaffSchedule::upcoming()->count(),
-            'pending_payroll' => Payroll::where('status', 'pending')->count()
-        ];
+        try {
+            $stats = [
+                'total_staff' => Staff::count(),
+                'active_staff' => Staff::where('employment_status', 'active')->count(),
+                'departments' => Department::count(),
+                'pending_performance' => StaffPerformance::where('status', 'draft')->count(),
+                'upcoming_schedules' => StaffSchedule::upcoming()->count(),
+                'pending_payroll' => Payroll::where('status', 'pending')->count()
+            ];
+        } catch (\Exception $e) {
+            \Log::error('Stats calculation error: ' . $e->getMessage());
+            $stats = [
+                'total_staff' => Staff::count(),
+                'active_staff' => 0,
+                'departments' => 0,
+                'pending_performance' => 0,
+                'upcoming_schedules' => 0,
+                'pending_payroll' => 0
+            ];
+        }
 
         return view('admin.staff.index', compact('staff', 'departments', 'stats'));
         } catch (\Exception $e) {
@@ -512,7 +525,6 @@ class StaffManagementController extends Controller
             'work_location' => $request->work_location,
             'duties' => $request->duties,
             'notes' => $request->notes,
-            'duration_hours' => $durationHours,
             'assigned_by' => auth()->id(),
             'status' => $request->status
         ]);

@@ -84,7 +84,7 @@ class StudyMaterialController extends Controller
         $material->description = $request->description;
         $material->subject_id = $request->subject_id;
         $material->class_id = $request->class_id;
-        $material->teacher_id = $teacher->id;
+        $material->teacher_id = $teacher->user_id; // Use user_id instead of teacher model id
         $material->type = $request->material_type;
         $material->link = $request->link_url;
 
@@ -108,7 +108,7 @@ class StudyMaterialController extends Controller
     {
         $teacher = auth()->user()->teacher;
         
-        if ($material->teacher_id !== $teacher->id) {
+        if ($material->teacher_id !== $teacher->user_id) {
             return redirect()->route('teacher.study-materials.index')
                            ->withErrors(['error' => 'You are not authorized to view this material.']);
         }
@@ -121,7 +121,7 @@ class StudyMaterialController extends Controller
     {
         $teacher = auth()->user()->teacher;
         
-        if ($material->teacher_id !== $teacher->id) {
+        if ($material->teacher_id !== $teacher->user_id) {
             return redirect()->route('teacher.study-materials.index')
                            ->withErrors(['error' => 'You are not authorized to edit this material.']);
         }
@@ -138,7 +138,7 @@ class StudyMaterialController extends Controller
     {
         $teacher = auth()->user()->teacher;
         
-        if ($material->teacher_id !== $teacher->id) {
+        if ($material->teacher_id !== $teacher->user_id) {
             return redirect()->route('teacher.study-materials.index')
                            ->withErrors(['error' => 'You are not authorized to update this material.']);
         }
@@ -195,7 +195,7 @@ class StudyMaterialController extends Controller
     {
         $teacher = auth()->user()->teacher;
         
-        if ($material->teacher_id !== $teacher->id) {
+        if ($material->teacher_id !== $teacher->user_id) {
             return redirect()->route('teacher.study-materials.index')
                            ->withErrors(['error' => 'You are not authorized to delete this material.']);
         }

@@ -98,6 +98,24 @@
                             @enderror
                         </div>
 
+                        <!-- Classes (Multiple Selection) -->
+                        <div class="md:col-span-2">
+                            <label for="class_ids" class="block text-sm font-medium text-gray-700 mb-2">Assign to Classes *</label>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3">
+                                @foreach($classes as $class)
+                                    <label class="flex items-center">
+                                        <input type="checkbox" name="class_ids[]" value="{{ $class->id }}" 
+                                               class="mr-2 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500 @error('class_ids') border-red-500 @enderror"
+                                               {{ in_array($class->id, old('class_ids', [])) ? 'checked' : '' }}>
+                                        <span class="text-sm text-gray-700">{{ $class->name }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                            @error('class_ids')
+                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <!-- Hours per Week -->
                         <div>
                             <label for="hours_per_week" class="block text-sm font-medium text-gray-700 mb-2">Hours per Week</label>
