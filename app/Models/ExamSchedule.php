@@ -34,6 +34,7 @@ class ExamSchedule extends Model
         'end_date' => 'date',
         'start_time' => 'datetime',
         'end_time' => 'datetime',
+        'exam_date' => 'date',
         'is_active' => 'boolean',
     ];
 
@@ -85,6 +86,20 @@ class ExamSchedule extends Model
     public function scopeByAcademicYear($query, $academicYear)
     {
         return $query->where('academic_year', $academicYear);
+    }
+
+    /** Optional: teacher not on table; view uses @if($schedule->teacher) */
+    public function getTeacherAttribute()
+    {
+        return null;
+    }
+
+    public function getExamDateAttribute($value)
+    {
+        if ($value) {
+            return \Carbon\Carbon::parse($value);
+        }
+        return $this->start_date;
     }
 
     public function scopeByStatus($query, $status)

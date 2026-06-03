@@ -65,18 +65,25 @@
     remember: false
 }">
     <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        <!-- Background Elements -->
+        <!-- Background: school custom image or default -->
         <div class="absolute inset-0 overflow-hidden">
-            <!-- Floating circles -->
+            @if(isset($school) && $school && $school->login_background_image)
+            <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" style="background-image: url('{{ e($school->login_background_image) }}');"></div>
+            <div class="absolute inset-0 bg-black/40"></div>
+            @else
+            <!-- Floating circles (default) -->
             <div class="absolute top-20 left-20 w-32 h-32 bg-blue-200 rounded-full opacity-20 float"></div>
             <div class="absolute top-40 right-20 w-24 h-24 bg-purple-200 rounded-full opacity-20 float" style="animation-delay: -2s;"></div>
             <div class="absolute bottom-20 left-40 w-28 h-28 bg-indigo-200 rounded-full opacity-20 float" style="animation-delay: -4s;"></div>
             <div class="absolute bottom-40 right-40 w-20 h-20 bg-pink-200 rounded-full opacity-20 float" style="animation-delay: -1s;"></div>
             
-            <!-- Grid pattern -->
+            <!-- Grid pattern (default only) -->
+            @if(!isset($school) || !$school || !$school->login_background_image)
             <div class="absolute inset-0 opacity-5">
                 <div class="absolute inset-0" style="background-image: radial-gradient(circle at 1px 1px, #667eea 1px, transparent 0); background-size: 50px 50px;"></div>
             </div>
+            @endif
+            @endif
         </div>
 
         <!-- Main Content -->
@@ -88,9 +95,19 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                     </svg>
                 </div>
-                <h2 class="text-4xl font-bold gradient-text mb-2">SchoolMS</h2>
-                <p class="text-xl text-gray-600">Welcome back to your school</p>
+                @if(file_exists(public_path(config('school.logo', 'assets/images/school-logo.png'))))
+                <img src="{{ asset(config('school.logo', 'assets/images/school-logo.png')) }}" 
+                     alt="{{ config('app.name') }}" 
+                     class="mx-auto h-20 w-auto mb-4">
+                @endif
+                <h2 class="text-4xl font-bold gradient-text mb-2">{{ isset($school) && $school ? $school->name : config('app.name', 'School Management System') }}</h2>
+                <p class="text-xl text-gray-600">{{ isset($school) && $school ? $school->name . ' Portal' : config('school.name', 'School') }}</p>
                 <p class="text-sm text-gray-500 mt-2">Sign in to access your dashboard</p>
+                @if(isset($school) && $school && $school->code)
+                <p class="text-xs text-gray-400 mt-1">School login: <strong>{{ url()->current() }}?school={{ $school->code }}</strong></p>
+                @else
+                <p class="text-xs text-gray-400 mt-1">Use this URL: <strong>{{ config('app.url') }}</strong></p>
+                @endif
             </div>
 
             <!-- Login Form -->
@@ -255,5 +272,4 @@
         });
     </script>
 </body>
-</html>
 </html>

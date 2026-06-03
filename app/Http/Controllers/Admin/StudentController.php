@@ -50,6 +50,54 @@ class StudentController extends Controller
         }
     }
 
+    /**
+     * Export students.
+     */
+    public function export(Request $request, $format = 'csv')
+    {
+        try {
+            $query = Student::with(['user', 'classRoom']);
+
+            // Apply same filters as index
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->whereHas('user', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+                })->orWhere('admission_number', 'like', "%{$search}%");
+            }
+
+            if ($request->filled('class_id')) {
+                $query->where('class_id', $request->class_id);
+            }
+
+            if ($request->filled('status')) {
+                $query->whereHas('user', function ($q) use ($request) {
+                    $q->where('status', $request->status);
+                });
+            }
+
+            $students = $query->get();
+
+            $exportColumns = [
+                'admission_no' => 'Admission Number',
+                'student_id' => 'Student ID',
+                'user.name' => 'Student Name',
+                'user.email' => 'Email',
+                'user.phone' => 'Phone',
+                'classRoom.name' => 'Class',
+                'gender' => 'Gender',
+                'date_of_birth' => 'Date of Birth',
+                'status' => 'Status',
+            ];
+
+            return (new \App\Services\ExportService)->export($students, $format, $exportColumns, 'students');
+        } catch (\Exception $e) {
+            \Log::error('Student export error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Export failed: ' . $e->getMessage());
+        }
+    }
+
     public function create()
     {
         try {
@@ -62,7 +110,8 @@ class StudentController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $existingParent = User::where('email', $request->guardian_email)->where('user_type', 'parent')->first();
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:8',
@@ -77,63 +126,74 @@ class StudentController extends Controller
             'nationality' => 'nullable|string|max:100',
             'religion' => 'nullable|string|max:100',
             'blood_group' => 'nullable|string|max:10',
-            'guardian_name' => 'required|string|max:255',
             'guardian_email' => 'required|email',
-            'guardian_phone' => 'required|string|max:20',
-            'guardian_relationship' => 'required|string|max:100',
-        ]);
+        ];
+        if (!$existingParent) {
+            $rules['guardian_name'] = 'required|string|max:255';
+            $rules['guardian_phone'] = 'required|string|max:20';
+            $rules['guardian_relationship'] = 'required|string|max:100';
+            $rules['guardian_password'] = ['required', 'confirmed', 'min:8'];
+        }
+        $validated = $request->validate($rules);
 
         DB::beginTransaction();
         try {
-            // Create user account
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
-                'password' => bcrypt($validated['password']),
+                'password' => $validated['password'],
                 'user_type' => 'student',
-                'phone' => $validated['phone'],
-                'address' => $validated['address'],
+                'phone' => $validated['phone'] ?? null,
+                'address' => $validated['address'] ?? null,
                 'status' => 'active',
+                'school_id' => auth()->user()->school_id,
             ]);
 
-            // Create guardian user account
-            $guardianUser = User::create([
-                'name' => $validated['guardian_name'],
-                'email' => $validated['guardian_email'],
-                'password' => bcrypt('password123'), // Default password
-                'user_type' => 'parent',
-                'phone' => $validated['guardian_phone'],
-                'status' => 'active',
-            ]);
+            if ($existingParent) {
+                $guardian = \App\Models\Guardian::where('user_id', $existingParent->id)->first();
+                if (!$guardian) {
+                    $guardian = \App\Models\Guardian::create([
+                        'user_id' => $existingParent->id,
+                        'guardian_id' => 'G' . str_pad((\App\Models\Guardian::count() + 1), 4, '0', STR_PAD_LEFT),
+                        'relationship' => 'guardian',
+                        'status' => 'active',
+                    ]);
+                }
+            } else {
+                $guardianUser = User::create([
+                    'name' => $validated['guardian_name'],
+                    'email' => $validated['guardian_email'],
+                    'password' => $validated['guardian_password'],
+                    'user_type' => 'parent',
+                    'phone' => $validated['guardian_phone'],
+                    'status' => 'active',
+                    'school_id' => auth()->user()->school_id,
+                ]);
+                $guardian = \App\Models\Guardian::create([
+                    'user_id' => $guardianUser->id,
+                    'guardian_id' => 'G' . str_pad((\App\Models\Guardian::count() + 1), 4, '0', STR_PAD_LEFT),
+                    'relationship' => strtolower($validated['guardian_relationship']),
+                    'status' => 'active',
+                ]);
+            }
 
-            // Create guardian record
-            $guardian = \App\Models\Guardian::create([
-                'user_id' => $guardianUser->id,
-                'guardian_id' => 'G' . str_pad((\App\Models\Guardian::count() + 1), 4, '0', STR_PAD_LEFT),
-                'relationship' => strtolower($validated['guardian_relationship']),
-                'status' => 'active',
-            ]);
-
-            // Generate admission number
             $admissionNo = 'ADM' . date('Y') . str_pad((Student::count() + 1), 4, '0', STR_PAD_LEFT);
-
-            // Create student record
             $student = Student::create([
                 'user_id' => $user->id,
                 'class_id' => $validated['class_id'],
                 'admission_no' => $admissionNo,
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
-                'middle_name' => $validated['middle_name'],
+                'middle_name' => $validated['middle_name'] ?? null,
                 'academic_year' => date('Y'),
                 'admission_date' => now(),
                 'date_of_birth' => $validated['date_of_birth'],
                 'gender' => $validated['gender'],
-                'phone' => $validated['phone'],
-                'address' => $validated['address'],
+                'phone' => $validated['phone'] ?? null,
+                'address' => $validated['address'] ?? null,
                 'nationality' => $validated['nationality'] ?? 'Liberian',
-                'religion' => $validated['religion'],
-                'blood_group' => $validated['blood_group'],
+                'religion' => $validated['religion'] ?? null,
+                'blood_group' => $validated['blood_group'] ?? null,
                 'guardian_id' => $guardian->id,
                 'status' => 'active',
                 'is_active' => true,
@@ -141,8 +201,13 @@ class StudentController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.students.show', $student)
-                           ->with('success', 'Student created successfully! Admission Number: ' . $student->admission_no);
+            $msg = 'Student created successfully! Admission Number: ' . $student->admission_no;
+            if (!$existingParent) {
+                $msg .= ' Parent can log in at ' . url('/login') . ' with email: ' . $validated['guardian_email'] . ' and the password you set.';
+            } else {
+                $msg .= ' Student linked to existing parent (' . $validated['guardian_email'] . ').';
+            }
+            return redirect()->route('admin.students.show', $student)->with('success', $msg);
 
         } catch (\Exception $e) {
             DB::rollback();
@@ -253,5 +318,139 @@ class StudentController extends Controller
             \Log::error('Student deletion error: ' . $e->getMessage());
             return back()->withErrors(['error' => 'Failed to delete student: ' . $e->getMessage()]);
         }
+    }
+
+    /**
+     * Admin: list grade periods and years for a student (for viewing/printing grade sheets).
+     */
+    public function grades(Student $student)
+    {
+        $student->load(['user', 'classRoom']);
+        $periods = \App\Models\Grade::where('student_id', $student->id)
+            ->select('academic_year', 'semester')
+            ->distinct()
+            ->orderBy('academic_year', 'desc')
+            ->orderBy('semester', 'desc')
+            ->get()
+            ->map(fn($g) => [
+                'year' => $g->academic_year,
+                'semester' => $g->semester,
+                'period_name' => ($g->semester == 1 ? 'Semester 1 (Term 1)' : ($g->semester == 2 ? 'Semester 2 (Term 2)' : "Period {$g->semester}")) . " - {$g->academic_year}",
+            ]);
+        $yearsWithGrades = \App\Models\Grade::where('student_id', $student->id)
+            ->where('status', 'approved')
+            ->distinct()
+            ->pluck('academic_year')
+            ->sort()
+            ->values();
+        return view('admin.students.grades', compact('student', 'periods', 'yearsWithGrades'));
+    }
+
+    /**
+     * Admin: view student grade sheet by year and semester (printable).
+     */
+    public function gradeSheet(Student $student, $year, $semester)
+    {
+        $student->load(['user', 'classRoom']);
+        $grades = \App\Models\Grade::where('student_id', $student->id)
+            ->where('academic_year', $year)
+            ->where('semester', $semester)
+            ->where('status', 'approved')
+            ->with(['subject', 'class', 'teacher.user'])
+            ->orderBy('subject_id')
+            ->get();
+        $stats = [
+            'total_subjects' => $grades->count(),
+            'average_score' => $grades->count() > 0 ? $grades->avg('year_avg') : 0,
+            'highest_score' => $grades->count() > 0 ? $grades->max('year_avg') : 0,
+            'lowest_score' => $grades->count() > 0 ? $grades->min('year_avg') : 0,
+            'passed_subjects' => $grades->where('year_avg', '>=', 50)->count(),
+            'failed_subjects' => $grades->where('year_avg', '<', 50)->count(),
+        ];
+        $adminSignature = \App\Models\User::where('user_type', 'admin')->first()?->signature ?? null;
+        $school = \App\Models\School::first();
+        return view('student.grades.grade-sheet', compact('year', 'semester', 'student', 'grades', 'stats', 'adminSignature', 'school'));
+    }
+
+    /**
+     * Admin: download student grade sheet PDF by year and semester.
+     */
+    public function downloadGradeSheet(Student $student, $year, $semester)
+    {
+        $student->load(['user', 'classRoom']);
+        $grades = \App\Models\Grade::where('student_id', $student->id)
+            ->where('academic_year', $year)
+            ->where('semester', $semester)
+            ->where('status', 'approved')
+            ->with(['subject', 'class', 'teacher.user'])
+            ->orderBy('subject_id')
+            ->get();
+        $stats = [
+            'total_subjects' => $grades->count(),
+            'average_score' => $grades->count() > 0 ? $grades->avg('year_avg') : 0,
+            'highest_score' => $grades->count() > 0 ? $grades->max('year_avg') : 0,
+            'lowest_score' => $grades->count() > 0 ? $grades->min('year_avg') : 0,
+            'passed_subjects' => $grades->where('year_avg', '>=', 50)->count(),
+            'failed_subjects' => $grades->where('year_avg', '<', 50)->count(),
+        ];
+        $adminSignature = \App\Models\User::where('user_type', 'admin')->first()?->signature ?? null;
+        $school = \App\Models\School::first();
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('student.grades.grade-sheet-pdf', compact('year', 'semester', 'student', 'grades', 'stats', 'adminSignature', 'school'));
+        $filename = "Grade_Sheet_Period_{$semester}_{$year}_" . ($student->admission_no ?? $student->id) . ".pdf";
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Admin: view full-year grade sheet (yearly average, promotion 70%).
+     */
+    public function fullYearGradeSheet(Student $student, $year)
+    {
+        $student->load(['user', 'classRoom']);
+        $grades = \App\Models\Grade::where('student_id', $student->id)
+            ->where('academic_year', $year)
+            ->where('status', 'approved')
+            ->with(['subject', 'class', 'teacher.user'])
+            ->orderBy('semester')->orderBy('subject_id')
+            ->get();
+        $yearlyAverage = $grades->count() > 0 ? round($grades->avg('year_avg'), 2) : 0;
+        $bySemester = $grades->groupBy('semester');
+        $stats = [
+            'total_subjects' => $grades->unique('subject_id')->count(),
+            'yearly_average' => $yearlyAverage,
+            'eligible_for_promotion' => $yearlyAverage >= 70.0,
+            'passed_subjects' => $grades->where('year_avg', '>=', 50)->count(),
+            'failed_subjects' => $grades->where('year_avg', '<', 50)->count(),
+        ];
+        $adminSignature = \App\Models\User::where('user_type', 'admin')->first()?->signature ?? null;
+        $school = \App\Models\School::first();
+        return view('student.grades.grade-sheet-full-year', compact('year', 'student', 'grades', 'bySemester', 'stats', 'adminSignature', 'school'));
+    }
+
+    /**
+     * Admin: download full-year grade sheet PDF.
+     */
+    public function downloadFullYearGradeSheet(Student $student, $year)
+    {
+        $student->load(['user', 'classRoom']);
+        $grades = \App\Models\Grade::where('student_id', $student->id)
+            ->where('academic_year', $year)
+            ->where('status', 'approved')
+            ->with(['subject', 'class', 'teacher.user'])
+            ->orderBy('semester')->orderBy('subject_id')
+            ->get();
+        $yearlyAverage = $grades->count() > 0 ? round($grades->avg('year_avg'), 2) : 0;
+        $bySemester = $grades->groupBy('semester');
+        $stats = [
+            'total_subjects' => $grades->unique('subject_id')->count(),
+            'yearly_average' => $yearlyAverage,
+            'eligible_for_promotion' => $yearlyAverage >= 70.0,
+            'passed_subjects' => $grades->where('year_avg', '>=', 50)->count(),
+            'failed_subjects' => $grades->where('year_avg', '<', 50)->count(),
+        ];
+        $adminSignature = \App\Models\User::where('user_type', 'admin')->first()?->signature ?? null;
+        $school = \App\Models\School::first();
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('student.grades.grade-sheet-full-year-pdf', compact('year', 'student', 'grades', 'bySemester', 'stats', 'adminSignature', 'school'));
+        $filename = "Grade_Sheet_Full_Year_{$year}_" . ($student->admission_no ?? $student->id) . ".pdf";
+        return $pdf->download($filename);
     }
 }

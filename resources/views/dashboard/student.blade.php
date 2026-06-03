@@ -8,7 +8,7 @@
             <div class="flex items-center justify-between">
                 <h1 class="text-3xl font-bold text-gray-900">Student Dashboard</h1>
                 <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-500">Welcome, {{ auth()->user()->name }}</span>
+                    <span class="text-sm text-gray-500">Welcome, {{ $user->name ?? $currentUser->name ?? 'Student' }}</span>
                     @if(isset($session))
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
                         Session: {{ $session['academic_year'] }} • Sem {{ $session['semester'] }}

@@ -62,6 +62,7 @@
                                         <option value="teacher" {{ old('user_type', $user->user_type) == 'teacher' ? 'selected' : '' }}>Teacher</option>
                                         <option value="staff" {{ old('user_type', $user->user_type) == 'staff' ? 'selected' : '' }}>Staff</option>
                                         <option value="finance" {{ old('user_type', $user->user_type) == 'finance' ? 'selected' : '' }}>Finance</option>
+                                        <option value="parent" {{ old('user_type', $user->user_type) == 'parent' ? 'selected' : '' }}>Parent</option>
                                     </select>
                                     @error('user_type')
                                         <div class="invalid-feedback">{{ $message }}</div>

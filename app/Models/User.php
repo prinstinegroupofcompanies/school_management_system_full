@@ -6,14 +6,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-// use Spatie\Permission\Traits\HasRoles; // Commented out due to missing permission tables
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -38,7 +40,8 @@ class User extends Authenticatable
         'last_login_at',
         'last_logout_at',
         'is_active',
-        'user_type', // admin, teacher, student, parent, accountant, librarian
+        'user_type',
+        'school_id', // null = super admin; set = school-scoped user
     ];
 
     /**
@@ -63,6 +66,22 @@ class User extends Authenticatable
         'last_logout_at' => 'datetime',
         'is_active' => 'boolean',
     ];
+
+    /**
+     * Get the school this user belongs to (null for super admin).
+     */
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
+
+    /**
+     * Check if user is super admin (no school, has super_admin role).
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->school_id === null && $this->hasRole('super_admin');
+    }
 
     /**
      * Get the student profile associated with the user.
@@ -110,6 +129,62 @@ class User extends Authenticatable
     public function activities(): HasMany
     {
         return $this->hasMany(Activity::class);
+    }
+
+    /**
+     * Get the polymorphic attendance records (for teachers).
+     */
+    public function attendances(): MorphMany
+    {
+        return $this->morphMany(Attendance::class, 'attendable');
+    }
+
+    /**
+     * Get user settings.
+     */
+    public function userSetting(): HasOne
+    {
+        return $this->hasOne(UserSetting::class);
+    }
+
+    /**
+     * Get NFC cards.
+     */
+    public function nfcCards(): HasMany
+    {
+        return $this->hasMany(NfcCard::class);
+    }
+
+    /**
+     * Get active NFC card.
+     */
+    public function activeNfcCard(): HasOne
+    {
+        return $this->hasOne(NfcCard::class)->where('is_active', true);
+    }
+
+    /**
+     * Get transport assignments.
+     */
+    public function transportAssignments(): HasMany
+    {
+        return $this->hasMany(TransportAssignment::class);
+    }
+
+    /**
+     * Get active transport assignment.
+     */
+    public function activeTransportAssignment(): HasOne
+    {
+        return $this->hasOne(TransportAssignment::class)->where('is_active', true);
+    }
+
+    /**
+     * Parents can have many children (students).
+     */
+    public function children(): BelongsToMany
+    {
+        return $this->belongsToMany(Student::class, 'parent_student', 'parent_id', 'student_id')->withTimestamps();
     }
 
     /**

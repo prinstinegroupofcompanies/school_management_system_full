@@ -22,7 +22,12 @@ class TeacherController extends Controller
 {
     public function dashboard()
     {
+        // Always get fresh authenticated user
         $user = auth()->user();
+        
+        if (!$user) {
+            return redirect()->route('login');
+        }
         
         try {
             $teacher = $user->teacher;
@@ -245,6 +250,7 @@ class TeacherController extends Controller
             ];
         }));
 
+        // Ensure user is always passed to view
         return view('teacher.dashboard', compact(
             'stats', 
             'recent_activities', 

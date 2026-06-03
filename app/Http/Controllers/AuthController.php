@@ -25,6 +25,15 @@ class AuthController extends Controller
             
             $user = Auth::user();
             
+            // Check for role-based redirects first
+            if ($user->hasRole('conductor_driver')) {
+                return redirect()->intended(route('transport.driver.dashboard'));
+            }
+            
+            if ($user->hasRole('registrar')) {
+                return redirect()->intended(route('registrar.enrollment.index'));
+            }
+            
             // Redirect based on user type
             switch ($user->user_type) {
                 case 'admin':
@@ -35,6 +44,15 @@ class AuthController extends Controller
                     return redirect()->intended(route('student.dashboard'));
                 case 'finance':
                     return redirect()->intended(route('finance.dashboard'));
+                case 'parent':
+                    return redirect()->intended(route('parent.dashboard'));
+                case 'librarian':
+                    return redirect()->intended(route('library.index'));
+                case 'staff':
+                    if ($user->hasRole('conductor_driver')) {
+                        return redirect()->intended(route('transport.driver.dashboard'));
+                    }
+                    return redirect()->intended(route('library.index'));
                 default:
                     return redirect()->intended(route('dashboard'));
             }

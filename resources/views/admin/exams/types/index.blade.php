@@ -8,7 +8,7 @@
             <div class="flex items-center justify-between">
                 <h1 class="text-3xl font-bold text-gray-900">Exam Types Management</h1>
                 <div class="flex items-center space-x-4">
-                    <a href="{{ route('exams.types.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                    <a href="{{ route('admin.exams.types.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
@@ -135,9 +135,9 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex space-x-2">
-                                        <a href="{{ route('exams.types.show', $examType) }}" class="text-blue-600 hover:text-blue-900">View</a>
-                                        <a href="{{ route('exams.types.edit', $examType) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
-                                        <form method="POST" action="{{ route('exams.types.destroy', $examType) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this exam type?')">
+                                        <a href="{{ route('admin.exams.types.show', $examType) }}" class="text-blue-600 hover:text-blue-900">View</a>
+                                        <a href="{{ route('admin.exams.types.edit', $examType) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                        <form method="POST" action="{{ route('admin.exams.types.destroy', $examType) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this exam type?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
@@ -162,7 +162,7 @@
                     <h3 class="mt-2 text-sm font-medium text-gray-900">No exam types found</h3>
                     <p class="mt-1 text-sm text-gray-500">Get started by creating a new exam type.</p>
                     <div class="mt-6">
-                        <a href="{{ route('exams.types.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                        <a href="{{ route('admin.exams.types.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>

@@ -16,7 +16,7 @@
 
         <!-- Filters -->
         <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <form method="GET" action="{{ route('teachers.index') }}" class="flex flex-wrap gap-4">
+            <form method="GET" action="{{ route('admin.teachers.index') }}" class="flex flex-wrap gap-4">
                 <div class="flex-1 min-w-64">
                     <input type="text" name="search" value="{{ request('search') }}" 
                            placeholder="Search by name, email, or employee ID..." 

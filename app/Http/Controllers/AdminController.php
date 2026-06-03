@@ -235,9 +235,12 @@ class AdminController extends Controller
             $upcoming_exams = collect();
         }
 
+        // Always pass the authenticated user to the view
+        $user = auth()->user();
+        
         return view('dashboard.admin', compact(
             'stats', 'feeStats', 'attendanceStats', 'recentActivities', 'upcoming_exams',
-            'recentStudentAttendance', 'recentTeacherAttendance'
+            'recentStudentAttendance', 'recentTeacherAttendance', 'user'
         ) + ['session' => $session]);
     }
 
@@ -270,8 +273,10 @@ class AdminController extends Controller
     private function getRecentActivities()
     {
         try {
-            // Real-time activities from notifications and system events
-            $recentNotifications = Notification::where('user_id', auth()->id())
+            $currentUserId = auth()->id();
+            
+            // Real-time activities from notifications and system events for the current user
+            $recentNotifications = Notification::where('user_id', $currentUserId)
                 ->latest()
                 ->limit(3)
                 ->get()

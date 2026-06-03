@@ -22,7 +22,7 @@ class GradeController extends Controller
                 ->with('error', 'Student record not found. Please contact administrator.');
         }
 
-        // Get available academic periods for the student
+        // Get available academic periods (by term/semester) and years for end-of-year
         try {
             $periods = \App\Models\Grade::where('student_id', $student->id)
                 ->select('academic_year', 'semester')
@@ -31,18 +31,26 @@ class GradeController extends Controller
                 ->orderBy('semester', 'desc')
                 ->get()
                 ->map(function($grade) {
+                    $termLabel = $grade->semester == 1 ? 'Semester 1 (Term 1)' : ($grade->semester == 2 ? 'Semester 2 (Term 2)' : "Period {$grade->semester}");
                     return [
                         'year' => $grade->academic_year,
                         'semester' => $grade->semester,
-                        'period_name' => "Period {$grade->semester} - {$grade->academic_year}",
+                        'period_name' => "{$termLabel} - {$grade->academic_year}",
                         'period_key' => "{$grade->academic_year}_{$grade->semester}"
                     ];
                 });
+            $yearsWithGrades = \App\Models\Grade::where('student_id', $student->id)
+                ->where('status', 'approved')
+                ->select('academic_year')
+                ->distinct()
+                ->orderBy('academic_year', 'desc')
+                ->pluck('academic_year');
         } catch (\Exception $e) {
             $periods = collect();
+            $yearsWithGrades = collect();
         }
 
-        return view('student.grades.index', compact('periods'));
+        return view('student.grades.index', compact('periods', 'yearsWithGrades'));
     }
 
     public function transcript()
@@ -186,6 +194,99 @@ class GradeController extends Controller
         
         $filename = "Grade_Sheet_Period_{$semester}_{$year}_{$student->student_id}.pdf";
         
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Full academic year grade sheet: all terms/semesters, final yearly average, promotion eligibility (70%+).
+     */
+    public function fullYearGradeSheet($year)
+    {
+        try {
+            $user = auth()->user();
+            $student = $user->student;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')->with('error', 'Student profile not available.');
+        }
+        if (!$student) {
+            return redirect()->route('student.dashboard')->with('error', 'Student record not found.');
+        }
+
+        $grades = \App\Models\Grade::where('student_id', $student->id)
+            ->where('academic_year', $year)
+            ->where('status', 'approved')
+            ->with(['subject', 'class', 'teacher.user'])
+            ->orderBy('semester')
+            ->orderBy('subject_id')
+            ->get();
+
+        $yearlyAverage = $grades->count() > 0 ? round($grades->avg('year_avg'), 2) : 0;
+        $eligibleForPromotion = $yearlyAverage >= 70.0;
+        $bySemester = $grades->groupBy('semester');
+
+        $stats = [
+            'total_subjects' => $grades->unique('subject_id')->count(),
+            'yearly_average' => $yearlyAverage,
+            'eligible_for_promotion' => $eligibleForPromotion,
+            'passed_subjects' => $grades->where('year_avg', '>=', 50)->count(),
+            'failed_subjects' => $grades->where('year_avg', '<', 50)->count(),
+        ];
+
+        try {
+            $adminUser = \App\Models\User::where('user_type', 'admin')->first();
+            $adminSignature = $adminUser ? $adminUser->signature : null;
+        } catch (\Exception $e) {
+            $adminSignature = null;
+        }
+        try {
+            $school = \App\Models\School::first();
+        } catch (\Exception $e) {
+            $school = null;
+        }
+
+        return view('student.grades.grade-sheet-full-year', compact('year', 'student', 'grades', 'bySemester', 'stats', 'adminSignature', 'school'));
+    }
+
+    public function downloadFullYearGradeSheet($year)
+    {
+        try {
+            $user = auth()->user();
+            $student = $user->student;
+        } catch (\Exception $e) {
+            return redirect()->route('student.dashboard')->with('error', 'Student profile not available.');
+        }
+        if (!$student) {
+            return redirect()->route('student.dashboard')->with('error', 'Student record not found.');
+        }
+
+        $grades = \App\Models\Grade::where('student_id', $student->id)
+            ->where('academic_year', $year)
+            ->where('status', 'approved')
+            ->with(['subject', 'class', 'teacher.user'])
+            ->orderBy('semester')
+            ->orderBy('subject_id')
+            ->get();
+
+        $yearlyAverage = $grades->count() > 0 ? round($grades->avg('year_avg'), 2) : 0;
+        $eligibleForPromotion = $yearlyAverage >= 70.0;
+        $bySemester = $grades->groupBy('semester');
+        $stats = [
+            'total_subjects' => $grades->unique('subject_id')->count(),
+            'yearly_average' => $yearlyAverage,
+            'eligible_for_promotion' => $eligibleForPromotion,
+            'passed_subjects' => $grades->where('year_avg', '>=', 50)->count(),
+            'failed_subjects' => $grades->where('year_avg', '<', 50)->count(),
+        ];
+        $adminSignature = null;
+        $school = null;
+        try {
+            $adminUser = \App\Models\User::where('user_type', 'admin')->first();
+            $adminSignature = $adminUser ? $adminUser->signature : null;
+            $school = \App\Models\School::first();
+        } catch (\Exception $e) {}
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('student.grades.grade-sheet-full-year-pdf', compact('year', 'student', 'grades', 'bySemester', 'stats', 'adminSignature', 'school'));
+        $filename = "Grade_Sheet_Full_Year_{$year}_" . ($student->admission_no ?? $student->id) . ".pdf";
         return $pdf->download($filename);
     }
 

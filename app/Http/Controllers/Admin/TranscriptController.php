@@ -23,56 +23,38 @@ class TranscriptController extends Controller
 
     public function index(Request $request)
     {
-        $query = Transcript::with(['student.user', 'class', 'generatedBy', 'approvedBy', 'issuedBy']);
-
-        // Apply filters
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
+        $query = Transcript::with(['student.user', 'student.classRoom', 'generatedBy']);
 
         if ($request->filled('academic_year')) {
             $query->where('academic_year', $request->academic_year);
         }
 
-        if ($request->filled('class_id')) {
-            $query->where('class_id', $request->class_id);
-        }
-
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('student.user', function($q) use ($search) {
+            $query->whereHas('student.user', function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%");
-            })->orWhere('transcript_number', 'like', "%{$search}%");
+            });
         }
 
         $transcripts = $query->orderBy('created_at', 'desc')->paginate(20);
 
-        // Get filter options
         $academicYears = Transcript::distinct()->pluck('academic_year')->sort()->values();
         $classes = ClassRoom::orderBy('name')->get();
-        $statuses = ['draft', 'generated', 'approved', 'issued', 'archived'];
-        $types = ['official', 'unofficial', 'interim'];
 
         return view('admin.transcripts.index', compact(
-            'transcripts', 'academicYears', 'classes', 'statuses', 'types'
+            'transcripts', 'academicYears', 'classes'
         ));
     }
 
     public function create()
     {
-        $students = Student::with(['user', 'classRoom'])->get();
+        $students = Student::with(['user', 'classRoom'])->orderBy('created_at', 'desc')->get();
         $classes = ClassRoom::orderBy('name')->get();
         $academicYears = $this->getAcademicYears();
-        $semesters = ['First Semester', 'Second Semester', 'Annual'];
-        $types = ['official', 'unofficial', 'interim'];
 
         return view('admin.transcripts.create', compact(
-            'students', 'classes', 'academicYears', 'semesters', 'types'
+            'students', 'classes', 'academicYears'
         ));
     }
 
@@ -81,23 +63,18 @@ class TranscriptController extends Controller
         $request->validate([
             'student_id' => 'required|exists:students,id',
             'academic_year' => 'required|string',
-            'semester' => 'nullable|string',
-            'type' => 'required|in:official,unofficial,interim',
             'notes' => 'nullable|string|max:1000'
         ]);
 
         try {
             DB::beginTransaction();
 
-            $transcript = Transcript::generateForStudent(
-                $request->student_id,
-                $request->academic_year,
-                $request->semester,
-                $request->type
-            );
+            $student = Student::findOrFail($request->student_id);
+            $year = (int) preg_replace('/^(\d+).*/', '$1', $request->academic_year);
+            $transcript = Transcript::generateSimpleTranscript($student, $year);
 
             if ($request->filled('notes')) {
-                $transcript->update(['notes' => $request->notes]);
+                $transcript->update(['remarks' => $request->notes]);
             }
 
             DB::commit();
@@ -108,7 +85,7 @@ class TranscriptController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Transcript generation failed: ' . $e->getMessage());
-            
+
             return back()->withInput()
                 ->with('error', 'Failed to generate transcript: ' . $e->getMessage());
         }
@@ -116,22 +93,17 @@ class TranscriptController extends Controller
 
     public function show(Transcript $transcript)
     {
-        $transcript->load([
-            'student.user', 'class', 'transcriptGrades.subject', 'transcriptGrades.teacher.user',
-            'generatedBy', 'approvedBy', 'issuedBy'
-        ]);
+        $transcript->load(['student.user', 'student.classRoom', 'generatedBy']);
 
         return view('admin.transcripts.show', compact('transcript'));
     }
 
     public function generatePdf(Transcript $transcript)
     {
-        $transcript->load([
-            'student.user', 'class', 'transcriptGrades.subject', 'transcriptGrades.teacher.user',
-            'generatedBy', 'approvedBy', 'issuedBy'
-        ]);
+        $transcript->load(['student.user', 'student.classRoom', 'generatedBy']);
+        $school = \App\Models\School::first();
 
-        $pdf = Pdf::loadView('admin.transcripts.pdf', compact('transcript'))
+        $pdf = Pdf::loadView('admin.transcripts.pdf', compact('transcript', 'school'))
             ->setPaper('A4', 'portrait')
             ->setOptions([
                 'isHtml5ParserEnabled' => true,
@@ -139,71 +111,25 @@ class TranscriptController extends Controller
                 'defaultFont' => 'Arial'
             ]);
 
-        $filename = "transcript_{$transcript->transcript_number}.pdf";
+        $studentName = \Str::slug($transcript->student->user->name ?? 'student');
+        $filename = "transcript_{$studentName}_{$transcript->academic_year}.pdf";
         $path = "transcripts/{$filename}";
 
-        // Store the PDF
         Storage::put($path, $pdf->output());
-        $transcript->update(['pdf_path' => $path]);
 
         return $pdf->download($filename);
     }
 
     public function approve(Request $request, Transcript $transcript)
     {
-        if (!$transcript->canBeApproved()) {
-            return redirect()->route('admin.transcripts.show', $transcript)
-                ->with('error', 'This transcript cannot be approved.');
-        }
-
-        $request->validate([
-            'approver_signature' => 'nullable|string',
-            'notes' => 'nullable|string|max:1000'
-        ]);
-
-        $transcript->approve();
-
-        if ($request->filled('approver_signature')) {
-            $transcript->update(['approver_signature' => $request->approver_signature]);
-        }
-
-        if ($request->filled('notes')) {
-            $transcript->update(['notes' => $request->notes]);
-        }
-
         return redirect()->route('admin.transcripts.show', $transcript)
-            ->with('success', 'Transcript approved successfully.');
+            ->with('info', 'Approval workflow is not configured for this transcript type.');
     }
 
     public function issue(Request $request, Transcript $transcript)
     {
-        if (!$transcript->canBeIssued()) {
-            return redirect()->route('admin.transcripts.show', $transcript)
-                ->with('error', 'This transcript cannot be issued.');
-        }
-
-        $request->validate([
-            'registrar_signature' => 'nullable|string',
-            'watermark' => 'nullable|string',
-            'valid_until' => 'nullable|date|after:today'
-        ]);
-
-        $transcript->issue();
-
-        if ($request->filled('registrar_signature')) {
-            $transcript->update(['registrar_signature' => $request->registrar_signature]);
-        }
-
-        if ($request->filled('watermark')) {
-            $transcript->update(['watermark' => $request->watermark]);
-        }
-
-        if ($request->filled('valid_until')) {
-            $transcript->update(['valid_until' => $request->valid_until]);
-        }
-
         return redirect()->route('admin.transcripts.show', $transcript)
-            ->with('success', 'Transcript issued successfully.');
+            ->with('info', 'Issue workflow is not configured for this transcript type.');
     }
 
     private function getAcademicYears()

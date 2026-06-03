@@ -1,5 +1,7 @@
 @php 
-$userType = auth()->user()->user_type ?? 'guest'; 
+// Use currentUser from ViewComposer if available, otherwise fallback to auth()
+$currentUser = $currentUser ?? auth()->user();
+$userType = $currentUser ? $currentUser->user_type : 'guest'; 
 
 // Helper function to safely generate routes (only declare once)
 if (!function_exists('safeRoute')) {
@@ -25,6 +27,8 @@ if (!function_exists('safeRoute')) {
             'admin.subjects.create' => '/admin/subjects/create',
             'admin.grades.index' => '/admin/grades',
             'admin.grades.analytics' => '/admin/grades/analytics',
+            'admin.transcripts.index' => '/admin/transcripts',
+            'admin.transcripts.create' => '/admin/transcripts/create',
             'admin.staff.index' => '/admin/staff',
             'admin.staff.performance' => '/admin/staff/performance',
             'admin.staff.schedules' => '/admin/staff/schedules',
@@ -512,15 +516,36 @@ if (!function_exists('safeRoute')) {
     </div>
     @endif
 
-    {{-- Grades for Admin (Approvals) --}}
+    {{-- Grades & Transcripts for Admin --}}
     @if($userType === 'admin')
-    <a href="{{ safeRoute('admin.grades.index') }}" 
-       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.grades.*') ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
-        <svg class="mr-3 h-5 w-5 {{ request()->routeIs('admin.grades.*') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-9 4h12M4 6h16" />
-        </svg>
-        Grades Approvals
-    </a>
+    <div x-data="{ open: {{ (request()->routeIs('admin.grades.*') || request()->routeIs('admin.transcripts.*')) ? 'true' : 'false' }} }">
+        <button @click="open = !open" 
+                class="group w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-all {{ (request()->routeIs('admin.grades.*') || request()->routeIs('admin.transcripts.*')) ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+            <div class="flex items-center">
+                <svg class="mr-3 h-5 w-5 {{ (request()->routeIs('admin.grades.*') || request()->routeIs('admin.transcripts.*')) ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-9 4h12M4 6h16" />
+                </svg>
+                Grades &amp; Transcripts
+            </div>
+            <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+        </button>
+        <div x-show="open" x-transition class="ml-4 space-y-1">
+            <a href="{{ safeRoute('admin.grades.index') }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.grades.*') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+                Grade Approvals
+            </a>
+            <a href="{{ safeRoute('admin.students.index') }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.students.*') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" /></svg>
+                Student Grade Sheets
+            </a>
+            <a href="{{ safeRoute('admin.transcripts.index') }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all {{ request()->routeIs('admin.transcripts.*') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                Transcripts
+            </a>
+        </div>
+    </div>
     @endif
 
     <!-- Teachers (hidden for students) -->
@@ -856,6 +881,48 @@ if (!function_exists('safeRoute')) {
     </a>
     @endif
 
+    <!-- Impersonation (Super Admin Only) -->
+    @php($currentUser = $currentUser ?? auth()->user())
+    @if($currentUser && method_exists($currentUser, 'hasRole') && $currentUser->hasRole('super_admin'))
+    @php($impersonateUsers = \App\Models\User::with('roles')->limit(20)->get())
+    <div x-data="{ open: false }" class="relative">
+        <button @click="open = !open" 
+                class="group w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-all {{ Session::has('impersonate_id') ? 'bg-purple-100 text-purple-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+            <div class="flex items-center">
+                <svg class="mr-3 h-5 w-5 {{ Session::has('impersonate_id') ? 'text-purple-500' : 'text-gray-400 group-hover:text-gray-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                {{ Session::has('impersonate_id') ? 'Impersonating' : 'Act As...' }}
+            </div>
+            <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+        </button>
+        <div x-show="open" @click.away="open = false" x-transition class="absolute z-50 w-64 mt-1 bg-white rounded-md shadow-lg border border-gray-200 overflow-hidden">
+            @if(Session::has('impersonate_id'))
+                <a href="{{ route('impersonate.stop') }}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                    <div class="flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Stop Impersonating
+                    </div>
+                </a>
+            @endif
+            @if(!Session::has('impersonate_id'))
+                <div class="max-h-64 overflow-y-auto">
+                    @foreach($impersonateUsers as $u)
+                    <a href="{{ route('impersonate.start', $u) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                        <div class="font-medium">{{ $u->name }}</div>
+                        <div class="text-xs text-gray-500">{{ $u->email }} &bull; {{ $u->roles->first()->name ?? 'No Role' }}</div>
+                    </a>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    </div>
+    @endif
+
     <!-- Users (hidden for students) -->
     @if($userType !== 'student' && $userType !== 'finance')
     <a href="{{ safeRoute('users.index') }}" 
@@ -880,17 +947,18 @@ if (!function_exists('safeRoute')) {
     <!-- Help Section -->
     <div class="pt-6 mt-6 border-t border-gray-200">
         <div class="px-3 py-3 flex items-center space-x-3">
-            @php($photo = auth()->user()->profile_photo ?? null)
+            @php($currentUser = $currentUser ?? auth()->user())
+            @php($photo = $currentUser->profile_photo ?? null)
             @if($photo)
                 <img src="{{ Storage::url($photo) }}" alt="Avatar" class="h-8 w-8 rounded-full object-cover">
             @else
                 <div class="h-8 w-8 bg-gradient-primary rounded-full flex items-center justify-center">
-                    <span class="text-white font-medium text-sm">{{ auth()->user()->name[0] ?? 'U' }}</span>
+                    <span class="text-white font-medium text-sm">{{ $currentUser->name[0] ?? 'U' }}</span>
                 </div>
             @endif
             <div class="min-w-0">
-                <div class="text-sm font-semibold text-gray-900 truncate">{{ auth()->user()->name ?? 'User' }}</div>
-                <div class="text-xs text-gray-500 truncate">{{ auth()->user()->email ?? '' }}</div>
+                <div class="text-sm font-semibold text-gray-900 truncate">{{ $currentUser->name ?? 'User' }}</div>
+                <div class="text-xs text-gray-500 truncate">{{ $currentUser->email ?? '' }}</div>
             </div>
         </div>
         <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">

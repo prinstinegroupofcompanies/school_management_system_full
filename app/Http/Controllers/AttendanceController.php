@@ -10,9 +10,13 @@ use App\Models\StudentAttendance;
 use App\Models\Section;
 use App\Models\TeacherAttendance;
 use App\Models\FinanceOfficerAttendance;
+use App\Models\Attendance;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AttendanceController extends Controller
 {
@@ -508,6 +512,157 @@ class AttendanceController extends Controller
             'recentTeacherAttendance',
             'currentMonth'
         ));
+    }
+
+    /**
+     * Import attendance from CSV
+     * POST /attendance/import
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:csv,txt|max:10240', // 10MB max
+            'type' => 'required|in:student,teacher',
+            'class_id' => 'required_if:type,student|exists:class_rooms,id',
+            'date' => 'required|date',
+        ]);
+
+        try {
+            $type = $request->type;
+            $date = $request->date;
+            $classId = $request->class_id;
+
+            $rows = [];
+            $file = fopen($request->file('file')->getRealPath(), 'r');
+            
+            // Skip header row if exists
+            $header = fgetcsv($file);
+            
+            // Read data rows
+            while (($row = fgetcsv($file)) !== FALSE) {
+                $rows[] = $row;
+            }
+            fclose($file);
+
+            $imported = 0;
+            $errors = [];
+
+            DB::beginTransaction();
+            try {
+                foreach ($rows as $index => $row) {
+                    $rowNumber = $index + 2; // Account for header row
+                    
+                    try {
+                        if ($type === 'student') {
+                            // CSV format: student_id, status, remarks
+                            $studentId = trim($row[0]);
+                            $status = isset($row[1]) ? trim($row[1]) : 'present';
+                            $remarks = isset($row[2]) ? trim($row[2]) : null;
+
+                            // Normalize status
+                            $normalizedStatus = match(strtolower($status)) {
+                                'present', 'p' => 'present',
+                                'absent', 'a' => 'absent',
+                                'absent_excused', 'excused', 'excuse', 'e' => 'absent_excused',
+                                'absent_unexcused', 'unexcused', 'u' => 'absent_unexcused',
+                                default => 'present'
+                            };
+
+                            // Find student by ID or admission number
+                            $student = Student::where('id', $studentId)
+                                ->orWhere('admission_no', $studentId)
+                                ->orWhere('student_id', $studentId)
+                                ->first();
+
+                            if (!$student) {
+                                $errors[] = "Row {$rowNumber}: Student not found (ID: {$studentId})";
+                                continue;
+                            }
+
+                            // Create attendance using polymorphic model
+                            Attendance::updateOrCreate(
+                                [
+                                    'attendable_id' => $student->id,
+                                    'attendable_type' => Student::class,
+                                    'class_id' => $classId ?? $student->class_id,
+                                    'date' => $date,
+                                ],
+                                [
+                                    'status' => $normalizedStatus,
+                                    'remarks' => $remarks,
+                                    'recorded_by' => auth()->id(),
+                                ]
+                            );
+                        } else {
+                            // CSV format: teacher_id, status, remarks
+                            $teacherId = trim($row[0]);
+                            $status = isset($row[1]) ? trim($row[1]) : 'present';
+                            $remarks = isset($row[2]) ? trim($row[2]) : null;
+
+                            // Normalize status
+                            $normalizedStatus = match(strtolower($status)) {
+                                'present', 'p' => 'present',
+                                'absent', 'a' => 'absent',
+                                'absent_excused', 'excused', 'excuse', 'e' => 'absent_excused',
+                                'absent_unexcused', 'unexcused', 'u' => 'absent_unexcused',
+                                default => 'present'
+                            };
+
+                            // Find teacher
+                            $teacher = Teacher::where('id', $teacherId)
+                                ->orWhere('employee_id', $teacherId)
+                                ->first();
+
+                            if (!$teacher) {
+                                $errors[] = "Row {$rowNumber}: Teacher not found (ID: {$teacherId})";
+                                continue;
+                            }
+
+                            // Create attendance using polymorphic model
+                            Attendance::updateOrCreate(
+                                [
+                                    'attendable_id' => $teacher->user_id,
+                                    'attendable_type' => User::class,
+                                    'date' => $date,
+                                ],
+                                [
+                                    'status' => $normalizedStatus,
+                                    'remarks' => $remarks,
+                                    'recorded_by' => auth()->id(),
+                                ]
+                            );
+                        }
+
+                        $imported++;
+                    } catch (\Exception $e) {
+                        $errors[] = "Row {$rowNumber}: " . $e->getMessage();
+                        Log::error("CSV Import Error Row {$rowNumber}: " . $e->getMessage());
+                    }
+                }
+
+                DB::commit();
+
+                $message = "Successfully imported {$imported} attendance records.";
+                if (!empty($errors)) {
+                    $message .= " " . count($errors) . " errors occurred.";
+                }
+
+                return redirect()->back()
+                    ->with('success', $message)
+                    ->with('import_errors', $errors);
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error('CSV Import Transaction Error: ' . $e->getMessage());
+                return redirect()->back()
+                    ->with('error', 'Failed to import attendance: ' . $e->getMessage());
+            }
+
+        } catch (\Exception $e) {
+            Log::error('CSV Import Error: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Failed to process CSV file: ' . $e->getMessage());
+        }
     }
 
     public function export(Request $request)

@@ -32,6 +32,7 @@ class ExamMark extends Model
         'marked_at',
         'verified_by',
         'verified_at',
+        'teacher_id',
     ];
 
     protected $casts = [
@@ -74,6 +75,11 @@ class ExamMark extends Model
     public function verifiedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    public function teacher(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Teacher::class);
     }
 
     public function scopeByStudent($query, $studentId)

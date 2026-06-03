@@ -10,9 +10,21 @@ use Illuminate\Http\Request;
 
 class HostelController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $hostels = Hostel::with('rooms')->latest()->paginate(15);
+        $query = Hostel::with('rooms');
+        if ($request->filled('search')) {
+            $q = $request->search;
+            $query->where(function ($qry) use ($q) {
+                $qry->where('name', 'like', "%{$q}%")
+                    ->orWhere('address', 'like', "%{$q}%")
+                    ->orWhere('warden_name', 'like', "%{$q}%");
+            });
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        $hostels = $query->latest()->paginate(15)->withQueryString();
         return view('admin.hostel.index', compact('hostels'));
     }
 

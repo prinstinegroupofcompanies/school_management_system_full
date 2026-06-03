@@ -5,461 +5,227 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Transcript extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'transcript_number', 'student_id', 'class_id', 'academic_year', 'semester',
-        'type', 'status', 'gpa', 'cgpa', 'total_credits', 'earned_credits',
-        'total_subjects', 'passed_subjects', 'failed_subjects',
-        'class_rank', 'grade_rank', 'total_students_in_class', 'total_students_in_grade', 'percentile',
-        'a_grades', 'b_grades', 'c_grades', 'd_grades', 'f_grades', 'incomplete_grades',
-        'academic_standing', 'academic_honors', 'disciplinary_actions',
-        'total_days', 'days_present', 'days_absent', 'attendance_percentage',
-        'generation_date', 'issue_date', 'valid_until',
-        'generated_at', 'approved_at', 'issued_at',
-        'generated_by', 'approved_by', 'issued_by',
-        'approver_signature', 'registrar_signature',
-        'pdf_path', 'excel_path', 'watermark', 'is_sealed', 'seal_path',
-        'notes', 'internal_notes', 'metadata', 'grade_data'
+        'student_id',
+        'class_id',
+        'academic_year',
+        'terms_data',
+        'cgpa',
+        'remarks',
+        'generated_by',
+        'generated_at',
+        'generation_date',
+        'transcript_number',
     ];
 
     protected $casts = [
-        'gpa' => 'decimal:2',
-        'cgpa' => 'decimal:2',
-        'percentile' => 'decimal:2',
-        'attendance_percentage' => 'decimal:2',
-        'generation_date' => 'date',
-        'issue_date' => 'date',
-        'valid_until' => 'date',
+        'terms_data' => 'array',
+        'cgpa' => 'float',
         'generated_at' => 'datetime',
-        'approved_at' => 'datetime',
-        'issued_at' => 'datetime',
-        'is_sealed' => 'boolean',
-        'metadata' => 'array',
-        'grade_data' => 'array'
     ];
 
+    /**
+     * Get the student.
+     */
     public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class);
     }
 
-    public function class(): BelongsTo
-    {
-        return $this->belongsTo(ClassRoom::class, 'class_id');
-    }
-
+    /**
+     * Get the user who generated the transcript.
+     */
     public function generatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'generated_by');
     }
 
-    public function approvedBy(): BelongsTo
+    /**
+     * Calculate CGPA from terms data.
+     */
+    public static function calculateCGPA(array $termsData): float
     {
-        return $this->belongsTo(User::class, 'approved_by');
-    }
-
-    public function issuedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'issued_by');
-    }
-
-    public function transcriptGrades(): HasMany
-    {
-        return $this->hasMany(TranscriptGrade::class);
-    }
-
-    public function scopeByStatus($query, $status)
-    {
-        return $query->where('status', $status);
-    }
-
-    public function scopeByType($query, $type)
-    {
-        return $query->where('type', $type);
-    }
-
-    public function scopeByAcademicYear($query, $year)
-    {
-        return $query->where('academic_year', $year);
-    }
-
-    public function scopeByStudent($query, $studentId)
-    {
-        return $query->where('student_id', $studentId);
-    }
-
-    public function scopeByClass($query, $classId)
-    {
-        return $query->where('class_id', $classId);
-    }
-
-    public function scopeOfficial($query)
-    {
-        return $query->where('type', 'official');
-    }
-
-    public function scopeUnofficial($query)
-    {
-        return $query->where('type', 'unofficial');
-    }
-
-    public function scopeGenerated($query)
-    {
-        return $query->where('status', 'generated');
-    }
-
-    public function scopeApproved($query)
-    {
-        return $query->where('status', 'approved');
-    }
-
-    public function scopeIssued($query)
-    {
-        return $query->where('status', 'issued');
-    }
-
-    public function getStatusColorAttribute()
-    {
-        return match($this->status) {
-            'draft' => 'gray',
-            'generated' => 'blue',
-            'approved' => 'green',
-            'issued' => 'green',
-            'archived' => 'gray',
-            default => 'gray'
-        };
-    }
-
-    public function getStatusTextAttribute()
-    {
-        return match($this->status) {
-            'draft' => 'Draft',
-            'generated' => 'Generated',
-            'approved' => 'Approved',
-            'issued' => 'Issued',
-            'archived' => 'Archived',
-            default => 'Unknown'
-        };
-    }
-
-    public function getTypeTextAttribute()
-    {
-        return match($this->type) {
-            'official' => 'Official',
-            'unofficial' => 'Unofficial',
-            'interim' => 'Interim',
-            default => 'Unknown'
-        };
-    }
-
-    public function getAcademicStandingTextAttribute()
-    {
-        return match($this->academic_standing) {
-            'excellent' => 'Excellent',
-            'good' => 'Good',
-            'satisfactory' => 'Satisfactory',
-            'needs_improvement' => 'Needs Improvement',
-            'unsatisfactory' => 'Unsatisfactory',
-            default => 'Not Available'
-        };
-    }
-
-    public function getAcademicStandingColorAttribute()
-    {
-        return match($this->academic_standing) {
-            'excellent' => 'green',
-            'good' => 'blue',
-            'satisfactory' => 'yellow',
-            'needs_improvement' => 'orange',
-            'unsatisfactory' => 'red',
-            default => 'gray'
-        };
-    }
-
-    public function generateTranscriptNumber()
-    {
-        $year = now()->year;
-        $prefix = 'TRN';
+        $totalGPA = 0;
+        $termCount = 0;
         
-        $lastTranscript = self::whereYear('generation_date', $year)
-            ->where('transcript_number', 'like', $prefix . $year . '%')
-            ->orderBy('transcript_number', 'desc')
-            ->first();
-
-        if ($lastTranscript) {
-            $lastNumber = (int) substr($lastTranscript->transcript_number, -4);
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
-
-        return $prefix . $year . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
-    }
-
-    public function calculateGPA()
-    {
-        $grades = $this->transcriptGrades()->where('status', 'passed')->get();
-        
-        if ($grades->isEmpty()) {
-            return 0;
-        }
-
-        $totalPoints = 0;
-        $totalCredits = 0;
-
-        foreach ($grades as $grade) {
-            $totalPoints += $grade->grade_points * $grade->credits;
-            $totalCredits += $grade->credits;
-        }
-
-        return $totalCredits > 0 ? round($totalPoints / $totalCredits, 2) : 0;
-    }
-
-    public function calculateRanking()
-    {
-        // Calculate class ranking
-        $classStudents = self::where('class_id', $this->class_id)
-            ->where('academic_year', $this->academic_year)
-            ->where('status', '!=', 'draft')
-            ->orderBy('gpa', 'desc')
-            ->get();
-
-        $rank = 1;
-        foreach ($classStudents as $student) {
-            if ($student->id === $this->id) {
-                $this->class_rank = $rank;
-                $this->total_students_in_class = $classStudents->count();
-                break;
+        foreach ($termsData as $term) {
+            if (isset($term['gpa'])) {
+                $totalGPA += $term['gpa'];
+                $termCount++;
             }
-            $rank++;
-        }
-
-        // Calculate percentile
-        if ($this->total_students_in_class > 0) {
-            $this->percentile = round((($this->total_students_in_class - $this->class_rank + 1) / $this->total_students_in_class) * 100, 2);
-        }
-
-        $this->save();
-    }
-
-    public function calculateGradeSummary()
-    {
-        $grades = $this->transcriptGrades;
-        
-        $this->a_grades = $grades->where('grade_letter', 'A')->count();
-        $this->b_grades = $grades->where('grade_letter', 'B')->count();
-        $this->c_grades = $grades->where('grade_letter', 'C')->count();
-        $this->d_grades = $grades->where('grade_letter', 'D')->count();
-        $this->f_grades = $grades->where('grade_letter', 'F')->count();
-        $this->incomplete_grades = $grades->where('grade_letter', 'I')->count();
-        
-        $this->total_subjects = $grades->count();
-        $this->passed_subjects = $grades->whereIn('grade_letter', ['A', 'B', 'C', 'D'])->count();
-        $this->failed_subjects = $grades->where('grade_letter', 'F')->count();
-        
-        $this->total_credits = $grades->sum('credits');
-        $this->earned_credits = $grades->whereIn('grade_letter', ['A', 'B', 'C', 'D'])->sum('credits');
-        
-        $this->save();
-    }
-
-    public function determineAcademicStanding()
-    {
-        $gpa = $this->gpa ?? $this->calculateGPA();
-        
-        if ($gpa >= 3.5) {
-            $this->academic_standing = 'excellent';
-        } elseif ($gpa >= 3.0) {
-            $this->academic_standing = 'good';
-        } elseif ($gpa >= 2.0) {
-            $this->academic_standing = 'satisfactory';
-        } elseif ($gpa >= 1.0) {
-            $this->academic_standing = 'needs_improvement';
-        } else {
-            $this->academic_standing = 'unsatisfactory';
         }
         
-        $this->save();
+        return $termCount > 0 ? $totalGPA / $termCount : 0.0;
     }
 
-    public function generate()
+    /**
+     * Generate transcript data for a student.
+     */
+    public static function generateForStudent(Student $student, int $academicYear): self
     {
-        $this->update([
-            'status' => 'generated',
-            'generated_at' => now(),
-            'generated_by' => auth()->id()
-        ]);
-    }
-
-    public function approve($approverId = null)
-    {
-        $this->update([
-            'status' => 'approved',
-            'approved_at' => now(),
-            'approved_by' => $approverId ?? auth()->id()
-        ]);
-    }
-
-    public function issue($issuerId = null)
-    {
-        $this->update([
-            'status' => 'issued',
-            'issued_at' => now(),
-            'issued_by' => $issuerId ?? auth()->id(),
-            'issue_date' => now()->toDateString()
-        ]);
-    }
-
-    public function archive()
-    {
-        $this->update(['status' => 'archived']);
-    }
-
-    public function isOfficial()
-    {
-        return $this->type === 'official';
-    }
-
-    public function isGenerated()
-    {
-        return $this->status === 'generated';
-    }
-
-    public function isApproved()
-    {
-        return $this->status === 'approved';
-    }
-
-    public function isIssued()
-    {
-        return $this->status === 'issued';
-    }
-
-    public function canBeApproved()
-    {
-        return $this->status === 'generated';
-    }
-
-    public function canBeIssued()
-    {
-        return $this->status === 'approved';
-    }
-
-    public function canBeArchived()
-    {
-        return in_array($this->status, ['issued', 'approved']);
-    }
-
-    public static function generateForStudent($studentId, $academicYear, $semester = null, $type = 'official')
-    {
-        $student = Student::with(['user', 'classRoom'])->find($studentId);
+        $termsData = [];
+        $terms = ['Term 1', 'Term 2', 'Term 3'];
         
-        if (!$student) {
-            throw new \Exception('Student not found');
-        }
+        foreach ($terms as $term) {
+            $grades = Grade::where('student_id', $student->id)
+                ->where('term', $term)
+                ->where('year', $academicYear)
+                ->with('subject')
+                ->get();
+            
+            $termGrades = [];
+            $termGPA = 0;
 
-        // Check if transcript already exists
-        $existingTranscript = self::where('student_id', $studentId)
-            ->where('academic_year', $academicYear)
-            ->where('semester', $semester)
-            ->where('type', $type)
-            ->first();
-
-        if ($existingTranscript) {
-            return $existingTranscript;
-        }
-
-        // Get approved grades for the student
-        $grades = Grade::where('student_id', $studentId)
-            ->where('status', 'approved')
-            ->where('academic_year', $academicYear)
-            ->when($semester, function($query) use ($semester) {
-                return $query->where('semester', $semester);
-            })
-            ->with(['subject', 'teacher'])
-            ->get();
-
-        if ($grades->isEmpty()) {
-            throw new \Exception('No approved grades found for the specified period');
-        }
-
-        // Create transcript
-        $transcript = self::create([
-            'transcript_number' => self::generateTranscriptNumber(),
-            'student_id' => $studentId,
-            'class_id' => $student->class_id,
-            'academic_year' => $academicYear,
-            'semester' => $semester,
-            'type' => $type,
-            'status' => 'draft',
-            'generation_date' => now()->toDateString(),
-            'metadata' => [
-                'generated_via' => 'system',
-                'grade_count' => $grades->count()
-            ]
-        ]);
-
-        // Create transcript grades
         foreach ($grades as $grade) {
-            TranscriptGrade::create([
-                'transcript_id' => $transcript->id,
-                'subject_id' => $grade->subject_id,
-                'subject_code' => $grade->subject->code ?? null,
-                'subject_name' => $grade->subject->name,
-                'credits' => $grade->subject->credits ?? 1,
-                'grade_letter' => $grade->grade,
-                'grade_points' => self::convertGradeToPoints($grade->grade),
-                'percentage' => $grade->percentage,
-                'semester' => $grade->semester,
-                'academic_year' => $grade->academic_year,
-                'status' => self::determineGradeStatus($grade->grade),
-                'grade_date' => $grade->created_at->toDateString(),
-                'teacher_id' => $grade->teacher_id
-            ]);
+                $termGrades[] = [
+                    'subject' => $grade->subject->name ?? '',
+                    'mid_term' => $grade->mid_term_score ?? 0,
+                    'final' => $grade->final_score ?? 0,
+                    'total' => $grade->total_score ?? 0,
+                    'grade' => $grade->letter_grade ?? 'F',
+                ];
+                
+                $termGPA += $grade->gpa ?? 0;
+            }
+            
+            $termCount = count($termGrades);
+            $termsData[] = [
+                'term' => $term,
+                'subjects' => $termGrades,
+                'gpa' => $termCount > 0 ? $termGPA / $termCount : 0.0,
+            ];
+        }
+        
+        $cgpa = self::calculateCGPA($termsData);
+        
+        return self::create([
+            'student_id' => $student->id,
+            'academic_year' => $academicYear,
+            'terms_data' => $termsData,
+            'cgpa' => $cgpa,
+            'generated_by' => auth()->id() ?? 1,
+            'generated_at' => now(),
+        ]);
+    }
+
+    /**
+     * Simple transcript generation: uses grades by semester and builds terms_data.
+     * Works with the existing transcripts table (sets transcript_number, class_id, generation_date when present).
+     */
+    public static function generateSimpleTranscript(Student $student, int $academicYear): self
+    {
+        $termsData = [];
+
+        // Semester 1 (Term 1)
+        $sem1Grades = Grade::where('student_id', $student->id)
+            ->where('academic_year', $academicYear)
+            ->where('semester', 1)
+            ->where('status', 'approved')
+            ->with('subject')
+            ->orderBy('subject_id')
+            ->get();
+        $termsData[] = self::buildTermBlock('Semester 1 (Term 1)', $sem1Grades);
+
+        // Semester 2 (Term 2)
+        $sem2Grades = Grade::where('student_id', $student->id)
+            ->where('academic_year', $academicYear)
+            ->where('semester', 2)
+            ->where('status', 'approved')
+            ->with('subject')
+            ->orderBy('subject_id')
+            ->get();
+        $termsData[] = self::buildTermBlock('Semester 2 (Term 2)', $sem2Grades);
+
+        // Year summary: one row per subject (use first occurrence per subject_id for year_avg)
+        $yearGrades = Grade::where('student_id', $student->id)
+            ->where('academic_year', $academicYear)
+            ->where('status', 'approved')
+            ->with('subject')
+            ->orderBy('subject_id')
+            ->get()
+            ->groupBy('subject_id')
+            ->map(fn ($group) => $group->first())
+            ->values();
+        $termsData[] = self::buildTermBlock('Year Summary', $yearGrades, true);
+
+        $cgpa = self::calculateCGPA($termsData);
+
+        $academicYearStr = (string) $academicYear . '-' . ((int) $academicYear + 1);
+        $attrs = [
+            'student_id' => $student->id,
+            'academic_year' => $academicYearStr,
+            'terms_data' => $termsData,
+            'cgpa' => $cgpa,
+            'generated_by' => auth()->id() ?? 1,
+            'generated_at' => now(),
+        ];
+
+        $columns = \Illuminate\Support\Facades\Schema::getColumnListing((new self)->getTable());
+        if (in_array('class_id', $columns) && $student->class_id) {
+            $attrs['class_id'] = $student->class_id;
+        }
+        if (in_array('generation_date', $columns)) {
+            $attrs['generation_date'] = now()->format('Y-m-d');
+        }
+        if (in_array('transcript_number', $columns)) {
+            $attrs['transcript_number'] = 'TR-' . $student->id . '-' . $academicYear . '-' . uniqid();
         }
 
-        // Calculate transcript statistics
-        $transcript->calculateGradeSummary();
-        $transcript->gpa = $transcript->calculateGPA();
-        $transcript->determineAcademicStanding();
-        $transcript->calculateRanking();
-        $transcript->generate();
-
-        return $transcript;
+        return self::create($attrs);
     }
 
-    private static function convertGradeToPoints($grade)
+    /**
+     * Build one term block for terms_data from a collection of grades.
+     */
+    protected static function buildTermBlock(string $termLabel, $grades, bool $useYearAvg = false): array
     {
-        return match(strtoupper($grade)) {
-            'A+' => 4.0,
-            'A' => 4.0,
-            'A-' => 3.7,
-            'B+' => 3.3,
-            'B' => 3.0,
-            'B-' => 2.7,
-            'C+' => 2.3,
-            'C' => 2.0,
-            'C-' => 1.7,
-            'D+' => 1.3,
-            'D' => 1.0,
-            'F' => 0.0,
-            default => 0.0
-        };
+        $subjects = [];
+        $sum = 0;
+        $count = 0;
+
+        foreach ($grades as $grade) {
+            $total = $useYearAvg ? ($grade->year_avg ?? 0) : ($grade->year_avg ?? ($grade->sem1_avg ?? 0) + ($grade->sem2_avg ?? 0) / 2);
+            if ($total && $total > 0) {
+                $sum += (float) $total;
+                $count++;
+            }
+            $subjects[] = [
+                'subject' => $grade->subject->name ?? 'N/A',
+                'mid_term' => $grade->sem1_avg ?? 0,
+                'final' => $grade->sem2_avg ?? 0,
+                'total' => $grade->year_avg ?? 0,
+                'grade' => self::calculateLetterGrade((float) ($grade->year_avg ?? 0)),
+            ];
+        }
+
+        return [
+            'term' => $termLabel,
+            'subjects' => $subjects,
+            'gpa' => $count > 0 ? $sum / $count : 0.0,
+        ];
     }
 
-    private static function determineGradeStatus($grade)
+    /**
+     * Calculate letter grade from percentage
+     */
+    private static function calculateLetterGrade(float $percentage): string
     {
-        return match(strtoupper($grade)) {
-            'A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D' => 'passed',
-            'F' => 'failed',
-            'I' => 'incomplete',
-            'W' => 'withdrawn',
-            default => 'passed'
-        };
+        if ($percentage >= 97) return 'A+';
+        if ($percentage >= 93) return 'A';
+        if ($percentage >= 90) return 'A-';
+        if ($percentage >= 87) return 'B+';
+        if ($percentage >= 83) return 'B';
+        if ($percentage >= 80) return 'B-';
+        if ($percentage >= 77) return 'C+';
+        if ($percentage >= 73) return 'C';
+        if ($percentage >= 70) return 'C-';
+        if ($percentage >= 67) return 'D+';
+        if ($percentage >= 65) return 'D';
+        return 'F';
     }
 }

@@ -231,6 +231,21 @@ Route::middleware('auth:sanctum')->group(function () {
         return response()->json(['success' => true]);
     });
 
+    // NFC Attendance
+    Route::prefix('nfc')->group(function () {
+        Route::post('/scan', [\App\Http\Controllers\Api\NfcAttendanceController::class, 'scan']);
+        Route::post('/register', [\App\Http\Controllers\Api\NfcAttendanceController::class, 'register']);
+        Route::get('/{cardUid}/attendance', [\App\Http\Controllers\Api\NfcAttendanceController::class, 'attendanceHistory']);
+    });
+
+    // DataTable Preferences
+    Route::prefix('datatable')->group(function () {
+        Route::post('/preferences', [\App\Http\Controllers\Api\DataTablePreferenceController::class, 'save']);
+        Route::get('/preferences/{tableId}', [\App\Http\Controllers\Api\DataTablePreferenceController::class, 'get']);
+        Route::post('/filters', [\App\Http\Controllers\Api\DataTablePreferenceController::class, 'saveFilters']);
+        Route::get('/filters/{context}', [\App\Http\Controllers\Api\DataTablePreferenceController::class, 'getFilters']);
+    });
+
     // Real-time updates
     Route::prefix('realtime')->group(function () {
         Route::get('/check-updates', [RealtimeController::class, 'checkUpdates']);

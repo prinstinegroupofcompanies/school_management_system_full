@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Student extends Model
 {
@@ -183,11 +184,59 @@ class Student extends Model
     }
 
     /**
-     * Get the attendance records.
+     * Get the attendance records (legacy).
      */
     public function attendances(): HasMany
     {
         return $this->hasMany(StudentAttendance::class);
+    }
+
+    /**
+     * Get the polymorphic attendance records.
+     */
+    public function polymorphicAttendances(): MorphMany
+    {
+        return $this->morphMany(Attendance::class, 'attendable');
+    }
+
+    /**
+     * Get promotion histories.
+     */
+    public function promotionHistories(): HasMany
+    {
+        return $this->hasMany(PromotionHistory::class);
+    }
+
+    /**
+     * Get receivables.
+     */
+    public function receivables(): HasMany
+    {
+        return $this->hasMany(Receivable::class);
+    }
+
+    /**
+     * Get the latest transcript.
+     */
+    public function transcript(): HasOne
+    {
+        return $this->hasOne(Transcript::class)->latestOfMany('academic_year');
+    }
+
+    /**
+     * Student may have many parents (users with role parent).
+     */
+    public function parents(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'parent_student', 'student_id', 'parent_id')->withTimestamps();
+    }
+
+    /**
+     * Get all transcripts.
+     */
+    public function transcripts(): HasMany
+    {
+        return $this->hasMany(Transcript::class);
     }
 
     /**
@@ -326,6 +375,26 @@ class Student extends Model
     public function scopeInAcademicYear($query, $academicYear)
     {
         return $query->where('academic_year', $academicYear);
+    }
+
+    /**
+     * Scope for filtering students with multiple criteria.
+     */
+    public function scopeFilter($query, array $filters)
+    {
+        return $query
+            ->when($filters['class_id'] ?? null, fn($q, $id) => $q->where('class_id', $id))
+            ->when($filters['section_id'] ?? null, fn($q, $id) => $q->where('section_id', $id))
+            ->when($filters['academic_year'] ?? null, fn($q, $year) => $q->where('academic_year', $year))
+            ->when($filters['status'] ?? null, fn($q, $status) => $q->where('status', $status))
+            ->when($filters['gender'] ?? null, fn($q, $gender) => $q->where('gender', $gender))
+            ->when($filters['search'] ?? null, function ($q, $search) {
+                return $q->whereHas('user', function ($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%")
+                          ->orWhere('email', 'like', "%{$search}%");
+                })->orWhere('admission_no', 'like', "%{$search}%")
+                  ->orWhere('student_id', 'like', "%{$search}%");
+            });
     }
     public function subjects(): BelongsToMany
     {
@@ -527,5 +596,41 @@ class Student extends Model
     public function getFormattedStudentNumber(): string
     {
         return $this->student_id ?? 'Not Assigned';
+    }
+
+    /**
+     * Get total fees balance.
+     */
+    public function getFeesBalanceAttribute(): float
+    {
+        return \App\Models\StudentFee::where('student_id', $this->id)
+            ->where('balance', '>', 0)
+            ->sum('balance');
+    }
+
+    /**
+     * Get fee due date (earliest unpaid fee due date).
+     */
+    public function getFeeDueDateAttribute(): ?\Carbon\Carbon
+    {
+        $earliestDueDate = \App\Models\StudentFee::where('student_id', $this->id)
+            ->where('balance', '>', 0)
+            ->whereNotNull('due_date')
+            ->orderBy('due_date', 'asc')
+            ->value('due_date');
+        
+        return $earliestDueDate ? \Carbon\Carbon::parse($earliestDueDate) : null;
+    }
+
+    /**
+     * Check if student has unpaid fees past due date.
+     */
+    public function hasOverdueFees(): bool
+    {
+        return \App\Models\StudentFee::where('student_id', $this->id)
+            ->where('balance', '>', 0)
+            ->whereNotNull('due_date')
+            ->where('due_date', '<', now())
+            ->exists();
     }
 } 

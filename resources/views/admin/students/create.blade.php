@@ -189,43 +189,40 @@
 
                     <!-- Guardian Information -->
                     <div class="mb-8">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Guardian Information</h3>
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Guardian / Parent Information</h3>
+                        <p class="text-sm text-gray-600 mb-4">Enter parent email. If this parent already has login (e.g. from another student), only the email is needed to link. For a new parent, fill all fields and set their login password.</p>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label for="guardian_name" class="block text-sm font-medium text-gray-700">Guardian Name <span class="text-red-500">*</span></label>
+                                <label for="guardian_email" class="block text-sm font-medium text-gray-700">Parent email (login) <span class="text-red-500">*</span></label>
+                                <input type="email" name="guardian_email" id="guardian_email" value="{{ old('guardian_email') }}" 
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 @error('guardian_email') border-red-300 @enderror" 
+                                       required placeholder="Used for parent portal login">
+                                @error('guardian_email')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label for="guardian_name" class="block text-sm font-medium text-gray-700">Guardian name <span class="text-gray-400">(new parent only)</span></label>
                                 <input type="text" name="guardian_name" id="guardian_name" value="{{ old('guardian_name') }}" 
-                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 @error('guardian_name') border-red-300 @enderror" 
-                                       required>
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 @error('guardian_name') border-red-300 @enderror">
                                 @error('guardian_name')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
 
                             <div>
-                                <label for="guardian_email" class="block text-sm font-medium text-gray-700">Guardian Email <span class="text-red-500">*</span></label>
-                                <input type="email" name="guardian_email" id="guardian_email" value="{{ old('guardian_email') }}" 
-                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 @error('guardian_email') border-red-300 @enderror" 
-                                       required>
-                                @error('guardian_email')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div>
-                                <label for="guardian_phone" class="block text-sm font-medium text-gray-700">Guardian Phone <span class="text-red-500">*</span></label>
+                                <label for="guardian_phone" class="block text-sm font-medium text-gray-700">Guardian phone <span class="text-gray-400">(new parent only)</span></label>
                                 <input type="text" name="guardian_phone" id="guardian_phone" value="{{ old('guardian_phone') }}" 
-                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 @error('guardian_phone') border-red-300 @enderror" 
-                                       required>
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 @error('guardian_phone') border-red-300 @enderror">
                                 @error('guardian_phone')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
 
                             <div>
-                                <label for="guardian_relationship" class="block text-sm font-medium text-gray-700">Relationship <span class="text-red-500">*</span></label>
+                                <label for="guardian_relationship" class="block text-sm font-medium text-gray-700">Relationship <span class="text-gray-400">(new parent only)</span></label>
                                 <select name="guardian_relationship" id="guardian_relationship" 
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 @error('guardian_relationship') border-red-300 @enderror" 
-                                        required>
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 @error('guardian_relationship') border-red-300 @enderror">
                                     <option value="">Select Relationship</option>
                                     <option value="Father" {{ old('guardian_relationship') == 'Father' ? 'selected' : '' }}>Father</option>
                                     <option value="Mother" {{ old('guardian_relationship') == 'Mother' ? 'selected' : '' }}>Mother</option>
@@ -239,6 +236,27 @@
                                 @error('guardian_relationship')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <p class="text-sm text-gray-600 mb-2">Parent login credentials (for portal access to grades and activities)</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="guardian_password" class="block text-sm font-medium text-gray-700">Parent login password <span class="text-gray-400">(new parent only)</span></label>
+                                        <input type="password" name="guardian_password" id="guardian_password" autocomplete="new-password"
+                                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 @error('guardian_password') border-red-300 @enderror"
+                                               minlength="8" placeholder="Min 8 characters (only for new parent)">
+                                        @error('guardian_password')
+                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <label for="guardian_password_confirmation" class="block text-sm font-medium text-gray-700">Confirm password <span class="text-gray-400">(new parent only)</span></label>
+                                        <input type="password" name="guardian_password_confirmation" id="guardian_password_confirmation" autocomplete="new-password"
+                                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                               minlength="8">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -157,6 +157,20 @@ class RolePermissionSeeder extends Seeder
             'bypass maintenance mode',
             'view statistics',
             'generate reports',
+            
+            // Lesson plan management
+            'review lesson plans',
+            'approve lesson plans',
+            'reject lesson plans',
+            
+            // Enrollment
+            'manage enrollment',
+            'generate admission letters',
+            
+            // Transport
+            'view assigned route',
+            'view assigned vehicle',
+            'report maintenance',
         ];
 
         foreach ($permissions as $permission) {
@@ -216,6 +230,44 @@ class RolePermissionSeeder extends Seeder
                 'view fees', 'create fees', 'edit fees', 'delete fees',
                 'view fee payments', 'manage fee payments', 'view fee reports',
                 'generate fee reports', 'view dashboard', 'view statistics',
+            ],
+            'vpi' => [
+                'view users', 'create users', 'edit users', 'delete users',
+                'view students', 'create students', 'edit students', 'delete students',
+                'view teachers', 'create teachers', 'edit teachers', 'delete teachers',
+                'view classes', 'create classes', 'edit classes', 'delete classes',
+                'view subjects', 'create subjects', 'edit subjects', 'delete subjects',
+                'view fees', 'create fees', 'edit fees', 'delete fees',
+                'view exams', 'create exams', 'edit exams', 'delete exams',
+                'view books', 'create books', 'edit books', 'delete books',
+                'view transport routes', 'create transport routes', 'edit transport routes',
+                'view vehicles', 'create vehicles', 'edit vehicles',
+                'view hostel rooms', 'create hostel rooms', 'edit hostel rooms',
+                'view dashboard', 'view system settings', 'manage system settings',
+                'view statistics', 'generate reports',
+                'review lesson plans', 'approve lesson plans', 'reject lesson plans',
+                'view teacher attendance', 'manage teacher attendance',
+            ],
+            'vpa' => [
+                'view users', 'view students', 'view teachers',
+                'view classes', 'view subjects', 'view fees', 'view exams',
+                'view books', 'view transport routes', 'view vehicles',
+                'view hostel rooms', 'view dashboard', 'view statistics',
+            ],
+            'conductor_driver' => [
+                'view transport routes', 'view vehicles',
+                'view assigned route', 'view assigned vehicle',
+                'report maintenance', 'view dashboard',
+            ],
+            'librarian' => [
+                'view books', 'create books', 'edit books', 'delete books',
+                'manage book issues', 'view library members', 'manage library members',
+                'view library reports', 'view dashboard',
+            ],
+            'registrar' => [
+                'view students', 'create students', 'edit students',
+                'view classes', 'generate admission letters',
+                'manage enrollment', 'view dashboard',
             ],
         ];
 

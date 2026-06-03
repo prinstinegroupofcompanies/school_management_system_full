@@ -212,12 +212,15 @@ class FinanceController extends Controller
             'total_amount_awarded' => $totalScholarshipAmount,
         ];
 
+        // Always pass the authenticated user to the view
+        $user = auth()->user();
+        
         return view('dashboard.finance', compact(
             'totalFees', 'totalCollected', 'totalPending', 'todayCollection', 'monthlyRevenue',
             'totalStudents', 'totalFeeStructures', 'recent_payments', 'recentPayments', 'totalScholarships',
             'activeScholarships', 'approvedApplications', 'totalScholarshipAmount',
             'pending_scholarships', 'classWiseCollection', 'recentActivities', 'monthlyCollection',
-            'stats', 'scholarshipStats'
+            'stats', 'scholarshipStats', 'user'
         ));
     }
 

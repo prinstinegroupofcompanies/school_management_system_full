@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Guardian;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -79,20 +80,30 @@ class UserController extends Controller
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => ['required', 'confirmed', Password::defaults()],
-                'user_type' => 'required|in:admin,student,teacher,staff,finance',
+                'user_type' => 'required|in:admin,student,teacher,staff,finance,parent',
                 'is_active' => 'boolean',
             ]);
 
-            User::create([
+            $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
-                'password' => Hash::make($request->password),
+                'password' => $request->password,
                 'user_type' => $request->user_type,
                 'is_active' => $request->boolean('is_active', true),
+                'school_id' => auth()->user()->school_id,
             ]);
 
+            if ($request->user_type === 'parent') {
+                Guardian::create([
+                    'user_id' => $user->id,
+                    'guardian_id' => 'G' . str_pad((Guardian::count() + 1), 4, '0', STR_PAD_LEFT),
+                    'relationship' => 'guardian',
+                    'status' => 'active',
+                ]);
+            }
+
             return redirect()->route('admin.users.index')
-                ->with('success', 'User created successfully!');
+                ->with('success', 'User created successfully!' . ($request->user_type === 'parent' ? ' Parent can log in with the email and password you set. Link students to this parent when adding or editing students (use same guardian email).' : ''));
         } catch (\Exception $e) {
             \Log::error('UserController store error: ' . $e->getMessage());
             return redirect()->back()
@@ -130,7 +141,7 @@ class UserController extends Controller
             $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-                'user_type' => 'required|in:admin,student,teacher,staff,finance',
+                'user_type' => 'required|in:admin,student,teacher,staff,finance,parent',
                 'is_active' => 'boolean',
             ]);
 

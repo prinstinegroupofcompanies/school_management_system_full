@@ -26,11 +26,12 @@
         <!-- Available Grade Periods -->
         <div class="bg-white shadow rounded-lg mb-8">
             <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-2">
                     Available Grade Periods
                 </h3>
+                <p class="text-sm text-gray-500 mb-6">Your current class and all previous class grades are listed below. After promotion, your dashboard reflects your new class; you can still open any past year or semester here to view or download that gradesheet.</p>
                 
-                @if($periods->count() > 0)
+                @if($periods->count() > 0 || $yearsWithGrades->count() > 0)
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         @foreach($periods as $period)
                             <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -43,26 +44,37 @@
                                         </div>
                                         <div class="ml-4">
                                             <h4 class="text-lg font-medium text-gray-900">{{ $period['period_name'] }}</h4>
-                                            <p class="text-sm text-gray-500">Academic Period</p>
+                                            <p class="text-sm text-gray-500">Term / Semester</p>
                                         </div>
                                     </div>
-                                    
                                     <div class="space-y-3">
                                         <a href="{{ route('student.grades.grade-sheet', ['year' => $period['year'], 'semester' => $period['semester']]) }}" 
-                                           class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md text-center block transition-colors duration-200">
-                                            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                            </svg>
-                                            View Grade Sheet
-                                        </a>
+                                           class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md text-center block transition-colors duration-200">View Grade Sheet</a>
                                         <a href="{{ route('student.grades.download', ['year' => $period['year'], 'semester' => $period['semester']]) }}" 
-                                           class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md text-center block transition-colors duration-200">
-                                            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg>
-                                            Download PDF
-                                        </a>
+                                           class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md text-center block transition-colors duration-200">Download PDF</a>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                        @foreach($yearsWithGrades as $yr)
+                            <div class="bg-white border-2 border-amber-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 bg-amber-50/30">
+                                <div class="p-6">
+                                    <div class="flex items-center mb-4">
+                                        <div class="flex-shrink-0">
+                                            <div class="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center">
+                                                <span class="text-lg font-bold text-white">Y</span>
+                                            </div>
+                                        </div>
+                                        <div class="ml-4">
+                                            <h4 class="text-lg font-medium text-gray-900">End of Year {{ $yr }}</h4>
+                                            <p class="text-sm text-gray-500">Full year average &amp; promotion (70%+)</p>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-3">
+                                        <a href="{{ route('student.grades.full-year', ['year' => $yr]) }}" 
+                                           class="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-2 px-4 rounded-md text-center block transition-colors duration-200">View Full Year Sheet</a>
+                                        <a href="{{ route('student.grades.download-full-year', ['year' => $yr]) }}" 
+                                           class="w-full bg-amber-100 hover:bg-amber-200 text-amber-800 font-medium py-2 px-4 rounded-md text-center block transition-colors duration-200">Download Full Year PDF</a>
                                     </div>
                                 </div>
                             </div>

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ExamType;
+use App\Models\Subject;
+use App\Models\ClassRoom;
 use Illuminate\Http\Request;
 
 class ExamTypeController extends Controller
@@ -35,8 +37,10 @@ class ExamTypeController extends Controller
         }
 
         $examTypes = $query->paginate(15);
+        $subjects = Subject::orderBy('name')->get();
+        $classes = ClassRoom::orderBy('name')->get();
 
-        return view('admin.exams.types.index', compact('examTypes'));
+        return view('admin.exams.types.index', compact('examTypes', 'subjects', 'classes'));
     }
 
     public function create()

@@ -6,33 +6,26 @@ use Illuminate\Support\Facades\Storage;
 
 @section('content')
 <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <div class="bg-white shadow">
+    <!-- Header: actions (Back goes to grade sheets list for this student, not student list) -->
+    <div class="no-print bg-white shadow">
         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-3xl font-bold text-gray-900">Official Grade Sheet</h1>
-                    <p class="mt-2 text-gray-600">Period {{ $semester }} - {{ $year }} - {{ $student->user->name }}</p>
+                    <p class="mt-2 text-gray-600">{{ $student->user->name ?? 'Student' }} — Period {{ $semester }}, {{ $year }}</p>
                 </div>
                 <div class="flex space-x-3">
-                    <button onclick="window.print()" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors duration-200">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-                        </svg>
+                    <button type="button" onclick="window.print()" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors duration-200">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                         Print Grade Sheet
                     </button>
-                    <a href="{{ route('student.grades.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-md transition-colors duration-200">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                        </svg>
-                        Back to Periods
-                    </a>
-                    <a href="{{ route('student.grades.download', ['year' => $year, 'semester' => $semester]) }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md transition-colors duration-200">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        Download PDF
-                    </a>
+                    @if(request()->routeIs('admin.*'))
+                        <a href="{{ route('admin.students.grades', $student) }}" class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-md transition-colors duration-200">Back to Grade Sheets</a>
+                        <a href="{{ route('admin.students.grades.download', [$student, $year, $semester]) }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md transition-colors duration-200">Download PDF</a>
+                    @else
+                        <a href="{{ route('student.grades.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-md transition-colors duration-200">Back to Periods</a>
+                        <a href="{{ route('student.grades.download', ['year' => $year, 'semester' => $semester]) }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md transition-colors duration-200">Download PDF</a>
+                    @endif
                 </div>
             </div>
         </div>
@@ -45,8 +38,8 @@ use Illuminate\Support\Facades\Storage;
             <div class="p-8">
                 <!-- School Information -->
                 <div class="text-center mb-8">
-                    <h1 class="text-2xl font-bold mb-2">School Name</h1>
-                    <p class="text-lg">Address</p>
+                    <h1 class="text-2xl font-bold mb-2">{{ $school->name ?? 'School' }}</h1>
+                    <p class="text-lg">{{ $school->address ?? 'Address' }}</p>
                 </div>
 
                 <!-- Student Information Grid -->
@@ -70,8 +63,8 @@ use Illuminate\Support\Facades\Storage;
                     <!-- Right Column -->
                     <div class="space-y-4">
                         <div class="flex">
-                            <span class="font-semibold w-16">Year:</span>
-                            <span>{{ $academicYear ?? date('Y') }}</span>
+                            <span class="font-semibold w-24">Academic Year:</span>
+                            <span>{{ $year }}</span>
                         </div>
                         <div class="flex">
                             <span class="font-semibold w-16">Grade:</span>
@@ -141,10 +134,10 @@ use Illuminate\Support\Facades\Storage;
                         </div>
                     </div>
 
-                    <!-- Right Side - Signature -->
+                    <!-- Right Side - Authorized Signature -->
                     <div class="flex justify-end">
                         <div class="text-center">
-                            @if($adminSignature)
+                            @if(!empty($adminSignature))
                                 <div class="mb-2">
                                     <img src="{{ Storage::url($adminSignature) }}" alt="Authorized Signature" class="h-16 w-32 object-contain mx-auto bg-white p-2 rounded border border-gray-300">
                                 </div>
@@ -155,7 +148,7 @@ use Illuminate\Support\Facades\Storage;
                             @endif
                             <div class="text-sm">
                                 <div class="border-t border-gray-300 pt-1 w-32 mx-auto"></div>
-                                <span class="text-xs text-gray-900">Authorized Signature</span>
+                                <span class="text-xs font-medium text-gray-900">Authorized Signature</span>
                             </div>
                         </div>
                     </div>

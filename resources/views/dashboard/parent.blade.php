@@ -25,12 +25,12 @@
                 <div class="flex items-center space-x-4">
                     <div class="flex-shrink-0">
                         <div class="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center">
-                            <span class="text-2xl font-bold text-white">{{ substr(auth()->user()->name, 0, 1) }}</span>
+                            <span class="text-2xl font-bold text-white">{{ substr($user->name ?? $currentUser->name ?? 'P', 0, 1) }}</span>
                         </div>
                     </div>
                     <div>
-                        <h3 class="text-lg font-medium text-gray-900">{{ auth()->user()->name }}</h3>
-                        <p class="text-sm text-gray-500">Email: {{ auth()->user()->email }}</p>
+                        <h3 class="text-lg font-medium text-gray-900">{{ $user->name ?? $currentUser->name ?? 'Parent' }}</h3>
+                        <p class="text-sm text-gray-500">Email: {{ $user->email ?? $currentUser->email ?? '' }}</p>
                         <p class="text-sm text-gray-500">Status: Active</p>
                     </div>
                 </div>
@@ -121,16 +121,19 @@
                                     <div class="text-sm text-gray-500">Average Grade</div>
                                 </div>
                             </div>
-                            <div class="flex space-x-2">
-                                <a href="{{ route('parent.grades.student', $child->id) }}" class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200">
+                            <div class="flex flex-wrap gap-2">
+                                <a href="{{ route('parent.grades.student', $child) }}" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200">
                                     View Grades
                                 </a>
-                                <a href="{{ route('parent.grades.progress', $child->id) }}" class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-green-700 bg-green-100 hover:bg-green-200">
-                                    Academic Progress
+                                <a href="{{ route('parent.grades.progress', $child) }}" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-green-700 bg-green-100 hover:bg-green-200">
+                                    Activities &amp; Performance
                                 </a>
-                                <a href="{{ route('parent.grades.download', $child->id) }}" class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-purple-700 bg-purple-100 hover:bg-purple-200">
-                                    Download Report
-                                </a>
+                                <form action="{{ route('parent.grades.download', $child) }}" method="POST" class="inline">
+                                    @csrf
+                                    <button type="submit" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-purple-700 bg-purple-100 hover:bg-purple-200">
+                                        Download Report
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     @empty

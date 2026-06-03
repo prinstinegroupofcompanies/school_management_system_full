@@ -5,23 +5,30 @@ namespace App\Http\Controllers\Parent;
 use App\Http\Controllers\Controller;
 use App\Models\Grade;
 use App\Models\Student;
+use App\Models\Guardian;
 use Illuminate\Http\Request;
 
 class GradeController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('parent');
-    }
-
     public function index(Request $request)
     {
-        $parent = $request->user();
+        $user = auth()->user();
         
-        // Get all students of this parent
-        $students = Student::whereHas('user', function($query) use ($parent) {
-            $query->where('parent_id', $parent->id);
-        })->with('user')->get();
+        // Get guardian record for the parent user
+        $guardian = \App\Models\Guardian::where('user_id', $user->id)->first();
+        
+        if (!$guardian) {
+            return redirect()->route('parent.dashboard')
+                ->with('error', 'Guardian profile not found.');
+        }
+        
+        // Get all students linked to this guardian
+        $students = Student::where('guardian_id', $guardian->id)
+            ->orWhere('father_id', $guardian->id)
+            ->orWhere('mother_id', $guardian->id)
+            ->orWhere('local_guardian_id', $guardian->id)
+            ->with('user')
+            ->get();
 
         $selectedStudentId = $request->get('student_id', $students->first()->id ?? null);
         
@@ -48,7 +55,18 @@ class GradeController extends Controller
 
     public function studentGrades(Student $student)
     {
-        $this->authorize('viewStudent', $student);
+        $user = auth()->user();
+        $guardian = \App\Models\Guardian::where('user_id', $user->id)->first();
+        
+        // Verify the student belongs to this guardian
+        if (!$guardian || !in_array($guardian->id, [
+            $student->guardian_id,
+            $student->father_id,
+            $student->mother_id,
+            $student->local_guardian_id
+        ])) {
+            abort(403, 'You do not have access to view this student\'s grades.');
+        }
         
         $grades = Grade::where('student_id', $student->id)
             ->with(['subject', 'class', 'teacher.user'])
@@ -62,7 +80,18 @@ class GradeController extends Controller
 
     public function subjectGrades(Student $student, $subjectId)
     {
-        $this->authorize('viewStudent', $student);
+        $user = auth()->user();
+        $guardian = \App\Models\Guardian::where('user_id', $user->id)->first();
+        
+        // Verify the student belongs to this guardian
+        if (!$guardian || !in_array($guardian->id, [
+            $student->guardian_id,
+            $student->father_id,
+            $student->mother_id,
+            $student->local_guardian_id
+        ])) {
+            abort(403, 'You do not have access to view this student\'s grades.');
+        }
         
         $grades = Grade::where('student_id', $student->id)
             ->where('subject_id', $subjectId)
@@ -75,7 +104,18 @@ class GradeController extends Controller
 
     public function academicProgress(Student $student)
     {
-        $this->authorize('viewStudent', $student);
+        $user = auth()->user();
+        $guardian = \App\Models\Guardian::where('user_id', $user->id)->first();
+        
+        // Verify the student belongs to this guardian
+        if (!$guardian || !in_array($guardian->id, [
+            $student->guardian_id,
+            $student->father_id,
+            $student->mother_id,
+            $student->local_guardian_id
+        ])) {
+            abort(403, 'You do not have access to view this student\'s progress.');
+        }
         
         // Get grades for the current academic year
         $currentYear = date('Y');
@@ -108,7 +148,18 @@ class GradeController extends Controller
 
     public function downloadReport(Student $student)
     {
-        $this->authorize('viewStudent', $student);
+        $user = auth()->user();
+        $guardian = \App\Models\Guardian::where('user_id', $user->id)->first();
+        
+        // Verify the student belongs to this guardian
+        if (!$guardian || !in_array($guardian->id, [
+            $student->guardian_id,
+            $student->father_id,
+            $student->mother_id,
+            $student->local_guardian_id
+        ])) {
+            abort(403, 'You do not have access to download this student\'s report.');
+        }
         
         // This would typically generate and download a PDF report
         // For now, return a JSON response

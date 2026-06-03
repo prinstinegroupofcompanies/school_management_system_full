@@ -209,6 +209,9 @@ class StudentController extends Controller
             'recent_grades' => 0, // Will be updated when grading system is implemented
         ];
 
+        // Ensure user is always the authenticated user
+        $user = auth()->user();
+        
         return view('dashboard.student', compact(
             'stats', 
             'homework', 

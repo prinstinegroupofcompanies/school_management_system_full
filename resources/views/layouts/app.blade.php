@@ -403,6 +403,9 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
         }
     </style>
+    @if(class_exists('Livewire\\Livewire'))
+        @livewireStyles
+    @endif
 </head>
 <body class="h-full font-sans antialiased" x-data="{ 
     sidebarOpen: false, 
@@ -468,6 +471,14 @@
 
                     <!-- Right side -->
                     <div class="flex items-center space-x-4">
+                        <!-- School website link (when user belongs to a school with website) -->
+                        @if(auth()->user()->school_id && auth()->user()->school && auth()->user()->school->website)
+                        <a href="{{ auth()->user()->school->website }}" target="_blank" rel="noopener noreferrer" class="p-2 rounded-md text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all" title="Visit school website">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+                            </svg>
+                        </a>
+                        @endif
                         <!-- Dark mode toggle -->
                         <button @click="toggleTheme()" class="p-2 rounded-md text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-all">
                             <svg x-show="!darkMode" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -556,7 +567,7 @@
                         @if(auth()->user() && auth()->user()->user_type === 'teacher')
                             @include('components.teacher-navigation')
                         @else
-                            @include('layouts.navigation')
+                            @include('layouts.role-navigation')
                         @endif
                     </div>
                 </div>
@@ -569,7 +580,7 @@
                         @if(auth()->user() && auth()->user()->user_type === 'teacher')
                             @include('components.teacher-navigation')
                         @else
-                            @include('layouts.navigation')
+                            @include('layouts.role-navigation')
                         @endif
                     </div>
                 </div>
@@ -716,5 +727,8 @@
             }
         }
     </script>
+    @if(class_exists('Livewire\\Livewire'))
+        @livewireScripts
+    @endif
 </body>
 </html>

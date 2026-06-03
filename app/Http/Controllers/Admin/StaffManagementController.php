@@ -20,25 +20,29 @@ class StaffManagementController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'role']);
-        
+        // Authentication is enforced at route level; add guard here for safety
+        $this->middleware(['auth']);
+
         // Allow finance officers to access payroll methods
         $allowedRoutes = ['payroll', 'showPayroll', 'createPayroll', 'storePayroll', 'editPayroll', 'updatePayroll', 'destroyPayroll'];
-        
+
         $this->middleware(function ($request, $next) use ($allowedRoutes) {
             $user = auth()->user();
-            
-            if (in_array($request->route()->getActionMethod(), $allowedRoutes)) {
+
+            $method = $request->route() ? $request->route()->getActionMethod() : null;
+            if (in_array($method, $allowedRoutes)) {
                 if (in_array($user->user_type, ['admin', 'finance'])) {
                     return $next($request);
                 }
                 abort(403, 'Access denied.');
-            } elseif ($user->user_type !== 'admin') {
+            }
+
+            if ($user->user_type !== 'admin') {
                 abort(403, 'Admin privileges required.');
             }
-            
+
             return $next($request);
-        })->except(array_merge($allowedRoutes, ['index']));
+        });
     }
 
     // Staff Management Dashboard
@@ -751,17 +755,19 @@ class StaffManagementController extends Controller
         $stats = [
             'total_staff' => Staff::count(),
             'active_staff' => Staff::where('employment_status', 'active')->count(),
-            'average_performance' => StaffPerformance::avg('overall_score'),
-            'total_payroll_this_month' => Payroll::whereRaw('strftime("%m", pay_date) = ?', [now()->format('m')])
-                ->whereRaw('strftime("%Y", pay_date) = ?', [now()->format('Y')])
-                ->sum('net_pay'),
+            'average_performance' => \Schema::hasTable('staff_performance') ? StaffPerformance::avg('overall_score') : 0,
+            'total_payroll_this_month' => \Schema::hasTable('payroll')
+                ? Payroll::whereRaw('strftime("%m", pay_date) = ?', [now()->format('m')])
+                    ->whereRaw('strftime("%Y", pay_date) = ?', [now()->format('Y')])
+                    ->sum('net_pay')
+                : 0,
             'department_breakdown' => Staff::with('department')
                 ->select('department_id', DB::raw('count(*) as count'))
                 ->groupBy('department_id')
                 ->get(),
-            'performance_breakdown' => StaffPerformance::select('performance_rating', DB::raw('count(*) as count'))
-                ->groupBy('performance_rating')
-                ->get()
+            'performance_breakdown' => \Schema::hasTable('staff_performance')
+                ? StaffPerformance::select('performance_rating', DB::raw('count(*) as count'))->groupBy('performance_rating')->get()
+                : collect(),
         ];
 
         return view('admin.staff.reports', compact('stats'));
@@ -781,12 +787,28 @@ class StaffManagementController extends Controller
             'schedule_date' => 'required|date',
             'start_time' => 'required',
             'end_time' => 'required|after:start_time',
-            'schedule_type' => 'required|in:regular,overtime,holiday',
-            'description' => 'nullable|string',
-            'status' => 'required|in:scheduled,completed,cancelled',
+            'shift_type' => 'nullable|in:morning,afternoon,evening,night',
+            'schedule_type' => 'nullable|in:regular,overtime,holiday',
+            'work_location' => 'nullable|string|max:255',
+            'duties' => 'nullable|string',
+            'notes' => 'nullable|string',
+            'status' => 'required|in:scheduled,confirmed,pending,completed,cancelled',
         ]);
 
-        $schedule->update($request->all());
+        // Normalize: accept either shift_type or legacy schedule_type
+        $shiftType = $request->input('shift_type') ?? $request->input('schedule_type');
+
+        $schedule->update([
+            'staff_id' => $request->staff_id,
+            'schedule_date' => $request->schedule_date,
+            'start_time' => $request->start_time,
+            'end_time' => $request->end_time,
+            'shift_type' => $shiftType,
+            'work_location' => $request->work_location,
+            'duties' => $request->duties,
+            'notes' => $request->notes,
+            'status' => $request->status,
+        ]);
 
         return redirect()->route('admin.staff.schedules')
                         ->with('success', 'Schedule updated successfully.');

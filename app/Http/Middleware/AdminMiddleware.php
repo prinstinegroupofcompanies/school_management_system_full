@@ -24,14 +24,26 @@ class AdminMiddleware
             return redirect()->route('login')->with('error', 'Please log in to access this page.');
         }
 
-        // Check if user is admin
-        if (auth()->user()->user_type !== 'admin') {
+        // School admin only: super admin has separate dashboard and must not use admin routes
+        $user = auth()->user();
+        if ($user->isSuperAdmin()) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Use Super Admin dashboard for system-wide actions.'], 403);
+            }
+            return redirect()->route('super_admin.dashboard')->with('info', 'Use Super Admin dashboard.');
+        }
+
+        $isAdmin = false;
+        if (method_exists($user, 'hasRole')) {
+            $isAdmin = $user->hasRole('admin') || $user->hasRole('vpi') || $user->hasRole('vpa');
+        }
+        if (!$isAdmin && $user->user_type !== 'admin') {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Access denied. Admin privileges required.'], 403);
             }
             
             abort(403, 'Access denied. Admin privileges required.');
-    }
+        }
 
         return $next($request);
     }
