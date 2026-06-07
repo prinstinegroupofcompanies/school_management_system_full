@@ -12,6 +12,7 @@ RUN apk add --no-cache \
     unzip \
     postgresql-dev \
     sqlite \
+    sqlite-dev \
     nodejs \
     npm \
     freetype-dev \
