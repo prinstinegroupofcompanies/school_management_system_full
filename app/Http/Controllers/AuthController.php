@@ -37,24 +37,24 @@ class AuthController extends Controller
             // Redirect based on user type
             switch ($user->user_type) {
                 case 'admin':
-                    return redirect()->intended(route('admin.dashboard'));
+                    return redirect()->route('admin.dashboard');
                 case 'teacher':
-                    return redirect()->intended(route('teacher.dashboard'));
+                    return redirect()->route('teacher.dashboard');
                 case 'student':
-                    return redirect()->intended(route('student.dashboard'));
+                    return redirect()->route('student.dashboard');
                 case 'finance':
-                    return redirect()->intended(route('finance.dashboard'));
+                    return redirect()->route('finance.dashboard');
                 case 'parent':
-                    return redirect()->intended(route('parent.dashboard'));
+                    return redirect()->route('parent.dashboard');
                 case 'librarian':
-                    return redirect()->intended(route('library.index'));
+                    return redirect()->route('library.index');
                 case 'staff':
                     if ($user->hasRole('conductor_driver')) {
-                        return redirect()->intended(route('transport.driver.dashboard'));
+                        return redirect()->route('transport.driver.dashboard');
                     }
-                    return redirect()->intended(route('library.index'));
+                    return redirect()->route('library.index');
                 default:
-                    return redirect()->intended(route('dashboard'));
+                    return redirect()->route('dashboard');
             }
         }
 

@@ -79,6 +79,7 @@ class DebugSeeder extends Seeder
         $class = ClassRoom::firstOrCreate(
             ['name' => 'Grade 10A'],
             [
+                'code' => 'G10A',
                 'description' => 'Grade 10 Class A',
             ]
         );
@@ -98,7 +99,6 @@ class DebugSeeder extends Seeder
             ['name' => 'Mathematics'],
             [
                 'description' => 'Mathematics Department',
-                'is_active' => true,
             ]
         );
 

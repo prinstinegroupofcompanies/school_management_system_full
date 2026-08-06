@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,14 +12,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Skip this migration - class_id column already exists in subjects table
-        // and we're using the pivot table subject_classes for many-to-many relationships
-        if (!Schema::hasColumn('subjects', 'class_id')) {
-            Schema::table('subjects', function (Blueprint $table) {
-                $table->unsignedBigInteger('class_id')->nullable();
-                $table->foreign('class_id')->references('id')->on('class_rooms')->onDelete('set null');
-            });
+        if (Schema::hasColumn('subjects', 'class_id')) {
+            return;
         }
+
+        if (DB::getDriverName() === 'sqlite') {
+            DB::statement('ALTER TABLE subjects ADD COLUMN class_id INTEGER NULL');
+            return;
+        }
+
+        Schema::table('subjects', function (Blueprint $table) {
+            $table->unsignedBigInteger('class_id')->nullable();
+            $table->foreign('class_id')->references('id')->on('class_rooms')->onDelete('set null');
+        });
     }
 
     /**
@@ -26,6 +32,14 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasColumn('subjects', 'class_id')) {
+            return;
+        }
+
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         Schema::table('subjects', function (Blueprint $table) {
             $table->dropForeign(['class_id']);
             $table->dropColumn('class_id');

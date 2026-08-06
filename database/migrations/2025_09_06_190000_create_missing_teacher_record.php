@@ -12,27 +12,37 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Create teacher record for user_id 2 (teacher@school.com) if it doesn't exist
-        $existingTeacher = DB::table('teachers')->where('user_id', 2)->first();
-        
-        if (!$existingTeacher) {
-            DB::table('teachers')->insert([
-                'user_id' => 2,
-                'teacher_id' => 'TCH0002',
-                'employee_id' => 'EMP0002',
-                'department_id' => 1,
-                'designation_id' => 1,
-                'qualification' => 'Bachelor of Education',
-                'experience' => 5,
-                'joining_date' => now()->subYears(5),
-                'salary' => 2500.00,
-                'basic_salary' => 2000.00,
-                'status' => 'active',
-                'employment_status' => 'active',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        $teacherUser = DB::table('users')->where('email', 'teacher@school.com')->first();
+
+        if (! $teacherUser) {
+            return;
         }
+
+        $existingTeacher = DB::table('teachers')->where('user_id', $teacherUser->id)->first();
+
+        if ($existingTeacher) {
+            return;
+        }
+
+        $departmentId = DB::table('departments')->value('id');
+        $designationId = DB::table('designations')->value('id');
+
+        DB::table('teachers')->insert([
+            'user_id' => $teacherUser->id,
+            'teacher_id' => 'TCH' . str_pad((string) $teacherUser->id, 4, '0', STR_PAD_LEFT),
+            'employee_id' => 'EMP' . str_pad((string) $teacherUser->id, 4, '0', STR_PAD_LEFT),
+            'department_id' => $departmentId,
+            'designation_id' => $designationId,
+            'qualification' => 'Bachelor of Education',
+            'experience' => 5,
+            'joining_date' => now()->subYears(5),
+            'salary' => 2500.00,
+            'basic_salary' => 2000.00,
+            'status' => 'active',
+            'employment_status' => 'active',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 
     /**

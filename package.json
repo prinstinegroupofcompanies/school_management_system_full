@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "School Management System",
   "scripts": {
-    "build": "npx @tailwindcss/cli -i ./resources/css/app.css -o ./public/css/app.css --minify",
-    "dev": "npx @tailwindcss/cli -i ./resources/css/app.css -o ./public/css/app.css --watch"
+    "build": "npx tailwindcss -i ./resources/css/app.css -o ./public/css/app.css --minify",
+    "dev": "npx tailwindcss -i ./resources/css/app.css -o ./public/css/app.css --watch=always"
   },
   "dependencies": {
     "datatables.net": "^2.3.4",

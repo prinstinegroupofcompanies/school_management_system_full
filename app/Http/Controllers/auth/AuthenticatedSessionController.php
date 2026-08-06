@@ -40,15 +40,15 @@ class AuthenticatedSessionController extends Controller
         // Redirect based on user type
         switch ($user->user_type) {
             case 'admin':
-                return redirect()->intended(route('admin.dashboard'));
+                return redirect()->route('admin.dashboard');
             case 'teacher':
-                return redirect()->intended(route('teacher.dashboard'));
+                return redirect()->route('teacher.dashboard');
             case 'student':
-                return redirect()->intended(route('student.dashboard'));
+                return redirect()->route('student.dashboard');
             case 'finance':
-                return redirect()->intended(route('dashboard'));
+                return redirect()->route('dashboard');
             default:
-                return redirect()->intended(route('dashboard'));
+                return redirect()->route('dashboard');
         }
     }
 
