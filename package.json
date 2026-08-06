@@ -3,13 +3,16 @@
   "version": "1.0.0",
   "description": "School Management System",
   "scripts": {
-    "build": "npx tailwindcss -i ./resources/css/app.css -o ./public/css/app.css --minify",
-    "dev": "npx tailwindcss -i ./resources/css/app.css -o ./public/css/app.css --watch"
+    "build": "npx @tailwindcss/cli -i ./resources/css/app.css -o ./public/css/app.css --minify",
+    "dev": "npx @tailwindcss/cli -i ./resources/css/app.css -o ./public/css/app.css --watch"
   },
   "dependencies": {
     "datatables.net": "^2.3.4",
     "datatables.net-dt": "^2.3.4",
     "jquery": "^3.7.1",
     "tailwindcss": "^4.1.12"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.1"
   }
 }
