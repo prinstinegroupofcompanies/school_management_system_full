@@ -32,7 +32,10 @@ ENV COMPOSER_ALLOW_SUPERUSER=1 \
 
 WORKDIR /var/www/html
 COPY composer.json composer.lock* ./
-RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-scripts --no-audit || composer update --no-dev --prefer-dist --optimize-autoloader --no-scripts --no-audit
+RUN composer config --global --no-interaction allow-plugins.true true \
+    && composer config --global --no-interaction secure-http false \
+    && composer install --no-dev --prefer-dist --optimize-autoloader --no-scripts --no-interaction --no-progress --no-suggest --no-plugins --no-audit \
+    || composer update --no-dev --prefer-dist --optimize-autoloader --no-scripts --no-interaction --no-progress --no-suggest --no-plugins --no-audit
 
 COPY . .
 
