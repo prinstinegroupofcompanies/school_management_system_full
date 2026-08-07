@@ -1,9 +1,10 @@
 services:
   - type: web
     name: school-management-system
-    env: docker
+    env: php
     plan: free
-    dockerfilePath: ./Dockerfile
+    buildCommand: composer config --global --no-interaction allow-plugins true && composer config --global --no-interaction secure-http false && composer install --no-dev --prefer-dist --optimize-autoloader --no-scripts --no-interaction --no-progress --no-suggest --no-plugins --no-security-blocking && php artisan key:generate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache
+    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
     autoDeploy: true
     envVars:
       - key: APP_ENV
