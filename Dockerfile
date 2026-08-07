@@ -1,4 +1,4 @@
-FROM php:8.3-cli
+FROM php:8.4-cli
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -32,7 +32,7 @@ ENV COMPOSER_ALLOW_SUPERUSER=1 \
 
 WORKDIR /var/www/html
 COPY composer.json composer.lock* ./
-RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-scripts || composer update --no-dev --prefer-dist --optimize-autoloader --no-scripts
+RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-scripts --no-audit || composer update --no-dev --prefer-dist --optimize-autoloader --no-scripts --no-audit
 
 COPY . .
 
