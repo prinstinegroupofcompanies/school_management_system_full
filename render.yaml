@@ -1,10 +1,10 @@
 services:
   - type: web
     name: school-management-system
-    env: php
+    env: docker
     plan: free
-    buildCommand: composer install --no-dev --optimize-autoloader --no-interaction && php artisan key:generate --force && php artisan migrate --force && php artisan db:seed --force && php artisan config:cache && php artisan route:cache && php artisan view:cache && mkdir -p storage/framework/sessions storage/framework/cache storage/framework/views storage/logs && chmod -R 755 storage bootstrap/cache
-    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
     envVars:
       - key: APP_ENV
         value: production
@@ -66,29 +66,11 @@ services:
         value: https://liberiaschoolmanagementsystem.onrender.com
       - key: SESSION_DRIVER
         value: file
-      - key: SESSION_LIFETIME
-        value: 120
-      - key: SESSION_ENCRYPT
-        value: false
-      - key: SESSION_SECURE_COOKIE
-        value: false
-      - key: SESSION_HTTP_ONLY
-        value: true
-      - key: SESSION_SAME_SITE
-        value: lax
       - key: CACHE_DRIVER
         value: file
       - key: QUEUE_CONNECTION
         value: sync
-      - key: LOG_CHANNEL
-        value: stack
-      - key: LOG_LEVEL
-        value: error
       - key: BROADCAST_DRIVER
-        value: log
-      - key: FILESYSTEM_DISK
-        value: local
-      - key: MAIL_MAILER
         value: log
       - key: TELESCOPE_ENABLED
         value: false

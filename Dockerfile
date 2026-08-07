@@ -1,92 +1,49 @@
-# Use PHP 8.3 with Alpine for Fly.io deployment
-FROM php:8.3-alpine
+FROM php:8.3-cli
 
-# Install system dependencies and PHP extensions
-RUN apk add --no-cache \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
     git \
     curl \
-    libpng-dev \
-    oniguruma-dev \
-    libxml2-dev \
-    zip \
     unzip \
-    postgresql-dev \
-    sqlite \
-    sqlite-dev \
-    nodejs \
-    npm \
-    freetype-dev \
-    libjpeg-turbo-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
     libwebp-dev \
+    libzip-dev \
+    libpq-dev \
+    libonig-dev \
+    libsqlite3-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j$(nproc) \
-        pdo \
-        pdo_pgsql \
-        pdo_sqlite \
-        mbstring \
-        exif \
-        pcntl \
-        bcmath \
-        gd \
-        zip
+    pdo \
+    pdo_pgsql \
+    pdo_sqlite \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    zip \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+ENV COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_NO_INTERACTION=1
 
-# Set working directory
-WORKDIR /var/www
+WORKDIR /var/www/html
+COPY composer.json composer.lock* ./
+RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-scripts || composer update --no-dev --prefer-dist --optimize-autoloader --no-scripts
 
-# Copy composer files first for better caching
-COPY composer.json composer.lock ./
-
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
-
-# Copy package.json and install Node dependencies
-COPY package.json package-lock.json ./
-RUN npm ci --only=production
-
-# Copy application code
 COPY . .
 
-# Set proper permissions
-RUN chown -R www-data:www-data /var/www
-RUN chmod -R 755 /var/www
+RUN php artisan key:generate --force || true \
+    && php artisan config:cache || true \
+    && php artisan route:cache || true \
+    && php artisan view:cache || true \
+    && mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache storage/app/public \
+    && chmod -R 775 storage bootstrap/cache
 
-# Install remaining dependencies and run post-install scripts
-RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-# Build frontend assets
-RUN npm run build || echo "No build script found, skipping..."
-
-# Create necessary directories
-RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache storage/app/public
-RUN chmod -R 775 storage bootstrap/cache
-
-# Create SQLite database directory
-RUN mkdir -p /database
-RUN chmod 755 /database
-
-# Copy environment file
-COPY env.fly .env
-
-# Generate application key
-RUN php artisan key:generate --force
-
-# Cache configuration for production
-RUN php artisan config:cache
-RUN php artisan route:cache
-RUN php artisan view:cache
-
-# Create symbolic link for storage
-RUN php artisan storage:link
-
-# Expose port
+ENV PORT=8080
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
-
-# Start the application
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080"]
+CMD sh -lc 'php artisan serve --host=0.0.0.0 --port=${PORT}'
