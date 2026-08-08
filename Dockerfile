@@ -1,18 +1,36 @@
-FROM php:8.4-cli
+FROM php:8.3-cli
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-    git curl unzip libpng-dev libjpeg-dev libfreetype6-dev libwebp-dev libzip-dev libpq-dev libonig-dev libsqlite3-dev \
+    git curl unzip ca-certificates gnupg libpng-dev libjpeg-dev libfreetype6-dev libwebp-dev libzip-dev libpq-dev libonig-dev libsqlite3-dev \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j$(nproc) pdo pdo_pgsql pdo_sqlite mbstring exif pcntl bcmath gd zip \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /var/www/html
-COPY . /var/www/html
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-RUN chmod -R 775 storage bootstrap/cache || true
+WORKDIR /var/www/html
+
+COPY composer.json composer.lock* ./
+RUN composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader
+
+COPY package.json package-lock.json* ./
+RUN npm install --no-audit --no-fund
+
+COPY . .
+
+RUN chmod -R 775 storage bootstrap/cache || true \
+    && php artisan storage:link >/dev/null 2>&1 || true \
+    && npm run build >/dev/null 2>&1 || true
 
 ENV PORT=8080
 EXPOSE 8080
 
-CMD sh -lc 'php artisan serve --host=0.0.0.0 --port=${PORT}'
+CMD sh -lc 'if [ -z "$APP_KEY" ]; then export APP_KEY=$(php -r "echo base64_encode(random_bytes(32));"); fi; \
+    php artisan optimize:clear >/dev/null 2>&1 || true; \
+    php artisan config:cache >/dev/null 2>&1 || true; \
+    php artisan route:cache >/dev/null 2>&1 || true; \
+    php artisan view:cache >/dev/null 2>&1 || true; \
+    php artisan serve --host=0.0.0.0 --port=${PORT}'
