@@ -23,12 +23,13 @@ COPY . .
 
 RUN chmod -R 775 storage bootstrap/cache || true \
   && php artisan storage:link >/dev/null 2>&1 || true \
-  && npm run build >/dev/null 2>&1 || true
+  && npm run build
 
 ENV PORT=8080
 EXPOSE 8080
 
-CMD sh -lc 'if [ -z "$APP_KEY" ]; then export APP_KEY=$(php -r "echo base64_encode(random_bytes(32));"); fi; \
+CMD sh -lc 'test -n "$APP_KEY" || { echo "APP_KEY must be configured before startup"; exit 1; }; \
+  php artisan migrate --force || exit 1; \
   php artisan optimize:clear >/dev/null 2>&1 || true; \
   php artisan config:cache >/dev/null 2>&1 || true; \
   php artisan route:cache >/dev/null 2>&1 || true; \

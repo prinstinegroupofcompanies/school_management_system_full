@@ -16,7 +16,7 @@
         </div>
 
         <div class="bg-white rounded-lg shadow-lg p-6">
-            <form method="POST" action="{{ route('profile.change-password') }}" class="space-y-6">
+            <form method="POST" action="{{ route('profile.update-password') }}" class="space-y-6">
                 @csrf
                 @method('PUT')
 

@@ -1419,7 +1419,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
     Route::get('/profile/change-password', [\App\Http\Controllers\ProfileController::class, 'showChangePasswordForm'])->name('profile.change-password');
-    Route::put('/profile/change-password', [\App\Http\Controllers\ProfileController::class, 'changePassword'])->name('profile.change-password');
+    Route::put('/profile/change-password', [\App\Http\Controllers\ProfileController::class, 'changePassword'])->name('profile.update-password');
     
     // Notifications API
     Route::prefix('notifications')->name('notifications.')->group(function () {
@@ -1453,7 +1453,7 @@ Route::middleware(['auth'])->group(function () {
         $service = app(\App\Services\NotificationService::class);
         $service->markAsRead($id, $user->id);
         return response()->json(['success' => true]);
-    })->name('notifications.mark-read');
+    })->name('notifications.mark-read-legacy');
     
     // User Profile Routes (for all user types)
     Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('users.update-profile');

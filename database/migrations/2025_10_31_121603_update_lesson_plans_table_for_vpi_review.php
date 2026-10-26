@@ -34,8 +34,14 @@ return new class extends Migration
             }
         });
 
-        if (DB::getDriverName() !== 'sqlite') {
+        $driver = DB::getDriverName();
+
+        if ($driver === 'mysql') {
             DB::statement("ALTER TABLE lesson_plans MODIFY COLUMN status ENUM('pending', 'approved', 'rejected', 'draft', 'submitted', 'first_level_approved', 'second_level_approved') DEFAULT 'pending'");
+        } elseif ($driver === 'pgsql') {
+            DB::statement('ALTER TABLE lesson_plans DROP CONSTRAINT IF EXISTS lesson_plans_status_check');
+            DB::statement("ALTER TABLE lesson_plans ALTER COLUMN status SET DEFAULT 'pending'");
+            DB::statement("ALTER TABLE lesson_plans ADD CONSTRAINT lesson_plans_status_check CHECK (status IN ('pending', 'approved', 'rejected', 'draft', 'submitted', 'first_level_approved', 'second_level_approved'))");
         }
     }
 
